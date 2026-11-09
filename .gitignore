@@ -112,3 +112,20 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# ------------------------------------------------------------------
+# Paid / redistribution-restricted packs (Asset Store, Synty Store).
+# Their licences forbid sharing source files in a public repo, so they
+# stay local. See README "Third-party packs" to rebuild the project.
+# ------------------------------------------------------------------
+/[Aa]ssets/ARCADE - Ultimate Vehicles Pack/
+/[Aa]ssets/ARCADE - Ultimate Vehicles Pack.meta
+/[Aa]ssets/Realistic Car Controller Pro/
+/[Aa]ssets/Realistic Car Controller Pro.meta
+/[Aa]ssets/SplineArchitect/
+/[Aa]ssets/SplineArchitect.meta
+/[Aa]ssets/Synty/
+/[Aa]ssets/Synty.meta
+
+# macOS
+.DS_Store
