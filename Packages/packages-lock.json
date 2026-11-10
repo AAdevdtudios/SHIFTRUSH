@@ -17,6 +17,16 @@
       },
       "hash": "81542a7e86292b5c4c21b1782c5af23b567f45ce"
     },
+    "com.jbooth.microverse": {
+      "version": "file:com.jbooth.microverse",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.mathematics": "1.2.6",
+        "com.unity.burst": "1.6.6",
+        "com.unity.collections": "1.4.0"
+      }
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
@@ -157,7 +167,7 @@
     },
     "com.unity.render-pipelines.universal-config": {
       "version": "17.0.3",
-      "depth": 1,
+      "depth": 0,
       "source": "builtin",
       "dependencies": {
         "com.unity.render-pipelines.core": "17.0.3"

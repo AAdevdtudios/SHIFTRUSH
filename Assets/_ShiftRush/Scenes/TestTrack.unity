@@ -683,7 +683,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 309f831f19a7b4280965e85bb1cce556, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Vehicles.RCCPSessionSetup
-  behaviorPreset: Arcade
 --- !u!4 &1050746223
 Transform:
   m_ObjectHideFlags: 0
@@ -844,8 +843,63 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2060493299427801699, guid: fdb1354f3bd578d4faaec9dc39e2619c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1293340790}
+    - targetCorrespondingSourceObject: {fileID: 2060493299427801699, guid: fdb1354f3bd578d4faaec9dc39e2619c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1293340789}
   m_SourcePrefab: {fileID: 100100000, guid: fdb1354f3bd578d4faaec9dc39e2619c, type: 3}
+--- !u!1 &1293340788 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2060493299427801699, guid: fdb1354f3bd578d4faaec9dc39e2619c, type: 3}
+  m_PrefabInstance: {fileID: 1293340787}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1293340789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1293340788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ce5a37aaf6e24747a4b1f08d138b50b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Vehicles.RCCPSpeedCamera
+  speedFeel: {fileID: 1293340790}
+  baseFov: 55
+--- !u!114 &1293340790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1293340788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 592086007bae947a189ab959fae01708, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.CameraFX.SpeedFeel
+  startKmh: 70
+  fullKmh: 175
+  pullBack: 2.4
+  boostPullBack: 1.6
+  surgePullBack: 1.2
+  drop: 0.35
+  pullResponse: 2.2
+  extraFov: 14
+  boostFov: 9
+  shakeDegrees: 0.35
+  shakeFrequency: 18
+  lineMaterial: {fileID: 2100000, guid: 908175f7993454b5a83e39b4862e82a4, type: 2}
+  maxLinesPerSecond: 110
+  lineColor: {r: 1, g: 1, b: 1, a: 0.55}
+  boostLineColor: {r: 1, g: 0.25, b: 0.85, a: 0.75}
+  maxChromatic: 0.55
+  maxLensDistortion: -0.22
+  vignetteAtSpeed: 0.32
 --- !u!1 &1312237464
 GameObject:
   m_ObjectHideFlags: 0

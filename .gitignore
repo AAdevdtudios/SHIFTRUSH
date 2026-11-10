@@ -126,6 +126,19 @@ InitTestScene*.unity*
 /[Aa]ssets/SplineArchitect.meta
 /[Aa]ssets/Synty/
 /[Aa]ssets/Synty.meta
+/[Aa]ssets/FayLabs/
+/[Aa]ssets/FayLabs.meta
+/[Aa]ssets/Hovl Studio/
+/[Aa]ssets/Hovl Studio.meta
+/[Aa]ssets/Heat - Complete Modern UI/
+/[Aa]ssets/Heat - Complete Modern UI.meta
+/[Aa]ssets/Motion Titles Pack/
+/[Aa]ssets/Motion Titles Pack.meta
+/[Aa]ssets/AMS/
+/[Aa]ssets/AMS.meta
+/[Aa]ssets/UI SFX Mega Pack/
+/[Aa]ssets/UI SFX Mega Pack.meta
+/Packages/com.jbooth.microverse/
 
 # macOS
 .DS_Store

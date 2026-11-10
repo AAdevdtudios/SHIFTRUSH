@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc81008149a763b468f830783c72c0e9, type: 3}
+  m_Name: SR_Credits
+  m_EditorClassIdentifier: Assembly-CSharp::Michsky.UI.Heat.CreditsPreset
+  backgroundSprite: {fileID: 0}
+  sectionSpacing: 70
+  headerSpacing: 30
+  nameListSpacing: 50
+  credits:
+  - headerTitle: Razorbill Studio
+    headerTitleKey: 
+    items:
+    - Design, code and level design
+  - headerTitle: Concept & Inspiration
+    headerTitleKey: 
+    items:
+    - Jennifer Ugwoke
+  - headerTitle: Made for
+    headerTitleKey: 
+    items:
+    - GitHub Game Off 2026
+    - 'Theme: SHIFT'
+  - headerTitle: Built with
+    headerTitleKey: 
+    items:
+    - Unity 6 (URP)
+  - headerTitle: Third-party packs
+    headerTitleKey: 
+    items:
+    - Realistic Car Controller Pro (BoneCracker Games)
+    - 'ARCADE: Ultimate Vehicles Pack'
+    - Spline Architect
+    - POLYGON Alpine Mountain (Synty)
+    - 'KROMA: Atmosphere Toolkit (FayLabs)'
+    - MicroVerse (Jason Booth)
+    - 'Heat: Complete Modern UI (Michsky)'
+    - UI SFX Mega Pack
+  - headerTitle: Controller graphics
+    headerTitleKey: 
+    items:
+    - Zacksly (CC BY 3.0)
+  mentions:
+  - ID: thanks
+    icon: {fileID: 0}
+    description: Thanks for playing SHIFT//RUSH.
+    descriptionKey: 
+    descriptionSpacing: 30
+    layoutSpacing: 160

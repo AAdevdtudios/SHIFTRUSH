@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_ShiftRush/Scenes/MainMenu.unity
+    guid: a7fbbe366ca08483097b01ab94544efc
+  - enabled: 1
+    path: Assets/_ShiftRush/Scenes/TestArena.unity
+    guid: bcceda2a227d84ab8a58195ebae935aa
+  - enabled: 1
     path: Assets/_ShiftRush/Scenes/TestTrack.unity
     guid: 3bc1bc10377c041abb8a7e5fc0df54ed
   m_configObjects:

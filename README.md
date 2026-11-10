@@ -34,6 +34,12 @@ The game uses these paid packs. Their licences don't allow the source files to b
 | ARCADE – Ultimate Vehicles Pack | Unity Asset Store | Cars |
 | Spline Architect + Spline Architect Terrain Tools | Unity Asset Store | Track and terrain |
 | POLYGON Alpine Mountain – Nature Biomes (Synty, Unity 6 URP version) | Synty Store | Alpine scenery |
+| KROMA – Atmosphere Toolkit (URP) | Unity Asset Store | Sky, clouds, atmosphere |
+| MicroVerse (Jason Booth) | Unity Asset Store | Terrain |
+| Heat – Complete Modern UI (Michsky) | Unity Asset Store | Menus and settings UI |
+| Motion Titles Pack | Unity Asset Store | Animated titles |
+| AMS UI Soft Mask | Unity Asset Store | Soft UI masks |
+| UI SFX Mega Pack | Unity Asset Store | Menu sounds |
 
 Without these packs, the project's own code (`Assets/_ShiftRush/`) is still public and readable, but scenes will show missing references.
 
