@@ -169,3 +169,6 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+
+# Terrain heightmaps/splatmaps are binary-serialized
+Assets/_ShiftRush/Art/Track/TD_*.asset binary

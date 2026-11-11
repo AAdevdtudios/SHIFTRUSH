@@ -20,6 +20,8 @@ namespace ShiftRush.Core
         [SerializeField] TMP_Text percent;
         [SerializeField] Image fill;
         [SerializeField] RectTransform streaks;
+        [Tooltip("Soft-masked shot of the track behind the title.")]
+        [SerializeField] Image hero;
         [Tooltip("Minimum time on screen, so the track name can be read even on a fast load.")]
         [SerializeField] float minimumShow = 1.6f;
         [SerializeField] float fade = 0.35f;
@@ -46,11 +48,12 @@ namespace ShiftRush.Core
         }
 
         /// <summary>Loads a scene behind the loading screen. Falls back to a plain load if the prefab is missing.</summary>
-        public static void Load(string scene, string heading, string subheading, string tipText)
+        public static void Load(string scene, string heading, string subheading, string tipText, Sprite heroSprite = null)
         {
             if (IsLoading) return;
             var loader = Instance;
             if (loader == null) { SceneManager.LoadScene(scene); return; }
+            if (loader.hero != null) { loader.hero.sprite = heroSprite; loader.hero.enabled = heroSprite != null; }
             loader.StartCoroutine(loader.Run(scene, heading, subheading, tipText));
         }
 
@@ -60,7 +63,7 @@ namespace ShiftRush.Core
                 ? track.loadingTips[Random.Range(0, track.loadingTips.Length)] : "";
             var car = RaceSession.Car;
             string sub = (car != null ? car.displayName.ToUpperInvariant() + "  //  " : "") + track.LengthLabel;
-            Load(track.scene, track.displayName, sub, tipText);
+            Load(track.scene, track.displayName, sub, tipText, track.thumbnail);
         }
 
         IEnumerator Run(string scene, string heading, string subheading, string tipText)

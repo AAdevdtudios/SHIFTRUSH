@@ -20,6 +20,9 @@ namespace ShiftRush.UI
         [SerializeField] TMP_Text title;
         [SerializeField] TMP_Text description;
         [SerializeField] TMP_Text details;
+        [Tooltip("Big soft-masked shot of the selected track behind the cards.")]
+        [SerializeField] Image hero;
+        float heroAlpha;
 
         readonly List<TrackCard> cards = new List<TrackCard>();
         int index;
@@ -40,6 +43,14 @@ namespace ShiftRush.UI
         }
 
         bool Accepting { get { return visibleGroup == null || (visibleGroup.alpha > 0.95f && visibleGroup.interactable); } }
+
+        void LateUpdate()
+        {
+            if (hero == null) return;
+            heroAlpha = Mathf.MoveTowards(heroAlpha, 1f, Time.unscaledDeltaTime * 3f);
+            var c = hero.color; c.a = heroAlpha; hero.color = c;
+            hero.rectTransform.localScale = Vector3.one * (1.06f - 0.06f * heroAlpha);
+        }
 
         void Update()
         {
@@ -79,6 +90,12 @@ namespace ShiftRush.UI
             if (title) title.text = t.displayName.ToUpperInvariant();
             if (description) description.text = t.description;
             if (details) details.text = t.LengthLabel;
+            if (hero != null && hero.sprite != t.thumbnail)
+            {
+                hero.sprite = t.thumbnail;
+                hero.enabled = t.thumbnail != null;
+                heroAlpha = 0f; // fade the new track in
+            }
             for (int i = 0; i < cards.Count; i++) cards[i].SetSelected(i == index);
         }
     }

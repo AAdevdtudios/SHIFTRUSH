@@ -14,6 +14,12 @@ namespace ShiftRush.Core
         public const string CameraShakeKey = "SR_CameraShake";
         public const string ReducedMotionKey = "SR_ReducedMotion";
         public const string UnitsKey = "SR_Units";
+        public const string ScrollSoundKey = "SR_ScrollSound";
+
+        /// <summary>Sound when moving between menu items.</summary>
+        public static readonly string[] ScrollSoundLabels = { "Soft", "Clunk", "Off" };
+        /// <summary>0 soft tick, 1 mechanical clunk, 2 silent.</summary>
+        public static int ScrollSound { get { return PlayerPrefs.GetInt("HorizontalSelector_" + ScrollSoundKey, 0); } }
 
         /// <summary>Labels for the speed-effects selector, matching <see cref="SpeedFxLevels"/>.</summary>
         public static readonly string[] SpeedFxLabels = { "Off", "Subtle", "Full", "Max" };

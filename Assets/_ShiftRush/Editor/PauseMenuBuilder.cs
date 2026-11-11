@@ -47,6 +47,7 @@ namespace ShiftRush.EditorTools
             var ms = root.AddComponent<MenuSounds>();
             var mso = new SerializedObject(ms);
             mso.FindProperty("shift").objectReferenceValue = sounds.shift;
+            mso.FindProperty("scrollSoft").objectReferenceValue = sounds.scrollSoft;
             mso.FindProperty("hover").objectReferenceValue = sounds.hover;
             mso.FindProperty("select").objectReferenceValue = sounds.select;
             mso.FindProperty("back").objectReferenceValue = sounds.back;
@@ -99,6 +100,7 @@ namespace ShiftRush.EditorTools
                 OptionRowUI(column, 3, "Master Volume", OptionRow.Kind.Volume, "MasterVolume", null, 0, true, "Master"),
                 OptionRowUI(column, 4, "Car & Effects", OptionRow.Kind.Volume, "SFXVolume", null, 0, true, "SFX"),
                 OptionRowUI(column, 5, "Music", OptionRow.Kind.Volume, "MusicVolume", null, 0, true, "Music"),
+                OptionRowUI(column, 6, "Menu Scroll Sound", OptionRow.Kind.Choice, GameSettings.ScrollSoundKey, GameSettings.ScrollSoundLabels, 0, true, ""),
             };
             var list = opts.gameObject.AddComponent<OptionsList>();
             var lso = new SerializedObject(list);

@@ -24,6 +24,28 @@ MonoBehaviour:
     boost: 5
     accent: {r: 1, g: 0.2509804, b: 0.8509804, a: 1}
   tracks:
+  - id: alpine
+    displayName: Alpine Pass
+    scene: Track_AlpinePass
+    description: Snow, switchbacks and a misty summit. Climb the hairpins, then dive
+      through the avalanche gallery.
+    lengthKm: 2.5
+    thumbnail: {fileID: 21300000, guid: 1edf2f524652c484d801673713f24afe, type: 3}
+    loadingTips:
+    - Brake before the hairpins, not in them.
+    - Hold Left Ctrl for nitro on the gallery straight.
+    - R puts you back on your wheels.
+  - id: valley
+    displayName: Glacier Valley
+    scene: Track_GlacierValley
+    description: Flat-out sweepers around a glacier lake, over the river bridge and
+      through the village.
+    lengthKm: 2.3
+    thumbnail: {fileID: 21300000, guid: 11edc4d378ba74ad3b189cce8665f941, type: 3}
+    loadingTips:
+    - Keep it pinned through the lakeside sweepers.
+    - The bridge kink is flat out if you're brave.
+    - Hold Left Ctrl for nitro.
   - id: arena
     displayName: Test Arena
     scene: TestArena
@@ -34,12 +56,3 @@ MonoBehaviour:
     - Hold Left Ctrl for nitro.
     - R puts you back on your wheels.
     - Steer in the air to line up a landing.
-  - id: oval
-    displayName: Test Track
-    scene: TestTrack
-    description: The greybox loop with ramps. Good for flat-out laps.
-    lengthKm: 0
-    thumbnail: {fileID: 0}
-    loadingTips:
-    - Hold Left Ctrl for nitro.
-    - R puts you back on your wheels.

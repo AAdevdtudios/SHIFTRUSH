@@ -38,7 +38,7 @@ namespace ShiftRush.EditorTools
         static readonly Color Cyan = new Color32(56, 225, 255, 255);
 
         static TMP_FontAsset fontTitle, fontBold, fontMedium, fontRegular, fontLight;
-        static Sprite slant, slantFrame, streaks, chevron, fadeLeft;
+        static Sprite slant, slantFrame, streaks, chevron, fadeLeft, softBand;
 
         [MenuItem("SHIFT RUSH/Build Main Menu")]
         public static void Build()
@@ -119,6 +119,15 @@ namespace ShiftRush.EditorTools
             slantFrame = SaveSprite("T_SlantFrame", 160, 96, (x, y, w, h) => Parallelogram(x, y, w, h, 22f, 3f), new Vector4(28, 6, 28, 6));
             chevron = SaveSprite("T_Chevron", 64, 96, Chevron, Vector4.zero);
             fadeLeft = SaveSprite("T_FadeLeft", 256, 4, (x, y, w, h) => Mathf.SmoothStep(1f, 0f, x / w), Vector4.zero);
+            // Mask for the track hero art: a wide slanted band whose edges melt away.
+            softBand = SaveSprite("T_SoftBand", 512, 256, (x, y, w, h) =>
+            {
+                float lean = 150f, soft = 70f, t = y / h;
+                float left = lean * t, right = w - lean + lean * t;
+                float d = Mathf.Min(x - left, right - x);
+                float v = Mathf.Min(y, h - y);
+                return Mathf.SmoothStep(0f, 1f, d / soft) * Mathf.SmoothStep(0f, 1f, v / (soft * 0.6f));
+            }, Vector4.zero);
             var rng = new System.Random(7);
             var lines = new List<Vector4>();
             for (int i = 0; i < 70; i++)
@@ -183,7 +192,7 @@ namespace ShiftRush.EditorTools
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
-        class Sounds { public AudioClip shift, hover, select, back, confirm, tick; }
+        class Sounds { public AudioClip shift, scrollSoft, hover, select, back, confirm, tick; }
 
         static Sounds LoadSounds()
         {
@@ -191,6 +200,7 @@ namespace ShiftRush.EditorTools
             return new Sounds
             {
                 shift = c("Repair/repair_77.wav"),
+                scrollSoft = c("Buttons/button_press_452.wav"),
                 hover = c("Buttons/button_press_741.wav"),
                 select = c("Buttons/button_press_453.wav"),
                 back = c("Cancel/cancel_200.wav"),
@@ -314,6 +324,19 @@ namespace ShiftRush.EditorTools
             var bg = Img(root.transform, "Background", null, Ink);
             Stretch(bg.rectTransform);
 
+            var heroBand = new GameObject("Hero Band", typeof(RectTransform)).GetComponent<RectTransform>();
+            heroBand.SetParent(root.transform, false);
+            Place(heroBand, new Vector2(0.25f, 0.2f), new Vector2(1.08f, 1f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            var loadMask = heroBand.gameObject.AddComponent<AMS.UI.SoftMask.UISoftMask>();
+            loadMask.mask = softBand;
+            loadMask.fallOff = 0.6f;
+            var loadHero = Img(heroBand, "Hero", null, new Color(1, 1, 1, 0.85f));
+            loadHero.raycastTarget = false;
+            Stretch(loadHero.rectTransform);
+            var lfit = loadHero.gameObject.AddComponent<AspectRatioFitter>();
+            lfit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; lfit.aspectRatio = 16f / 9f;
+            loadHero.enabled = false;
+
             var band = Img(root.transform, "Streaks", streaks, new Color(Magenta.r, Magenta.g, Magenta.b, 0.35f));
             band.type = Image.Type.Tiled;
             Place(band.rectTransform, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 40), new Vector2(400, 420));
@@ -351,6 +374,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("percent").objectReferenceValue = pct;
             so.FindProperty("fill").objectReferenceValue = fill;
             so.FindProperty("streaks").objectReferenceValue = band.rectTransform;
+            so.FindProperty("hero").objectReferenceValue = loadHero;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             PrefabUtility.SaveAsPrefabAsset(root, path);
@@ -505,6 +529,7 @@ namespace ShiftRush.EditorTools
             var ms = go.AddComponent<MenuSounds>();
             var so = new SerializedObject(ms);
             so.FindProperty("shift").objectReferenceValue = s.shift;
+            so.FindProperty("scrollSoft").objectReferenceValue = s.scrollSoft;
             so.FindProperty("hover").objectReferenceValue = s.hover;
             so.FindProperty("select").objectReferenceValue = s.select;
             so.FindProperty("back").objectReferenceValue = s.back;
@@ -528,6 +553,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("audioMixer").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/_ShiftRush/Resources/SR_Mixer.mixer");
             so.ApplyModifiedPropertiesWithoutUndo();
             am.GetComponent<AudioSource>().outputAudioMixerGroup = MixerGroup("UI");
+            if (am.GetComponent<HeatHoverFade>() == null) am.gameObject.AddComponent<HeatHoverFade>();
         }
 
         static void CleanBackground(Transform canvas)
@@ -769,6 +795,23 @@ namespace ShiftRush.EditorTools
             var content = panel.Find("Content");
             Header(content, "TRACKS", "STEP 2 / 2   CHOOSE A TRACK");
 
+            // Selected track's hero shot, soft-masked into a slanted band behind everything.
+            var band = new GameObject("Hero Band", typeof(RectTransform)).GetComponent<RectTransform>();
+            band.SetParent(content, false);
+            band.SetAsFirstSibling();
+            Place(band, new Vector2(0.36f, 0.2f), new Vector2(1.05f, 0.95f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            var bandMask = band.gameObject.AddComponent<AMS.UI.SoftMask.UISoftMask>();
+            bandMask.mask = softBand;
+            bandMask.fallOff = 0.6f;
+            var heroImg = Img(band, "Hero", null, Color.white);
+            heroImg.raycastTarget = false;
+            Stretch(heroImg.rectTransform);
+            var heroFit = heroImg.gameObject.AddComponent<AspectRatioFitter>();
+            heroFit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; heroFit.aspectRatio = 16f / 9f;
+            var heroStreaks = Img(band, "Streaks", streaks, new Color(Magenta.r, Magenta.g, Magenta.b, 0.18f));
+            heroStreaks.type = Image.Type.Tiled; heroStreaks.raycastTarget = false;
+            Stretch(heroStreaks.rectTransform);
+
             var title = Txt(content, "Track Title", "TEST ARENA", fontTitle, 96, Color.white, TextAlignmentOptions.Left);
             Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(120, 120), new Vector2(1000, 120));
             var desc = Txt(content, "Track Description", "", fontRegular, 28, Steel, TextAlignmentOptions.TopLeft);
@@ -801,10 +844,19 @@ namespace ShiftRush.EditorTools
             cardStreaks.type = Image.Type.Tiled; cardStreaks.raycastTarget = false;
             Stretch(cardStreaks.rectTransform);
             cardStreaks.rectTransform.offsetMin = new Vector2(30, 8); cardStreaks.rectTransform.offsetMax = new Vector2(-30, -8);
-            var thumb = Img(body, "Thumbnail", null, Color.white);
-            thumb.preserveAspect = false; thumb.raycastTarget = false;
+            // Track photo, soft-masked to the card's slant.
+            var photoMask = new GameObject("Photo Mask", typeof(RectTransform)).GetComponent<RectTransform>();
+            photoMask.SetParent(body, false);
+            Stretch(photoMask);
+            photoMask.offsetMin = new Vector2(4, 4); photoMask.offsetMax = new Vector2(-4, -4);
+            var cardMask = photoMask.gameObject.AddComponent<AMS.UI.SoftMask.UISoftMask>();
+            cardMask.mask = slant;
+            cardMask.fallOff = 0.25f;
+            var cmso = new SerializedObject(cardMask);
+            var uvMode = cmso.FindProperty("m_MaskUV"); if (uvMode != null) { uvMode.enumValueIndex = 1; cmso.ApplyModifiedPropertiesWithoutUndo(); }
+            var thumb = Img(photoMask, "Thumbnail", null, new Color(0.7f, 0.7f, 0.75f, 0.9f)); // dimmed so the name reads
+            thumb.raycastTarget = false;
             Stretch(thumb.rectTransform);
-            thumb.rectTransform.offsetMin = new Vector2(30, 8); thumb.rectTransform.offsetMax = new Vector2(-30, -8);
             var frame = Img(body, "Frame", slantFrame, new Color(1, 1, 1, 0.15f));
             frame.type = Image.Type.Sliced; frame.raycastTarget = false;
             Stretch(frame.rectTransform);
@@ -835,6 +887,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("title").objectReferenceValue = title;
             so.FindProperty("description").objectReferenceValue = desc;
             so.FindProperty("details").objectReferenceValue = details;
+            so.FindProperty("hero").objectReferenceValue = heroImg;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             CloneHotkeys(canvas.Find("Main Content/Home Panel"), content, router, "Back", router.Back);
@@ -981,6 +1034,11 @@ namespace ShiftRush.EditorTools
             SetDescription(aud["SFX Volume"], "Car & Effects", "Engines, tyres, crashes and nitro.");
             SetRowTitle(aud["UI Volume"], "Menu Sounds");
             SetDescription(aud["UI Volume"], "Menu Sounds", "Clicks, shifts and menu effects.");
+            // Menu scroll sound: a selector cloned from the gameplay Speed Units row.
+            var scroll = Object.Instantiate(items["Subtitle Scale"].gameObject, aud["UI Volume"].parent).transform;
+            scroll.SetSiblingIndex(aud["UI Volume"].GetSiblingIndex() + 1);
+            ConfigureSelector(scroll, "Menu Scroll Sound", GameSettings.ScrollSoundKey, GameSettings.ScrollSoundLabels, 0,
+                "The sound when you move between menu items: a soft tick, a mechanical clunk, or nothing.");
             HideSectionHeaders(Deep(lists.Find("Audio"), "List"));
 
             // Visuals: add a quality level selector based on the Texture Quality row.
@@ -1231,9 +1289,12 @@ namespace ShiftRush.EditorTools
             var list = new List<EditorBuildSettingsScene>
             {
                 new EditorBuildSettingsScene(ScenePath, true),
-                new EditorBuildSettingsScene("Assets/_ShiftRush/Scenes/TestArena.unity", true),
-                new EditorBuildSettingsScene("Assets/_ShiftRush/Scenes/TestTrack.unity", true),
             };
+            foreach (var t in new[] { "Track_AlpinePass", "Track_GlacierValley", "TestArena" })
+            {
+                string p = "Assets/_ShiftRush/Scenes/" + t + ".unity";
+                if (AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null) list.Add(new EditorBuildSettingsScene(p, true));
+            }
             EditorBuildSettings.scenes = list.ToArray();
         }
 
