@@ -88,6 +88,9 @@ namespace ShiftRush.Vehicles
             }
         }
 
+        /// <summary>Any car put back on the track (R, flipped, off-track or stuck).</summary>
+        public static event System.Action<VehicleReset> Respawned;
+
         public void ResetNow()
         {
             flippedTimer = 0f; offTimer = 0f; beachedTimer = 0f;
@@ -96,6 +99,7 @@ namespace ShiftRush.Vehicles
             vehicle.Teleport(pos + Vector3.up * respawnLift, rot, 0f);
             vehicle.SetControllable(false);
             unlockAt = Time.time + controlLockSeconds;
+            Respawned?.Invoke(this);
         }
 
         /// <summary>The race line where the car is (centre of the road, race direction), nudged forward if

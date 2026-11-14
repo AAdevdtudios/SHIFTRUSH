@@ -42,6 +42,10 @@ namespace ShiftRush.Shift
         /// <summary>For effects: the timing bar opened / closed, the car warped into a world, the car came back.</summary>
         public static event System.Action TimingStarted, TimingEnded, Warped;
         public static event System.Action<IVehicle> Returned;
+        /// <summary>Each timing try: hits so far (after this one) and whether this one landed.</summary>
+        public static event System.Action<int, bool> TimingPress;
+        /// <summary>Nitro handed out after a SHIFT (0..1 of the tank).</summary>
+        public static event System.Action<float> NitroAwarded;
         public State CurrentState { get; private set; }
 
         ShiftHUD hud;
@@ -132,12 +136,13 @@ namespace ShiftRush.Shift
                     {
                         if (inside) hits++; else misses++;
                         if (hud != null) hud.MarkPip(t, inside);
+                        TimingPress?.Invoke(hits, inside);
                         pressed = true;
                         break;
                     }
                     yield return null;
                 }
-                if (!pressed) { misses++; if (hud != null) hud.MarkPip(t, false); }
+                if (!pressed) { misses++; if (hud != null) hud.MarkPip(t, false); TimingPress?.Invoke(hits, false); }
                 yield return new WaitForSecondsRealtime(0.25f);
             }
 
@@ -203,7 +208,7 @@ namespace ShiftRush.Shift
 
         void Reward(IVehicle vehicle, float fill, string headline, string detail)
         {
-            if (vehicle is INitroTank tank && fill > 0f) tank.AddNitro(fill);
+            if (vehicle is INitroTank tank && fill > 0f) { tank.AddNitro(fill); NitroAwarded?.Invoke(fill); }
             if (hud != null) hud.ShowReward(fill, headline, detail);
         }
 

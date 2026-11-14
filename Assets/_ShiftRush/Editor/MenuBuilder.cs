@@ -1093,6 +1093,8 @@ namespace ShiftRush.EditorTools
                 UnityEventTools.AddPersistentListener(hs.onValueChanged, qb.SetLevel);
             }
             HideSectionHeaders(vis);
+            // Applies window mode, frame rate, VSync, textures and filtering as they change (see DisplaySettings).
+            if (vis.GetComponent<DisplaySettingsBinder>() == null) vis.gameObject.AddComponent<DisplaySettingsBinder>();
 
             // Header, and our own default for the description panel (Heat's shows its logo).
             var head = Txt(settings.Find("Content"), "Header", "SETTINGS", fontTitle, 64, Color.white, TextAlignmentOptions.Left);

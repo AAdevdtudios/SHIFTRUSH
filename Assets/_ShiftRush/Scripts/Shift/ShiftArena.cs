@@ -34,6 +34,8 @@ namespace ShiftRush.Shift
         public int RingsPassed { get; private set; }
         public int Hits { get; private set; }
         public event System.Action Pulse; // ring passed or trap hit, for HUD feedback
+        /// <summary>Any arena: a ring passed (true) or a trap hit (false), for sound.</summary>
+        public static event System.Action<ShiftArena, bool> Feedback;
 
         IVehicle vehicle;
         float time, prevZ, lastHit;
@@ -65,6 +67,7 @@ namespace ShiftRush.Shift
             lastHit = Time.time;
             Hits++;
             Pulse?.Invoke();
+            Feedback?.Invoke(this, false);
         }
 
         void Update()
@@ -89,6 +92,7 @@ namespace ShiftRush.Shift
                             RingsPassed++;
                             Tint(i, ringPassedColor);
                             Pulse?.Invoke();
+                            Feedback?.Invoke(this, true);
                         }
                     }
                 }

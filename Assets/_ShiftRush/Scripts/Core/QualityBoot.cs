@@ -13,8 +13,8 @@ namespace ShiftRush.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
         {
-            if (!PlayerPrefs.HasKey("HorizontalSelector_" + Key)) return;
-            Apply(PlayerPrefs.GetInt("HorizontalSelector_" + Key));
+            if (PlayerPrefs.HasKey("HorizontalSelector_" + Key)) Apply(PlayerPrefs.GetInt("HorizontalSelector_" + Key));
+            DisplaySettings.Apply(); // window mode, frame rate, VSync, textures, filtering
         }
 
         /// <summary>Hooked to the Settings selector's value changed event.</summary>
@@ -23,7 +23,9 @@ namespace ShiftRush.Core
         static void Apply(int level)
         {
             level = Mathf.Clamp(level, 0, QualitySettings.names.Length - 1);
-            if (QualitySettings.GetQualityLevel() != level) QualitySettings.SetQualityLevel(level, true);
+            if (QualitySettings.GetQualityLevel() == level) return;
+            QualitySettings.SetQualityLevel(level, true);
+            DisplaySettings.Apply(); // a level change resets VSync, textures and filtering to the level's own
         }
     }
 }
