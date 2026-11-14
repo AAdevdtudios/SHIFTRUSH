@@ -31,10 +31,10 @@ namespace ShiftRush.EditorTools
             {
                 new Shot { spec = TrackBuilder.AlpinePass(), id = "alpine", t = 0.415f, camOffset = new Vector3(-5.5f, 2.2f, -14f), lookAhead = 45f, fov = 48f,
                     description = "Snow, switchbacks and a misty summit. Climb the hairpins, then dive through the avalanche gallery.",
-                    tips = new[] { "Brake before the hairpins, not in them.", "Hold Left Ctrl for nitro on the gallery straight.", "R puts you back on your wheels." } },
+                    tips = new[] { "Brake before the hairpins, not in them.", "Hold Shift for nitro on the gallery straight.", "SHIFT ramp: press Shift as the diamonds meet.", "R puts you back on your wheels." } },
                 new Shot { spec = TrackBuilder.GlacierValley(), id = "valley", t = 0.17f, camOffset = new Vector3(9f, 3.5f, -18f), lookAhead = 30f, fov = 52f,
                     description = "Flat-out sweepers around a glacier lake, over the river bridge and through the village.",
-                    tips = new[] { "Keep it pinned through the lakeside sweepers.", "The bridge kink is flat out if you're brave.", "Hold Left Ctrl for nitro." } },
+                    tips = new[] { "Keep it pinned through the lakeside sweepers.", "The bridge kink is flat out if you're brave.", "Hold Shift for nitro.", "SHIFT ramp: press Shift as the diamonds meet." } },
             };
 
             var tracks = new List<RaceCatalog.Track>();
@@ -59,18 +59,15 @@ namespace ShiftRush.EditorTools
             var cat = AssetDatabase.LoadAssetAtPath<RaceCatalog>("Assets/_ShiftRush/Resources/RaceCatalog.asset");
             if (cat != null)
             {
-                // Keep the test arena as a free-roam option after the real circuits; drop the old greybox oval.
-                var arena = cat.tracks.Find(t => t.scene == "TestArena");
+                // Only the real circuits. TestArena stays in the project for trying cars, off the menu and out of builds.
                 cat.tracks.Clear();
                 cat.tracks.AddRange(tracks);
-                if (arena != null) cat.tracks.Add(arena);
                 EditorUtility.SetDirty(cat);
                 AssetDatabase.SaveAssets();
             }
 
             var scenes = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene("Assets/_ShiftRush/Scenes/MainMenu.unity", true) };
             foreach (var s in shots) scenes.Add(new EditorBuildSettingsScene(s.spec.scene, true));
-            scenes.Add(new EditorBuildSettingsScene("Assets/_ShiftRush/Scenes/TestArena.unity", true));
             EditorBuildSettings.scenes = scenes.ToArray();
             Debug.Log("[SHIFT//RUSH] Hero shots captured and catalog updated (" + tracks.Count + " circuits).");
         }

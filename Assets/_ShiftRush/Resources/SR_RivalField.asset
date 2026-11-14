@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dfa6a976f6c74d528f309fa4c57e8ba, type: 3}
+  m_Name: SR_RivalField
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Race.RivalField
+  carPrefab: {fileID: 618919482974570354, guid: f7cef4fc8817248b58bee806fb810876, type: 3}
+  paintToReplace: {fileID: 2100000, guid: 0a5fa0e3de53444488e88fe9ce77ebee, type: 2}
+  rivals:
+  - name: KESTREL
+    livery: {fileID: 2100000, guid: 36e7c998e660c9646bec8182b09f625c, type: 2}
+    color: {r: 0.057697017, g: 0.36685264, b: 0.85, a: 1}
+    grip: 1.32
+    topSpeedKmh: 232
+    shortcutChance: 0.6
+  - name: SHRIKE
+    livery: {fileID: 2100000, guid: 8717d257f117dab42b822658c521ead1, type: 2}
+    color: {r: 0.4949353, g: 0, b: 0.85, a: 1}
+    grip: 1.28
+    topSpeedKmh: 228
+    shortcutChance: 0.35
+  - name: PETREL
+    livery: {fileID: 2100000, guid: a91d9797fc46141738352ff474a4bc05, type: 2}
+    color: {r: 0.55, g: 0.9, b: 1, a: 1}
+    grip: 1.24
+    topSpeedKmh: 225
+    shortcutChance: 0.5
+  - name: MERLIN
+    livery: {fileID: 2100000, guid: fe2f9f2ef464e704f9ba11acdca2882a, type: 2}
+    color: {r: 0.946401, g: 0.59409785, b: 0, a: 1}
+    grip: 1.38
+    topSpeedKmh: 236
+    shortcutChance: 0.7
+  - name: GANNET
+    livery: {fileID: 2100000, guid: 4f925b8f042e64fdc8a49f07c6e431aa, type: 2}
+    color: {r: 0.62, g: 0.66, b: 0.78, a: 1}
+    grip: 1.3
+    topSpeedKmh: 230
+    shortcutChance: 0.45
+  playerGridSlot: 4
+  firstRowBack: 10
+  rowSpacing: 10
+  laneSpacing: 4.5
+  catchUp: 0.06
+  rampNitro: {x: 0.35, y: 0.9}

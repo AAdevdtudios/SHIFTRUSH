@@ -19,13 +19,34 @@ namespace ShiftRush.UI
         [SerializeField] float orbitSway = 14f;
         [SerializeField] float orbitPeriod = 22f;
         [SerializeField] float kickFov = 5f;
-        [Tooltip("Where the camera should frame each screen: Home shows the car to the right, Garage centres it.")]
+        [Header("Home")]
+        [Tooltip("Camera framing on Home. X more negative = car further right, Y more negative = car higher.")]
         [SerializeField] Vector3 homeOffset = new Vector3(-1.4f, 0f, 0f);
+        [Tooltip("Camera distance from the car on Home (bigger = smaller car).")]
+        [SerializeField] float homeDistance = 13f;
+        [Header("Garage")]
+        [Tooltip("Camera framing on Garage. X more negative = car further right, Y more negative = car higher.")]
         [SerializeField] Vector3 garageOffset = new Vector3(0f, 0f, 0f);
+        [Tooltip("Camera distance from the car on Garage (bigger = smaller car).")]
+        [SerializeField] float garageDistance = 13f;
+        [Header("Track select pose")]
+        [Tooltip("Track select: where the camera frames the posed car (right of the text, above the cards).")]
+        [SerializeField] Vector3 tracksOffset = new Vector3(-3.8f, -0.2f, 0f);
+        [Tooltip("Camera distance from the car on track select (bigger = smaller car).")]
+        [SerializeField] float tracksDistance = 9f;
+        [Tooltip("Car heading relative to the camera on track select: 90 / -90 = side on, 180 = nose to camera.")]
+        [SerializeField] float tracksYaw = -90f;
+        [Tooltip("Hidden on track select so the car stands alone in front of the track photo.")]
+        [SerializeField] GameObject[] hideWhenPosed;
 
         GameObject current;
         float baseFov, kick, baseYaw;
         Vector3 framing, framingTarget;
+        enum MenuScreen { Home, Garage, Tracks }
+        MenuScreen screen = MenuScreen.Home;
+        bool posed => screen == MenuScreen.Tracks;
+        float pose;       // 0 = turning showroom, 1 = posed close-up (eased)
+        float distance;
 
         void Awake()
         {
@@ -33,6 +54,7 @@ namespace ShiftRush.UI
             baseFov = cam != null ? cam.fieldOfView : 40f;
             baseYaw = orbitPivot != null ? orbitPivot.eulerAngles.y : 0f;
             framing = framingTarget = homeOffset;
+            distance = homeDistance;
         }
 
         void Start()
@@ -41,8 +63,17 @@ namespace ShiftRush.UI
             if (car != null) Show(car);
         }
 
-        public void FrameHome() { framingTarget = homeOffset; }
-        public void FrameGarage() { framingTarget = garageOffset; }
+        public void FrameHome() { SetScreen(MenuScreen.Home); }
+        public void FrameGarage() { SetScreen(MenuScreen.Garage); }
+        /// <summary>Track select: the turntable eases to a fixed side-on angle and stops, the camera moves in close
+        /// and stops swaying, and the floor, plinth and ring disappear. Any other screen undoes it.</summary>
+        public void FrameTracks() { SetScreen(MenuScreen.Tracks); }
+
+        void SetScreen(MenuScreen s)
+        {
+            screen = s;
+            if (hideWhenPosed != null) foreach (var g in hideWhenPosed) if (g != null) g.SetActive(!posed);
+        }
 
         public void Kick(float amount) { kick = Mathf.Max(kick, amount); }
 
@@ -113,14 +144,29 @@ namespace ShiftRush.UI
         void LateUpdate()
         {
             float dt = Time.unscaledDeltaTime;
-            if (turntable != null) turntable.Rotate(0f, turntableSpeed * dt, 0f, Space.World);
+            // Read every frame so Inspector edits in Play mode show straight away.
+            framingTarget = screen == MenuScreen.Tracks ? tracksOffset : screen == MenuScreen.Garage ? garageOffset : homeOffset;
+            float targetDistance = screen == MenuScreen.Tracks ? tracksDistance : screen == MenuScreen.Garage ? garageDistance : homeDistance;
+            distance = Mathf.Lerp(distance, targetDistance, 1f - Mathf.Exp(-dt * 3f));
+            pose = Mathf.MoveTowards(pose, posed ? 1f : 0f, dt * 1.6f);
+            float ease = pose * pose * (3f - 2f * pose);
+            if (turntable != null)
+            {
+                if (posed)
+                {
+                    // Glide to the pose and hold it.
+                    var target = Quaternion.Euler(0f, baseYaw + tracksYaw, 0f);
+                    turntable.rotation = Quaternion.Slerp(turntable.rotation, target, 1f - Mathf.Exp(-dt * 4f));
+                }
+                else turntable.Rotate(0f, turntableSpeed * (1f - ease) * dt, 0f, Space.World);
+            }
 
             kick = Mathf.MoveTowards(kick, 0f, dt * 2.5f);
             framing = Vector3.Lerp(framing, framingTarget, 1f - Mathf.Exp(-dt * 3f));
 
             if (orbitPivot != null)
             {
-                float yaw = baseYaw + Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / orbitPeriod) * orbitSway;
+                float yaw = baseYaw + Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / orbitPeriod) * orbitSway * (1f - ease);
                 orbitPivot.rotation = Quaternion.Euler(orbitPivot.eulerAngles.x, yaw, 0f);
                 orbitPivot.position = turntable.position + orbitPivot.rotation * framing;
             }
@@ -129,6 +175,9 @@ namespace ShiftRush.UI
                 float k = kick * kick;
                 cam.fieldOfView = baseFov + k * kickFov;
                 cam.transform.localRotation = Quaternion.Euler(-k * 0.6f, 0f, 0f);
+                var lp = cam.transform.localPosition;
+                lp.z = -distance;
+                cam.transform.localPosition = lp;
             }
         }
     }

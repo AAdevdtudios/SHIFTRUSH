@@ -22,6 +22,8 @@ namespace ShiftRush.UI
         [SerializeField] float fadeSpeed = 10f;
 
         public static bool IsPaused { get; private set; }
+        /// <summary>Set while something owns the time scale (the SHIFT selector) so Esc can't pause over it.</summary>
+        public static bool Blocked { get; set; }
 
         bool open, inOptions;
         float savedTimeScale = 1f;
@@ -61,7 +63,7 @@ namespace ShiftRush.UI
         {
             bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
                      || (Gamepad.current != null && (Gamepad.current.startButton.wasPressedThisFrame || (open && Gamepad.current.buttonEast.wasPressedThisFrame)));
-            if (back && !SceneLoader.IsLoading)
+            if (back && !SceneLoader.IsLoading && !(Blocked && !open))
             {
                 if (!open) Pause();
                 else if (inOptions) CloseOptions();

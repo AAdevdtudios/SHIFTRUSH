@@ -18,6 +18,8 @@ namespace ShiftRush.UI
         [Tooltip("Heat save key, e.g. SR_SpeedFX, SR_CameraShake, MasterVolume.")]
         [SerializeField] string key;
         [SerializeField] string[] choices = new string[0];
+        [Tooltip("Choice row listing the songs in Resources/Audio/Music (the Music setting).")]
+        [SerializeField] bool musicChoice;
         [SerializeField] int defaultIndex;
         [SerializeField] bool defaultOn = true;
         [Tooltip("Volume rows: mixer channel (Master, Music, SFX, UI).")]
@@ -44,6 +46,9 @@ namespace ShiftRush.UI
         {
             switch (kind)
             {
+                case Kind.Choice when musicChoice:
+                    MusicLibrary.ChoiceIndex = Mathf.Clamp(MusicLibrary.ChoiceIndex + dir, 0, MusicLibrary.Labels.Length - 1);
+                    break;
                 case Kind.Choice:
                 {
                     int i = PlayerPrefs.GetInt("HorizontalSelector_" + key, defaultIndex);
@@ -82,6 +87,9 @@ namespace ShiftRush.UI
             if (value == null) return;
             switch (kind)
             {
+                case Kind.Choice when musicChoice:
+                    value.text = "<  " + MusicLibrary.Labels[MusicLibrary.ChoiceIndex] + "  >";
+                    break;
                 case Kind.Choice:
                     int i = Mathf.Clamp(PlayerPrefs.GetInt("HorizontalSelector_" + key, defaultIndex), 0, Mathf.Max(0, choices.Length - 1));
                     value.text = "<  " + (choices.Length > 0 ? choices[i].ToUpperInvariant() : "") + "  >";

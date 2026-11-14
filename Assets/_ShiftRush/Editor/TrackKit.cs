@@ -14,7 +14,7 @@ namespace ShiftRush.EditorTools
         const string Dir = "Assets/_ShiftRush/Art/Track/";
         const string Synty = "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/";
 
-        public GameObject roadPiece, railPiece, post, galleryPiece, gantry, startLine;
+        public GameObject roadPiece, railPiece, post, galleryPiece, gantry, startLine, kerb;
         public Material water;
         public List<GameObject> pines = new List<GameObject>(), rocks = new List<GameObject>(), cliffs = new List<GameObject>(),
             snowMounds = new List<GameObject>(), mountains = new List<GameObject>(), bushes = new List<GameObject>(),
@@ -36,10 +36,15 @@ namespace ShiftRush.EditorTools
             var checker = Mat("M_StartLine", CheckerTexture(), Color.white, 0.3f, 0f);
             k.water = Mat("M_Water", null, new Color32(58, 112, 138, 255), 0.95f, 0f);
 
-            k.roadPiece = Prefab("P_RoadPiece", RoadMesh(10f, TrackBuilder.RoadWidth + 1f), asphalt, true);
+            k.roadPiece = Prefab("P_RoadPiece", RoadMesh(10f, TrackBuilder.SurfaceHalf * 2f), asphalt, true);
+            var kerbMat = Mat("M_Kerb", KerbTexture(), Color.white, 0.35f, 0f);
+            k.kerb = Prefab("P_Kerb", KerbMesh(10f, 1.2f), kerbMat, false);
             k.railPiece = Prefab("P_GuardrailPiece", RailMesh(8f), steel, true);
+            // Frictionless like the invisible walls: a glancing hit slides you along the rail instead of stopping you.
+            using (var edit = new PrefabUtility.EditPrefabContentsScope(AssetDatabase.GetAssetPath(k.railPiece)))
+                edit.prefabContentsRoot.GetComponent<MeshCollider>().sharedMaterial = TrackBuilder.WallMaterial();
             k.post = PostPrefab(white, reflector);
-            k.galleryPiece = Prefab("P_GalleryPiece", GalleryMesh(10f, TrackBuilder.RoadWidth + 4f, 6.5f), concrete, true);
+            k.galleryPiece = Prefab("P_GalleryPiece", GalleryMesh(10f, TrackBuilder.SurfaceHalf * 2f + 1f, 7.5f), concrete, true);
             k.gantry = GantryPrefab(gantryMat, neon);
             k.startLine = Prefab("P_StartLine", Quad(TrackBuilder.RoadWidth, 2.5f), checker, false);
 
@@ -148,10 +153,16 @@ namespace ShiftRush.EditorTools
                     float n = (float)rng.NextDouble();
                     float grain = 0.20f + n * 0.05f + Mathf.PerlinNoise(x * 0.05f, y * 0.05f) * 0.04f;
                     Color c = new Color(grain, grain, grain * 1.04f);
-                    bool edge = (u > 0.055f && u < 0.075f) || (u > 0.925f && u < 0.945f);
-                    bool centre = u > 0.492f && u < 0.508f && v < 0.5f;
-                    bool shoulder = u < 0.04f || u > 0.96f;
-                    if (shoulder) c *= 0.8f;
+                    // Across the mesh: shoulder | asphalt | shoulder, in metres from the left edge.
+                    float total = TrackBuilder.SurfaceHalf * 2f, m = u * total, sh = TrackBuilder.ShoulderWidth;
+                    bool shoulder = m < sh || m > total - sh;
+                    if (shoulder)
+                    {
+                        float g = 0.36f + n * 0.12f + Mathf.PerlinNoise(x * 0.3f, y * 0.3f) * 0.08f; // loose gravel
+                        c = new Color(g * 1.05f, g, g * 0.9f);
+                    }
+                    bool edge = (m > sh + 0.25f && m < sh + 0.5f) || (m < total - sh - 0.25f && m > total - sh - 0.5f);
+                    bool centre = Mathf.Abs(m - total * 0.5f) < 0.12f && v < 0.5f;
                     if (edge || centre) c = Color.Lerp(c, new Color(0.92f, 0.92f, 0.9f), 0.9f - n * 0.15f);
                     px[y * w + x] = c;
                 }
@@ -165,6 +176,47 @@ namespace ShiftRush.EditorTools
             imp.anisoLevel = 8;
             imp.SaveAndReimport();
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>Red and white kerb blocks, 2 m each along the road.</summary>
+        static Texture2D KerbTexture()
+        {
+            string path = Dir + "T_Kerb.png";
+            const int w = 32, h = 128;
+            var tex = new Texture2D(w, h, TextureFormat.RGB24, true);
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    bool red = (y / 32) % 2 == 0;
+                    float shade = x < 3 || x > w - 4 ? 0.8f : 1f;
+                    tex.SetPixel(x, y, (red ? new Color(0.85f, 0.08f, 0.12f) : new Color(0.95f, 0.95f, 0.95f)) * shade);
+                }
+            tex.Apply();
+            File.WriteAllBytes(path, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+            imp.wrapModeU = TextureWrapMode.Clamp; imp.wrapModeV = TextureWrapMode.Repeat;
+            imp.filterMode = FilterMode.Point;
+            imp.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>A low kerb strip (raised a touch so it sits over the asphalt), 10 m per piece: 5 red/white blocks.</summary>
+        static Mesh KerbMesh(float length, float width)
+        {
+            var v = new List<Vector3>(); var uv = new List<Vector2>(); var tri = new List<int>();
+            for (int r = 0; r <= 1; r++)
+                for (int c = 0; c <= 2; c++)
+                {
+                    float u = c / 2f;
+                    v.Add(new Vector3((u - 0.5f) * width, c == 1 ? 0.07f : 0.03f, r * length));
+                    uv.Add(new Vector2(u, r * length / 4f));
+                }
+            tri.AddRange(new[] { 0, 3, 1, 1, 3, 4, 1, 4, 2, 2, 4, 5 });
+            var m = new Mesh();
+            m.SetVertices(v); m.SetUVs(0, uv); m.SetTriangles(tri, 0);
+            return SaveMesh(m, "Mesh_Kerb");
         }
 
         static Texture2D CheckerTexture()
@@ -206,7 +258,7 @@ namespace ShiftRush.EditorTools
         static Mesh RoadMesh(float length, float width)
         {
             // A flat strip with 8 columns so the deformation can follow camber smoothly.
-            const int cols = 8;
+            const int cols = 12;
             var v = new List<Vector3>(); var uv = new List<Vector2>(); var tri = new List<int>();
             for (int r = 0; r <= 1; r++)
                 for (int c = 0; c <= cols; c++)
@@ -316,7 +368,7 @@ namespace ShiftRush.EditorTools
 
         static GameObject GantryPrefab(Material frame, Material neon)
         {
-            float hw = TrackBuilder.RoadWidth * 0.5f + 1.5f;
+            float hw = TrackBuilder.SurfaceHalf + 1.5f;
             var mesh = FromBoxes("Mesh_Gantry", (v, t) =>
             {
                 Box(v, t, new Vector3(-hw - 0.5f, 0f, -0.5f), new Vector3(-hw + 0.5f, 7.5f, 0.5f));

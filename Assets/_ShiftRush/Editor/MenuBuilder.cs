@@ -54,6 +54,8 @@ namespace ShiftRush.EditorTools
             var credits = MakeCreditsPreset();
             MakeLoadingScreen();
             MakePauseMenu(sounds);
+            MakeRaceHud(sounds);
+            MakeShiftHud(sounds);
 
             AssetDatabase.SaveAssets(); // unsaved assets can be unloaded by the scene switch below
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -75,7 +77,7 @@ namespace ShiftRush.EditorTools
             var panels = canvas.Find("Main Content").GetComponent<PanelManager>();
             var home = BuildHome(canvas, router, showroom);
             var garage = BuildGarage(canvas, router, showroom);
-            var tracks = BuildTracks(canvas, router);
+            var tracks = BuildTracks(canvas, router, showroom);
             BuildSettings(canvas, router);
             BuildPanelList(panels, home, garage, tracks, canvas.Find("Main Content/Settings").GetComponent<Animator>());
             var creditsManager = BuildCredits(canvas, credits);
@@ -249,18 +251,7 @@ namespace ShiftRush.EditorTools
                 topSpeed = 7, acceleration = 6, handling = 7, boost = 5,
                 accent = Magenta,
             });
-            cat.tracks.Add(new RaceCatalog.Track
-            {
-                id = "arena", displayName = "Test Arena", scene = "TestArena",
-                description = "Open ground to learn the car: speed, drifts and jumps.",
-                loadingTips = new[] { "Hold Left Ctrl for nitro.", "R puts you back on your wheels.", "Steer in the air to line up a landing." },
-            });
-            cat.tracks.Add(new RaceCatalog.Track
-            {
-                id = "oval", displayName = "Test Track", scene = "TestTrack",
-                description = "The greybox loop with ramps. Good for flat-out laps.",
-                loadingTips = new[] { "Hold Left Ctrl for nitro.", "R puts you back on your wheels." },
-            });
+            // Circuits are added by SHIFT RUSH > Tracks > Capture Hero Shots. TestArena is a dev scene, not on the list.
             AssetDatabase.CreateAsset(cat, path);
             return cat;
         }
@@ -476,6 +467,11 @@ namespace ShiftRush.EditorTools
             so.FindProperty("orbitPivot").objectReferenceValue = pivot;
             so.FindProperty("homeOffset").vector3Value = new Vector3(-2.7f, 0.2f, 0f);
             so.FindProperty("garageOffset").vector3Value = new Vector3(0f, -1.0f, 0.6f);
+            var hide = so.FindProperty("hideWhenPosed");
+            hide.arraySize = 3;
+            hide.GetArrayElementAtIndex(0).objectReferenceValue = floor;
+            hide.GetArrayElementAtIndex(1).objectReferenceValue = plinth;
+            hide.GetArrayElementAtIndex(2).objectReferenceValue = ring;
             so.ApplyModifiedPropertiesWithoutUndo();
             return showroom;
         }
@@ -789,21 +785,33 @@ namespace ShiftRush.EditorTools
 
         // ------------------------------------------------------------------ tracks
 
-        static Animator BuildTracks(Transform canvas, MenuRouter router)
+        static Animator BuildTracks(Transform canvas, MenuRouter router, Showroom showroom)
         {
             var panel = RepurposePanel(canvas, "Extras", MenuRouter.Tracks);
             var content = panel.Find("Content");
             Header(content, "TRACKS", "STEP 2 / 2   CHOOSE A TRACK");
 
-            // Selected track's hero shot, soft-masked into a slanted band behind everything.
+            // Selected track's hero shot, soft-masked into a wide slanted band. It lives on its own canvas placed in
+            // the showroom camera's space, far behind the car, so the live car sits in front of the track photo.
+            var showCam = (Camera)new SerializedObject(showroom).FindProperty("cam").objectReferenceValue;
+            var backdropGo = new GameObject("Canvas - Track Backdrop", typeof(RectTransform));
+            var backdropCanvas = backdropGo.AddComponent<Canvas>();
+            backdropCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+            backdropCanvas.worldCamera = showCam;
+            backdropCanvas.planeDistance = 18f; // just behind the car (~13 m), so the car draws in front but little floor does
+            var backdropScaler = backdropGo.AddComponent<CanvasScaler>();
+            backdropScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            backdropScaler.referenceResolution = new Vector2(1920, 1080);
+            backdropScaler.matchWidthOrHeight = 0.5f;
+            var backdropGroup = backdropGo.AddComponent<CanvasGroup>();
+            backdropGroup.alpha = 0f; backdropGroup.interactable = false; backdropGroup.blocksRaycasts = false;
             var band = new GameObject("Hero Band", typeof(RectTransform)).GetComponent<RectTransform>();
-            band.SetParent(content, false);
-            band.SetAsFirstSibling();
-            Place(band, new Vector2(0.36f, 0.2f), new Vector2(1.05f, 0.95f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            band.SetParent(backdropGo.transform, false);
+            Place(band, new Vector2(-0.02f, 0.1f), new Vector2(1.02f, 0.96f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             var bandMask = band.gameObject.AddComponent<AMS.UI.SoftMask.UISoftMask>();
             bandMask.mask = softBand;
             bandMask.fallOff = 0.6f;
-            var heroImg = Img(band, "Hero", null, Color.white);
+            var heroImg = Img(band, "Hero", null, new Color(0.82f, 0.82f, 0.86f, 1f)); // under bloom threshold, keeps text readable
             heroImg.raycastTarget = false;
             Stretch(heroImg.rectTransform);
             var heroFit = heroImg.gameObject.AddComponent<AspectRatioFitter>();
@@ -888,6 +896,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("description").objectReferenceValue = desc;
             so.FindProperty("details").objectReferenceValue = details;
             so.FindProperty("hero").objectReferenceValue = heroImg;
+            so.FindProperty("backdrop").objectReferenceValue = backdropGroup;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             CloneHotkeys(canvas.Find("Main Content/Home Panel"), content, router, "Back", router.Back);
@@ -965,13 +974,21 @@ namespace ShiftRush.EditorTools
                 "How speed is shown on the dashboard.");
             SetRowTitle(items["UI Scale"], "Menu Scale");
             SetDescription(items["UI Scale"], "Menu Scale", "Makes the menus bigger or smaller.");
+            var mini = Object.Instantiate(items["Subtitle Scale"].gameObject, items["Subtitle Scale"].parent).transform;
+            ConfigureSelector(mini, "Minimap", GameSettings.MinimapKey, GameSettings.MinimapLabels, 0,
+                "Local shows a faded patch of track around your car that turns with you. Full shows the whole circuit.");
+            var auto = Object.Instantiate(items["Enable Hints"].gameObject, items["Enable Hints"].parent).transform;
+            ConfigureSwitch(auto, "Auto Accelerate", GameSettings.AutoAccelerateKey, false,
+                "The car keeps the throttle down for you. You steer, brake and fire nitro. Braking still slows you and backs you up.");
             items["Speed Effects"] = items["Language"];
-            // Order: speed effects, shake, reduced motion, units, menu scale.
-            items["Language"].SetSiblingIndex(0);
-            items["Enable Hints"].SetSiblingIndex(1);
-            items["Enable Subtitles"].SetSiblingIndex(2);
-            items["Subtitle Scale"].SetSiblingIndex(3);
-            items["UI Scale"].SetSiblingIndex(4);
+            // Order: auto accelerate, speed effects, shake, reduced motion, units, minimap, menu scale.
+            auto.SetSiblingIndex(0);
+            items["Language"].SetSiblingIndex(1);
+            items["Enable Hints"].SetSiblingIndex(2);
+            items["Enable Subtitles"].SetSiblingIndex(3);
+            items["Subtitle Scale"].SetSiblingIndex(4);
+            mini.SetSiblingIndex(5);
+            items["UI Scale"].SetSiblingIndex(6);
             HideSectionHeaders(gen);
 
             // Controls.
@@ -1007,9 +1024,7 @@ namespace ShiftRush.EditorTools
                 if (secondary) secondary.gameObject.SetActive(false);
                 primary.useLocalization = false;
                 var br = row.gameObject.AddComponent<BindingRow>();
-                br.Configure(b.action, b.comp, b.part, primary);
-                for (int k = primary.onClick.GetPersistentEventCount() - 1; k >= 0; k--) UnityEventTools.RemovePersistentListener(primary.onClick, k);
-                UnityEventTools.AddVoidPersistentListener(primary.onClick, br.StartRebind);
+                br.Configure(b.action, b.comp, b.part, primary); // the click is hooked up at runtime (BindingRow.Awake)
                 resetOwner = resetOwner ?? br;
             }
             if (bindingRows.Count > 0 && resetOwner != null)
@@ -1017,13 +1032,11 @@ namespace ShiftRush.EditorTools
                 var reset = Object.Instantiate(bindingRows[0].gameObject, bindingRows[0].parent).transform;
                 reset.SetSiblingIndex(bindingRows[bindingRows.Count - 1].GetSiblingIndex() + 1);
                 reset.name = "Reset Controls";
-                Object.DestroyImmediate(reset.GetComponent<BindingRow>());
                 SetRowTitle(reset, "Reset Controls");
                 SetDescription(reset, "Reset Controls", "Puts every key back to the SHIFT//RUSH defaults.");
                 var btn = reset.Find("Binding 1").GetComponent<ButtonManager>();
                 btn.buttonText = "RESET";
-                for (int k = btn.onClick.GetPersistentEventCount() - 1; k >= 0; k--) UnityEventTools.RemovePersistentListener(btn.onClick, k);
-                UnityEventTools.AddVoidPersistentListener(btn.onClick, resetOwner.ResetAll);
+                reset.GetComponent<BindingRow>().ConfigureReset(btn); // BindingRow hooks up the click at runtime
             }
 
             // Audio.
@@ -1034,6 +1047,28 @@ namespace ShiftRush.EditorTools
             SetDescription(aud["SFX Volume"], "Car & Effects", "Engines, tyres, crashes and nitro.");
             SetRowTitle(aud["UI Volume"], "Menu Sounds");
             SetDescription(aud["UI Volume"], "Menu Sounds", "Clicks, shifts and menu effects.");
+            // Music: SHUFFLE ALL, OFF or one song on repeat. The songs are read from Resources/Audio/Music when the
+            // menu opens (MusicChoiceDropdown), so dropping a file in that folder is all it takes.
+            // A drop-down list (cloned from the Visuals → Resolution row) so any number of songs fits.
+            var resRow = FindRows(Deep(lists.Find("Visuals"), "List"))["Resolution"];
+            var music = Object.Instantiate(resRow.gameObject, aud["Music Volume"].parent).transform;
+            music.SetSiblingIndex(aud["Music Volume"].GetSiblingIndex() + 1);
+            music.name = "Music";
+            SetRowTitle(music, "Music");
+            SetDescription(music, "Music", "Shuffle every song, pick one to play on repeat, or turn the music off. Songs come from the Music folder.");
+            var musicDd = music.GetComponentInChildren<Michsky.UI.Heat.Dropdown>(true);
+            foreach (var lo in musicDd.GetComponentsInChildren<LocalizedObject>(true)) Object.DestroyImmediate(lo);
+            musicDd.items.Clear();
+            foreach (var label in new[] { "SHUFFLE ALL", "OFF" }) musicDd.items.Add(new Michsky.UI.Heat.Dropdown.Item { itemName = label, localizationKey = "" });
+            musicDd.saveSelected = false;
+            musicDd.enableScrollbar = true;
+            musicDd.panelSize = 300f;
+            for (int k = musicDd.onValueChanged.GetPersistentEventCount() - 1; k >= 0; k--) UnityEventTools.RemovePersistentListener(musicDd.onValueChanged, k);
+            var ddRt = (RectTransform)musicDd.transform;
+            ddRt.sizeDelta = new Vector2(420f, ddRt.sizeDelta.y);
+            if (musicDd.headerText != null) { musicDd.headerText.enableAutoSizing = false; musicDd.headerText.overflowMode = TextOverflowModes.Ellipsis; }
+            musicDd.gameObject.AddComponent<MusicChoiceDropdown>();
+
             // Menu scroll sound: a selector cloned from the gameplay Speed Units row.
             var scroll = Object.Instantiate(items["Subtitle Scale"].gameObject, aud["UI Volume"].parent).transform;
             scroll.SetSiblingIndex(aud["UI Volume"].GetSiblingIndex() + 1);
@@ -1290,7 +1325,7 @@ namespace ShiftRush.EditorTools
             {
                 new EditorBuildSettingsScene(ScenePath, true),
             };
-            foreach (var t in new[] { "Track_AlpinePass", "Track_GlacierValley", "TestArena" })
+            foreach (var t in new[] { "Track_AlpinePass", "Track_GlacierValley" })
             {
                 string p = "Assets/_ShiftRush/Scenes/" + t + ".unity";
                 if (AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null) list.Add(new EditorBuildSettingsScene(p, true));

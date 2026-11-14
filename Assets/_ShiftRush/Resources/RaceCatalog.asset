@@ -33,7 +33,8 @@ MonoBehaviour:
     thumbnail: {fileID: 21300000, guid: 1edf2f524652c484d801673713f24afe, type: 3}
     loadingTips:
     - Brake before the hairpins, not in them.
-    - Hold Left Ctrl for nitro on the gallery straight.
+    - Hold Shift for nitro on the gallery straight.
+    - 'SHIFT ramp: press Shift as the diamonds meet.'
     - R puts you back on your wheels.
   - id: valley
     displayName: Glacier Valley
@@ -45,14 +46,5 @@ MonoBehaviour:
     loadingTips:
     - Keep it pinned through the lakeside sweepers.
     - The bridge kink is flat out if you're brave.
-    - Hold Left Ctrl for nitro.
-  - id: arena
-    displayName: Test Arena
-    scene: TestArena
-    description: 'Open ground to learn the car: speed, drifts and jumps.'
-    lengthKm: 0
-    thumbnail: {fileID: 0}
-    loadingTips:
-    - Hold Left Ctrl for nitro.
-    - R puts you back on your wheels.
-    - Steer in the air to line up a landing.
+    - Hold Shift for nitro.
+    - 'SHIFT ramp: press Shift as the diamonds meet.'

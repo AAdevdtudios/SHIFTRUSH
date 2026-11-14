@@ -14,26 +14,40 @@ namespace ShiftRush.EditorTools
 
         class RoadIndex
         {
-            readonly List<Sample> road;
+            struct Seg { public Vector3 a, b; public float ta, tb, shrink; }
+            readonly List<Seg> segs = new List<Seg>();
             readonly Dictionary<long, List<int>> cells = new Dictionary<long, List<int>>();
             const float Cell = 40f;
 
-            public RoadIndex(List<Sample> r)
+            /// <summary>The road loop, plus optional shortcut lanes. A lane reports its distance less the
+            /// difference in half-width, so the same flatten/paint/scatter rules give it a narrower corridor;
+            /// lanes report t = -1 (never inside the gallery or bridge ranges).</summary>
+            public RoadIndex(List<Sample> r, List<List<Vector3>> lanes = null)
             {
-                road = r;
                 for (int i = 0; i < r.Count; i++)
                 {
-                    Vector3 a = r[i].pos, b = r[(i + 1) % r.Count].pos;
-                    int x0 = Mathf.FloorToInt(Mathf.Min(a.x, b.x) / Cell), x1 = Mathf.FloorToInt(Mathf.Max(a.x, b.x) / Cell);
-                    int z0 = Mathf.FloorToInt(Mathf.Min(a.z, b.z) / Cell), z1 = Mathf.FloorToInt(Mathf.Max(a.z, b.z) / Cell);
-                    for (int x = x0; x <= x1; x++)
-                        for (int z = z0; z <= z1; z++)
-                        {
-                            long k = Key(x, z);
-                            if (!cells.TryGetValue(k, out var list)) cells[k] = list = new List<int>();
-                            list.Add(i);
-                        }
+                    float tb = r[(i + 1) % r.Count].t; if (tb == 0f) tb = 1f;
+                    Add(new Seg { a = r[i].pos, b = r[(i + 1) % r.Count].pos, ta = r[i].t, tb = tb });
                 }
+                if (lanes != null)
+                    foreach (var lane in lanes)
+                        for (int i = 0; i < lane.Count - 1; i++)
+                            Add(new Seg { a = lane[i], b = lane[i + 1], ta = -1f, tb = -1f, shrink = SurfaceHalf - CutHalf - 1f });
+            }
+
+            void Add(Seg s)
+            {
+                int id = segs.Count;
+                segs.Add(s);
+                int x0 = Mathf.FloorToInt(Mathf.Min(s.a.x, s.b.x) / Cell), x1 = Mathf.FloorToInt(Mathf.Max(s.a.x, s.b.x) / Cell);
+                int z0 = Mathf.FloorToInt(Mathf.Min(s.a.z, s.b.z) / Cell), z1 = Mathf.FloorToInt(Mathf.Max(s.a.z, s.b.z) / Cell);
+                for (int x = x0; x <= x1; x++)
+                    for (int z = z0; z <= z1; z++)
+                    {
+                        long k = Key(x, z);
+                        if (!cells.TryGetValue(k, out var list)) cells[k] = list = new List<int>();
+                        list.Add(id);
+                    }
             }
 
             static long Key(int x, int z) { return ((long)x << 32) ^ (uint)z; }
@@ -51,20 +65,19 @@ namespace ShiftRush.EditorTools
                         if (!cells.TryGetValue(Key(x, z), out var list)) continue;
                         foreach (int i in list)
                         {
-                            Vector3 a = road[i].pos, b = road[(i + 1) % road.Count].pos;
-                            Vector2 a2 = new Vector2(a.x, a.z), ab = new Vector2(b.x, b.z) - a2;
+                            var s = segs[i];
+                            Vector2 a2 = new Vector2(s.a.x, s.a.z), ab = new Vector2(s.b.x, s.b.z) - a2;
                             float k = Mathf.Clamp01(Vector2.Dot(p2 - a2, ab) / Mathf.Max(ab.sqrMagnitude, 1e-4f));
-                            float d = (p2 - (a2 + ab * k)).sqrMagnitude;
+                            float d = (p2 - (a2 + ab * k)).magnitude - s.shrink;
                             if (d < best)
                             {
-                                best = d; roadY = Mathf.Lerp(a.y, b.y, k);
-                                float tb = road[(i + 1) % road.Count].t; if (tb == 0f) tb = 1f;
-                                t = Mathf.Lerp(road[i].t, tb, k);
+                                best = d; roadY = Mathf.Lerp(s.a.y, s.b.y, k);
+                                t = s.ta < 0f ? -1f : Mathf.Lerp(s.ta, s.tb, k);
                             }
                         }
                     }
                 if (best == float.MaxValue) return reach + 1f;
-                return Mathf.Sqrt(best);
+                return Mathf.Max(0f, best);
             }
         }
 
@@ -165,7 +178,7 @@ namespace ShiftRush.EditorTools
                 }
                 float far = 0f;
 
-                float hw = RoadWidth * 0.5f;
+                float hw = SurfaceHalf;
                 float rolling = (Fbm(x, z, 1f / 140f, 4, seed) - 0.45f) * (spec.snowy ? 26f : 9f);
                 float mountainMask = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(spec.snowy ? 70f : 230f, spec.snowy ? 650f : 760f, d + far));
                 float ridges = Ridged(x, z, 1f / 520f, 5, seed + 17f);
@@ -204,9 +217,9 @@ namespace ShiftRush.EditorTools
             }
         }
 
-        static Terrain BuildTerrain(Transform root, Spec s, List<Sample> road, float scale, Vector3 offset, TrackKit kit)
+        static Terrain BuildTerrain(Transform root, Spec s, List<Sample> road, float scale, Vector3 offset, TrackKit kit, List<List<Vector3>> lanes = null)
         {
-            var w = new World { spec = s, index = new RoadIndex(road), seed = s.seed * 13.37f };
+            var w = new World { spec = s, index = new RoadIndex(road, lanes), seed = s.seed * 13.37f };
             if (!s.snowy)
             {
                 w.lake = new Vector2(ToWorld(s.lakeSketch, scale, offset).x, ToWorld(s.lakeSketch, scale, offset).z);
@@ -266,7 +279,7 @@ namespace ShiftRush.EditorTools
                     float d = w.index.Query(new Vector3(x, 0, z), 80f, out roadY, out t);
                     float patch = Fbm(x, z, 1f / 45f, 3, w.seed + 4f);
                     var wts = new float[layers.Length];
-                    float shoulder = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(RoadWidth * 0.5f + 1f, RoadWidth * 0.5f + 7f, d));
+                    float shoulder = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(SurfaceHalf + 0.5f, SurfaceHalf + 6f, d));
                     float cliff = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(28f, 42f, steep));
                     if (s.snowy)
                     {
@@ -333,10 +346,10 @@ namespace ShiftRush.EditorTools
 
         // ------------------------------------------------------------------ scenery
 
-        static void BuildScenery(Transform root, Spec s, List<Sample> road, Terrain terrain, float scale, Vector3 offset, TrackKit kit)
+        static void BuildScenery(Transform root, Spec s, List<Sample> road, Terrain terrain, float scale, Vector3 offset, TrackKit kit, List<List<Vector3>> lanes = null)
         {
             var rng = new System.Random(s.seed);
-            var index = new RoadIndex(road);
+            var index = new RoadIndex(road, lanes);
             var data = terrain.terrainData;
             Vector3 origin = terrain.transform.position;
             float size = data.size.x;
@@ -386,16 +399,16 @@ namespace ShiftRush.EditorTools
 
             if (s.snowy)
             {
-                Scatter("Trees", kit.pines, 1100, 16f, 230f, 0.8f, 1.5f, 34f);
-                Scatter("Rocks", kit.rocks, 220, 16f, 140f, 0.5f, 1.4f, 60f);
-                Scatter("Cliffs", kit.cliffs, 50, 32f, 100f, 1f, 1.6f, 90f);
+                Scatter("Trees", kit.pines, 1100, 22f, 230f, 0.8f, 1.5f, 34f);
+                Scatter("Rocks", kit.rocks, 220, 22f, 140f, 0.5f, 1.4f, 60f);
+                Scatter("Cliffs", kit.cliffs, 50, 38f, 100f, 1f, 1.6f, 90f);
             }
             else
             {
-                Scatter("Trees", kit.pines, 2200, 15f, 260f, 0.8f, 1.6f, 32f);
-                Scatter("Bushes", kit.bushes, 500, 9f, 60f, 0.8f, 1.5f, 35f);
-                Scatter("Ground Cover", kit.groundCover, 600, 8f, 40f, 0.8f, 1.4f, 35f);
-                Scatter("Rocks", kit.rocks, 200, 16f, 160f, 0.5f, 1.4f, 60f);
+                Scatter("Trees", kit.pines, 2200, 21f, 260f, 0.8f, 1.6f, 32f);
+                Scatter("Bushes", kit.bushes, 500, 15f, 60f, 0.8f, 1.5f, 35f);
+                Scatter("Ground Cover", kit.groundCover, 600, 14.5f, 40f, 0.8f, 1.4f, 35f);
+                Scatter("Rocks", kit.rocks, 200, 22f, 160f, 0.5f, 1.4f, 60f);
                 Scatter("Cliffs", kit.cliffs, 30, 60f, 180f, 1f, 1.8f, 90f);
             }
 
@@ -442,14 +455,14 @@ namespace ShiftRush.EditorTools
                     float ry, rt;
                     float d = index.Query(vp, 60f, out ry, out rt);
                     Vector3 p = vp;
-                    if (d < 16f)
+                    if (d < 24f)
                     {
                         // Push the cabin off the road, away from the nearest road point.
                         Sample near = road[0]; float best = float.MaxValue;
                         foreach (var r in road) { float dd = (new Vector2(r.pos.x, r.pos.z) - new Vector2(vp.x, vp.z)).sqrMagnitude; if (dd < best) { best = dd; near = r; } }
                         Vector3 away = new Vector3(vp.x - near.pos.x, 0, vp.z - near.pos.z).normalized;
                         if (away == Vector3.zero) away = Vector3.Cross(Vector3.up, near.dir).normalized;
-                        p = near.pos + away * 18f;
+                        p = near.pos + away * 26f;
                     }
                     var go = (GameObject)PrefabUtility.InstantiatePrefab(kit.cabin, village);
                     go.transform.position = new Vector3(p.x, H(p.x, p.z), p.z);
@@ -462,7 +475,7 @@ namespace ShiftRush.EditorTools
                     if (!InRange(smp.t, s.bridgeRange)) continue;
                     if (Mathf.RoundToInt(smp.dist) % 12 > 3) continue;
                     Vector3 side = Vector3.Cross(Vector3.up, smp.dir).normalized;
-                    foreach (float sx in new[] { -5f, 5f })
+                    foreach (float sx in new[] { -SurfaceHalf + 2f, 0f, SurfaceHalf - 2f })
                     {
                         Vector3 top = smp.pos + side * sx;
                         float bed = H(top.x, top.z);

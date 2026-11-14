@@ -6,13 +6,14 @@ namespace ShiftRush.Vehicles
     /// <summary>
     /// SHIFT//RUSH's keyboard layout on top of RCC Pro's input actions, applied at runtime so RCCP's own
     /// (git-ignored) asset is never edited:
-    ///  - frees Left Shift (RCCP's gear-up) for the SHIFT selector and Left Ctrl (gear-down) for nitro,
-    ///  - moves nitro from F to Left Ctrl, frees R (RCCP's record) for our reset,
+    ///  - frees Left Shift (RCCP's gear-up) and Left Ctrl (gear-down) for nitro,
+    ///  - moves nitro from F to Left Shift (the SHIFT key: nitro on the road, the timing key at a SHIFT ramp)
+    ///    with Left Ctrl as a second nitro key, frees R (RCCP's record) for our reset,
     ///  - then layers the player's own rebinds from Settings on top (saved in PlayerPrefs).
     /// </summary>
     public static class ControlBindings
     {
-        const string SaveKey = "SR_Bindings";
+        const string SaveKey = "SR_Bindings", VersionKey = "SR_BindingsVersion";
         static readonly string[] UnbindKeyboard = { "Gear Shift Up", "Gear Shift Down", "Record", "Replay", "Feature Lab" };
 
         public static InputActionAsset Asset
@@ -35,6 +36,9 @@ namespace ShiftRush.Vehicles
             }
 
             asset.RemoveAllBindingOverrides();
+            // RCCP keeps its own copy of rebinds ("rebinds") and loads it after us, which would undo our layout.
+            // SHIFT//RUSH saves bindings itself (SR_Bindings), so RCCP's copy is dropped.
+            PlayerPrefs.DeleteKey("rebinds");
 
             foreach (var name in UnbindKeyboard)
             {
@@ -47,13 +51,51 @@ namespace ShiftRush.Vehicles
 
             var nos = asset.FindAction("NOS");
             if (nos != null)
+            {
+                int keys = 0;
                 for (int i = 0; i < nos.bindings.Count; i++)
                     if (nos.bindings[i].path.StartsWith("<Keyboard>"))
-                        nos.ApplyBindingOverride(i, "<Keyboard>/leftCtrl");
+                        nos.ApplyBindingOverride(i, keys++ == 0 ? "<Keyboard>/leftShift" : "<Keyboard>/leftCtrl");
+                if (keys < 2) AddSecondKey(nos, "<Keyboard>/leftCtrl");
+                if (!nos.enabled && nos.actionMap != null && nos.actionMap.enabled) nos.Enable();
+            }
 
             string saved = PlayerPrefs.GetString(SaveKey, "");
             if (!string.IsNullOrEmpty(saved)) asset.LoadBindingOverridesFromJson(saved, false);
+
+            // v2: nitro moved from Left Ctrl to Shift. Saved settings from before still say Left Ctrl: move them once.
+            if (PlayerPrefs.GetInt(VersionKey, 1) < 2)
+            {
+                if (nos != null)
+                {
+                    int k = FindKeyboardBinding(nos, "keyboard", "positive");
+                    if (k < 0) k = FindKeyboardBinding(nos, null, null);
+                    if (k >= 0 && nos.bindings[k].effectivePath == "<Keyboard>/leftCtrl") nos.ApplyBindingOverride(k, "<Keyboard>/leftShift");
+                }
+                PlayerPrefs.SetInt(VersionKey, 2);
+                if (!string.IsNullOrEmpty(saved)) Save();
+            }
             return true;
+        }
+
+        /// <summary>Left Ctrl as an extra nitro key, added once (runtime only; RCCP's asset file is untouched).</summary>
+        static void AddSecondKey(InputAction action, string path)
+        {
+            foreach (var b in action.bindings) if (b.path == path) return;
+            bool was = action.enabled;
+            if (was) action.Disable();
+            action.AddBinding(path);
+            if (was) action.Enable();
+        }
+
+        /// <summary>Mutes or restores the nitro key (the SHIFT timing bar borrows Shift).</summary>
+        public static void SetNitroInput(bool on)
+        {
+            var asset = Asset;
+            var nos = asset != null ? asset.FindAction("NOS") : null;
+            if (nos == null) return;
+            if (on) { if (nos.actionMap == null || nos.actionMap.enabled) nos.Enable(); }
+            else nos.Disable();
         }
 
         public static void Save()

@@ -21,6 +21,8 @@ namespace ShiftRush.UI
         [SerializeField] TMP_Text keyLabel;
         [Tooltip("Heat button showing the key (used instead of Key Label when set).")]
         [SerializeField] ButtonManager keyButton;
+        [Tooltip("The Reset Controls row: clicking puts every key back to the defaults instead of rebinding.")]
+        [SerializeField] bool resetRow;
 
         static readonly List<BindingRow> rows = new List<BindingRow>();
 
@@ -36,7 +38,24 @@ namespace ShiftRush.UI
             actionName = action; composite = compositeName; part = partName; keyButton = button;
         }
 
-        void OnEnable() { rows.Add(this); Refresh(); }
+        public void ConfigureReset(ButtonManager button) { resetRow = true; keyButton = button; }
+
+        // Clicks are hooked up here rather than saved in the scene: the Heat rows are prefab instances and an
+        // editor-added click listener on them doesn't survive the save.
+        void Awake()
+        {
+            if (keyButton == null)
+            {
+                var t = transform.Find("Binding 1");
+                if (t != null) keyButton = t.GetComponent<ButtonManager>();
+            }
+            if (keyButton == null) return;
+            keyButton.onClick.RemoveAllListeners();
+            if (resetRow) keyButton.onClick.AddListener(ResetAll);
+            else keyButton.onClick.AddListener(StartRebind);
+        }
+
+        void OnEnable() { if (!resetRow) { rows.Add(this); Refresh(); } }
 
         void OnDisable() { rows.Remove(this); Cancel(); }
 
@@ -46,6 +65,7 @@ namespace ShiftRush.UI
             ControlBindings.ResetToDefaults();
             MenuSounds.Back();
             foreach (var r in rows) r.Refresh();
+            if (resetRow && keyButton != null) keyButton.SetText("RESET");
         }
 
         void Show(string text)

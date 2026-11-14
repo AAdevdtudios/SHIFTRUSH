@@ -15,6 +15,16 @@ namespace ShiftRush.Core
         public const string ReducedMotionKey = "SR_ReducedMotion";
         public const string UnitsKey = "SR_Units";
         public const string ScrollSoundKey = "SR_ScrollSound";
+        public const string MinimapKey = "SR_Minimap";
+        public const string AutoAccelerateKey = "SR_AutoAccelerate";
+
+        /// <summary>The car keeps the throttle down by itself; the player steers, brakes and fires nitro.</summary>
+        public static bool AutoAccelerate { get { return GetSwitch(AutoAccelerateKey, false); } }
+
+        /// <summary>Race minimap: a faded patch of track around the car, the whole circuit, or hidden.</summary>
+        public static readonly string[] MinimapLabels = { "Local", "Full", "Off" };
+        /// <summary>0 local (follows and turns with the car), 1 full circuit, 2 off.</summary>
+        public static int Minimap { get { return PlayerPrefs.GetInt("HorizontalSelector_" + MinimapKey, 0); } }
 
         /// <summary>Sound when moving between menu items.</summary>
         public static readonly string[] ScrollSoundLabels = { "Soft", "Clunk", "Off" };

@@ -18,7 +18,12 @@ namespace ShiftRush.EditorTools
         const string Root = "Assets/_ShiftRush/";
         const string ArtTrack = Root + "Art/Track/";
         const string Synty = "Assets/Synty/PolygonNatureBiomes/PNB_Alpine_Mountain/";
-        public const float RoadWidth = 12f;
+        /// <summary>Asphalt width. Arcade racing needs room for 3–4 cars abreast.</summary>
+        public const float RoadWidth = 18f;
+        /// <summary>Gravel run-off each side of the asphalt, part of the road mesh, inside the rails.</summary>
+        public const float ShoulderWidth = 3f;
+        /// <summary>Half the drivable surface (asphalt + shoulders); rails stand just outside it.</summary>
+        public const float SurfaceHalf = RoadWidth * 0.5f + ShoulderWidth;
 
         // ------------------------------------------------------------------ track definitions
 
@@ -178,12 +183,21 @@ namespace ShiftRush.EditorTools
             var spline = BuildRoad(root.transform, points, s, kit);
             var road = SampleSpline(spline, 4f);
             if (s.riverSketch != null) s.bridgeRange = FindBridge(road, s, scale, offset);
-            var terrain = BuildTerrain(root.transform, s, road, scale, offset, kit);
+            var cuts = FindShortcuts(road, s, scale, offset);
+            AddRails(spline, road, cuts, kit);
+            var lanes = cuts.ConvertAll(c => c.path);
+            var terrain = BuildTerrain(root.transform, s, road, scale, offset, kit, lanes);
             BuildWater(root.transform, s, scale, offset, kit);
-            BuildScenery(root.transform, s, road, terrain, scale, offset, kit);
+            BuildScenery(root.transform, s, road, terrain, scale, offset, kit, lanes);
+            BuildShortcuts(root.transform, cuts, road, s, kit);
             PlaceStartAndCar(root.transform, s, road, kit);
+            AddRaceLine(spline, s);
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(ShiftKit.RampPath) == null) ShiftKit.Build();
+            AddShiftRamps(s);
+            AddTrackWalls();
 
             ApplyKroma(s.kroma);
+            VFXKitBuilder.AddAmbience(s.snowy);
             var setup = new GameObject("RCCP Session Setup");
             setup.AddComponent<ShiftRush.Vehicles.RCCPSessionSetup>();
 
@@ -256,15 +270,43 @@ namespace ShiftRush.EditorTools
 
             float len = spline.Length;
             AddPopulation(spline, kit.roadPiece, 0f, 0f, 0f, 0f, true, "Road");
-            AddPopulation(spline, kit.railPiece, RoadWidth * 0.5f + 0.9f, 0f, 0f, 0f, true, "Guardrail L");
-            AddPopulation(spline, kit.railPiece, -(RoadWidth * 0.5f + 0.9f), 0f, 0f, 0f, true, "Guardrail R");
-            AddPopulation(spline, kit.post, RoadWidth * 0.5f + 2.4f, 0f, 25f, 0f, false, "Posts L");
-            AddPopulation(spline, kit.post, -(RoadWidth * 0.5f + 2.4f), 0f, 25f, 0f, false, "Posts R");
+            // Guardrails and posts go on after the shortcuts are chosen (AddRails), so they can open for them.
+            AddKerbs(spline, kit);
 
             if (s.galleryRange.y > s.galleryRange.x)
                 AddPopulation(spline, kit.galleryPiece, 0f, len * s.galleryRange.x, 0f, len * (1f - s.galleryRange.y), true, "Avalanche Gallery");
             return spline;
         }
+
+        /// <summary>Red/white kerbs on both edges of the asphalt wherever the road bends tightly.</summary>
+        static void AddKerbs(Spline spline, TrackKit kit)
+        {
+            var road = SampleSpline(spline, 4f);
+            int n = road.Count;
+            float len = spline.Length, step = len / n;
+            var corner = new bool[n];
+            for (int i = 0; i < n; i++)
+            {
+                // Turn over ~24 m centred here, in degrees per metre.
+                float turn = Vector3.Angle(Flat(road[(i - 3 + n) % n].dir), Flat(road[(i + 3) % n].dir)) / (6f * step);
+                corner[i] = turn > 0.45f; // tighter than ~130 m radius
+            }
+            int made = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (!corner[i] || corner[(i - 1 + n) % n]) continue; // start of a corner run
+                int j = i;
+                while (corner[(j + 1) % n] && j - i < n) j++;
+                float a = Mathf.Max(0f, i * step - 10f), b = Mathf.Min(len, (j + 1) * step + 10f);
+                if (b - a < 24f) continue;
+                AddPopulation(spline, kit.kerb, RoadWidth * 0.5f + 0.6f, a, 0f, len - b, true, "Kerb L");
+                AddPopulation(spline, kit.kerb, -(RoadWidth * 0.5f + 0.6f), a, 0f, len - b, true, "Kerb R");
+                made++;
+            }
+            Debug.Log("[SHIFT//RUSH] Kerbs on " + made + " corners");
+        }
+
+        static Vector3 Flat(Vector3 v) { v.y = 0f; return v.normalized; }
 
         static void AddPopulation(Spline spline, GameObject prefab, float xOffset, float startPad, float spacing, float endPad, bool deform, string name, bool mirror = false)
         {

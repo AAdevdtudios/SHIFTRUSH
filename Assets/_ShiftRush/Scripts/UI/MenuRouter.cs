@@ -38,6 +38,7 @@ namespace ShiftRush.UI
             if (showroom != null)
             {
                 if (panel == Garage) showroom.FrameGarage();
+                else if (panel == Tracks) showroom.FrameTracks();
                 else showroom.FrameHome();
             }
         }

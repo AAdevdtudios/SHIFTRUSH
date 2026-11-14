@@ -22,6 +22,8 @@ namespace ShiftRush.UI
         [SerializeField] TMP_Text details;
         [Tooltip("Big soft-masked shot of the selected track behind the cards.")]
         [SerializeField] Image hero;
+        [Tooltip("Canvas behind the showroom car that holds the hero band; follows this panel's visibility.")]
+        [SerializeField] CanvasGroup backdrop;
         float heroAlpha;
 
         readonly List<TrackCard> cards = new List<TrackCard>();
@@ -44,8 +46,11 @@ namespace ShiftRush.UI
 
         bool Accepting { get { return visibleGroup == null || (visibleGroup.alpha > 0.95f && visibleGroup.interactable); } }
 
+        void OnDisable() { if (backdrop != null) backdrop.alpha = 0f; }
+
         void LateUpdate()
         {
+            if (backdrop != null) backdrop.alpha = visibleGroup != null && visibleGroup.gameObject.activeInHierarchy ? visibleGroup.alpha : 0f;
             if (hero == null) return;
             heroAlpha = Mathf.MoveTowards(heroAlpha, 1f, Time.unscaledDeltaTime * 3f);
             var c = hero.color; c.a = heroAlpha; hero.color = c;
