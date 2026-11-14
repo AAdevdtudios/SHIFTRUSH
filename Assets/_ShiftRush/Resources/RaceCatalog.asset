@@ -24,6 +24,12 @@ MonoBehaviour:
     boost: 5
     thumbnail: {fileID: 21300000, guid: b619e8c76a54f43569d285d174ec83c4, type: 3}
     accent: {r: 1, g: 0.2509804, b: 0.8509804, a: 1}
+    nitroVfx: {fileID: 8877627154093148493, guid: 387c65f17c2b3714083c66fdf9747a17, type: 3}
+    nitroExhausts: []
+    nitroRotation: {x: 0, y: -90, z: 0}
+    nitroScale: 0.3
+    nitroHide:
+    - SpaceshipMesh
   tracks:
   - id: alpine
     displayName: Alpine Pass

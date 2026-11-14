@@ -29,6 +29,18 @@ namespace ShiftRush.Core
             public Sprite thumbnail;
             [Tooltip("Paint colour used for the card accent.")]
             public Color accent = new Color(1f, 0.25f, 0.85f);
+
+            [Header("Nitro")]
+            [Tooltip("The effect at each exhaust while nitro burns: any particle prefab (a GabrielAguiar Sci-Fi Thruster, say). Empty = the game's own neon flame.")]
+            public GameObject nitroVfx;
+            [Tooltip("Exhaust points in the car's own space, in metres (x right, y up, z forward). Empty = two, low at the back either side of centre.")]
+            public Vector3[] nitroExhausts = new Vector3[0];
+            [Tooltip("Turns the effect at each exhaust, in degrees, after it is pointed straight back.")]
+            public Vector3 nitroRotation = Vector3.zero;
+            [Tooltip("Size of the effect.")]
+            [Range(0.05f, 3f)] public float nitroScale = 1f;
+            [Tooltip("Children of the effect to hide, by name (the thruster demos carry a spaceship).")]
+            public string[] nitroHide = { "SpaceshipMesh" };
         }
 
         [System.Serializable]
@@ -53,6 +65,19 @@ namespace ShiftRush.Core
 
         public List<Car> cars = new List<Car>();
         public List<Track> tracks = new List<Track>();
+
+        /// <summary>The catalog car a spawned car was made from (matched by prefab name), or null.</summary>
+        public Car FindCar(GameObject instance)
+        {
+            if (instance == null) return null;
+            string n = instance.name.Replace("(Clone)", "").Trim();
+            foreach (var c in cars)
+            {
+                if (c.prefab != null && (n == c.prefab.name || n.StartsWith(c.prefab.name))) return c;
+                if (c.showroomPrefab != null && n == c.showroomPrefab.name) return c;
+            }
+            return null;
+        }
 
         static RaceCatalog instance;
         public static RaceCatalog Instance

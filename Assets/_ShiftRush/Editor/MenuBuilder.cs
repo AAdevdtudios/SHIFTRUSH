@@ -59,6 +59,7 @@ namespace ShiftRush.EditorTools
             MakeRaceHud(sounds);
             MakeShiftHud(sounds);
             MakeCoach();
+            MakeRushHud();
 
             AssetDatabase.SaveAssets(); // unsaved assets can be unloaded by the scene switch below
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

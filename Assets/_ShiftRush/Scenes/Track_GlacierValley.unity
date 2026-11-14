@@ -440084,15 +440084,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.CameraFX.SpeedFeel
   startKmh: 70
   fullKmh: 175
-  pullBack: 2.4
-  boostPullBack: 1.6
-  surgePullBack: 1.2
+  pullBack: 1.8
+  boostPullBack: 1.2
+  surgePullBack: 1
   drop: 0.35
   pullResponse: 2.2
   extraFov: 14
   boostFov: 9
-  shakeDegrees: 0.35
+  shakeDegrees: 0.5
   shakeFrequency: 18
+  boostShakeDegrees: 0.5
+  boostKickDegrees: 1.6
+  boostRumble: 0.35
   lineMaterial: {fileID: 2100000, guid: 908175f7993454b5a83e39b4862e82a4, type: 2}
   maxLinesPerSecond: 110
   lineColor: {r: 1, g: 1, b: 1, a: 0.55}
@@ -617583,7 +617586,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2060493299427690371, guid: fdb1354f3bd578d4faaec9dc39e2619c, type: 3}
       propertyPath: TPSDistance
-      value: 7.5
+      value: 6.2
       objectReference: {fileID: 0}
     - target: {fileID: 2060493299427690371, guid: fdb1354f3bd578d4faaec9dc39e2619c, type: 3}
       propertyPath: TPSAutoFocus

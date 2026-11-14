@@ -60,7 +60,10 @@ namespace ShiftRush.VFX
                 Color colour = kit != null ? kit.magenta : Color.magenta;
                 if (!player && race != null)
                     foreach (var r in race.Racers) if (r.vehicle == v) colour = r.color;
-                mb.gameObject.AddComponent<CarFX>().Init(v, colour, player);
+                var cat = Core.RaceCatalog.Instance;
+                var spec = cat != null ? cat.FindCar(mb.gameObject) : null;
+                if (spec == null && player) spec = Core.RaceSession.Car;
+                mb.gameObject.AddComponent<CarFX>().Init(v, colour, player, spec);
             }
         }
     }

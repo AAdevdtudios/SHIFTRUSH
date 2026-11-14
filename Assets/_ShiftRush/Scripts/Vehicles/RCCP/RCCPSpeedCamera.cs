@@ -28,7 +28,10 @@ namespace ShiftRush.Vehicles
 
         void LateUpdate()
         {
-            if (speedFeel == null || rig.actualCamera == null || Time.timeScale <= 0f) return;
+            if (speedFeel == null) return;
+            // Paused or in SHIFT slow motion: no rumble left running.
+            if (rig.actualCamera == null || Time.timeScale < 0.5f) speedFeel.StopRumble();
+            if (rig.actualCamera == null || Time.timeScale <= 0f) return;
 
             var current = rig.cameraTarget.playerVehicle;
             if (current != car)

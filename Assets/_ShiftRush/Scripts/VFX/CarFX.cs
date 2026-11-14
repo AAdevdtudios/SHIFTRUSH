@@ -5,7 +5,8 @@ using UnityEngine;
 namespace ShiftRush.VFX
 {
     /// <summary>
-    /// The life on a car: nitro flames and a light trail while nitro burns, underglow in the car's colour, a dust
+    /// The life on a car: nitro flames (or the car's own nitro effect from the <see cref="Core.RaceCatalog"/>) and a
+    /// light trail while nitro burns, underglow in the car's colour, a dust
     /// (or snow) puff on landing from a jump, and dirt spray while it's on a shortcut lane. Added to every car by
     /// <see cref="FXDirector"/>; works on the player and rivals alike.
     /// </summary>
@@ -18,6 +19,7 @@ namespace ShiftRush.VFX
         bool isPlayer;
 
         ParticleSystem[] flames;
+        GameObject[] thrusters;
         TrailRenderer[] trails;
         ParticleSystem puff, dirt;
         Light glow;
@@ -25,7 +27,7 @@ namespace ShiftRush.VFX
         float airTime, glowBase, nitroOffAt = -1f;
         bool wasNitro;
 
-        public void Init(IVehicle v, Color c, bool player)
+        public void Init(IVehicle v, Color c, bool player, Core.RaceCatalog.Car spec = null)
         {
             vehicle = v; dash = v as IVehicleDash; colour = c; isPlayer = player;
             kit = VFXKit.Instance;
@@ -34,7 +36,8 @@ namespace ShiftRush.VFX
 
             // Nitro: two flames at the exhausts (lower rear, either side of centre) and one trail between.
             float back = local.min.z + 0.05f, low = local.min.y + Mathf.Max(0.3f, local.size.y * 0.28f);
-            if (kit.nitroFlame != null)
+            if (spec != null && spec.nitroVfx != null) MakeThrusters(spec, back, low);
+            else if (kit.nitroFlame != null)
             {
                 flames = new ParticleSystem[2];
                 for (int s = 0; s < 2; s++)
@@ -115,6 +118,11 @@ namespace ShiftRush.VFX
             if (nitro != wasNitro)
             {
                 if (flames != null) foreach (var f in flames) { if (nitro) f.Play(true); else f.Stop(true, ParticleSystemStopBehavior.StopEmitting); }
+                if (thrusters != null) foreach (var g in thrusters)
+                {
+                    if (nitro) { g.SetActive(true); foreach (var ps in g.GetComponentsInChildren<ParticleSystem>()) ps.Play(false); }
+                    else foreach (var ps in g.GetComponentsInChildren<ParticleSystem>()) ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+                }
                 if (trails != null) foreach (var t in trails)
                 {
                     if (nitro) { t.Clear(); t.enabled = true; }
@@ -124,10 +132,11 @@ namespace ShiftRush.VFX
                 if (isPlayer) ScreenFX.Set(ScreenFX.Overlay.Nitro, nitro);
                 wasNitro = nitro;
             }
-            // Let the streaks fade out, then switch them off.
-            if (!nitro && nitroOffAt > 0f && Time.time - nitroOffAt > 0.4f && trails != null)
+            // Let the streaks and thrusters fade out, then switch them off.
+            if (!nitro && nitroOffAt > 0f && Time.time - nitroOffAt > 0.4f)
             {
-                foreach (var t in trails) t.enabled = false;
+                if (trails != null) foreach (var t in trails) t.enabled = false;
+                if (thrusters != null) foreach (var g in thrusters) g.SetActive(false);
                 nitroOffAt = -1f;
             }
             if (glow != null) glow.intensity = Mathf.MoveTowards(glow.intensity, glowBase * (nitro ? 1.8f : 1f), dt * 12f);
@@ -157,6 +166,33 @@ namespace ShiftRush.VFX
         void OnDisable()
         {
             if (isPlayer && wasNitro) ScreenFX.Set(ScreenFX.Overlay.Nitro, false);
+        }
+
+        /// <summary>The car's own nitro effect at each exhaust, scaled, with the pack's demo parts hidden; off until nitro.</summary>
+        void MakeThrusters(Core.RaceCatalog.Car spec, float back, float low)
+        {
+            var points = spec.nitroExhausts != null && spec.nitroExhausts.Length > 0 ? spec.nitroExhausts
+                : new[] { new Vector3(-local.size.x * 0.12f, low, back), new Vector3(local.size.x * 0.12f, low, back) };
+            thrusters = new GameObject[points.Length];
+            for (int k = 0; k < points.Length; k++)
+            {
+                var g = Instantiate(spec.nitroVfx, transform);
+                g.name = "Nitro " + (k + 1);
+                g.transform.localPosition = points[k];
+                g.transform.localRotation = Quaternion.LookRotation(Vector3.back) * Quaternion.Euler(spec.nitroRotation);
+                g.transform.localScale = Vector3.one * spec.nitroScale;
+                foreach (var t in g.GetComponentsInChildren<Transform>(true))
+                    if (spec.nitroHide != null && System.Array.IndexOf(spec.nitroHide, t.name) >= 0) t.gameObject.SetActive(false);
+                foreach (var ps in g.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    var main = ps.main;
+                    main.scalingMode = ParticleSystemScalingMode.Hierarchy; // follow the car-sized scale
+                    main.playOnAwake = false;
+                }
+                foreach (var r in g.GetComponentsInChildren<Renderer>(true)) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                g.SetActive(false);
+                thrusters[k] = g;
+            }
         }
 
         /// <summary>One-shot shockwave at the car (arriving back from a SHIFT world).</summary>

@@ -9,7 +9,8 @@ namespace ShiftRush.CameraFX
     /// <summary>
     /// The sense of speed. As the car goes faster the chase camera drops back and low, the field of view widens,
     /// streaks fly past the screen edges and the image picks up a light lens fringe. Hard acceleration and nitro
-    /// make the car surge away from the camera before it catches up.
+    /// make the car surge away from the camera before it catches up; nitro shakes the camera (with a jolt as it lights)
+    /// and rumbles a controller.
     /// Camera-package agnostic: a bridge (e.g. RCCPSpeedCamera) calls <see cref="Tick"/> every LateUpdate
     /// after the chase camera has positioned itself, and applies <see cref="ExtraFov"/> to its own FOV.
     /// </summary>
@@ -40,6 +41,12 @@ namespace ShiftRush.CameraFX
         [Header("Shake")]
         [SerializeField] float shakeDegrees = 0.35f;
         [SerializeField] float shakeFrequency = 18f;
+        [Tooltip("Extra shake (degrees) while nitro burns, on top of the speed shake.")]
+        [SerializeField] float boostShakeDegrees = 0.5f;
+        [Tooltip("A hard jolt the moment nitro lights (degrees), fading over half a second.")]
+        [SerializeField] float boostKickDegrees = 1.6f;
+        [Tooltip("Controller rumble while nitro burns (0..1), with a stronger hit as it lights.")]
+        [SerializeField] float boostRumble = 0.35f;
 
         [Header("Speed lines")]
         [SerializeField] Material lineMaterial;
@@ -53,7 +60,8 @@ namespace ShiftRush.CameraFX
         [SerializeField] float maxLensDistortion = -0.22f;
         [SerializeField] float vignetteAtSpeed = 0.32f;
 
-        float intensity, boost, surge, pull, lastSpeed;
+        float intensity, boost, surge, pull, lastSpeed, kick;
+        bool wasBoosting, rumbling;
         Camera boundCamera;
         Transform lines;
         ParticleSystem lineSystem;
@@ -94,8 +102,13 @@ namespace ShiftRush.CameraFX
             // never fights the rig's own smoothing.
             float pullTarget = (intensity * pullBack + boost * boostPullBack + surge * surgePullBack) * strength * (calm ? 0.5f : 1f);
             pull = Mathf.Lerp(pull, pullTarget, dt * pullResponse);
+            // Nitro lighting up: a jolt that fades.
+            if (boosting && !wasBoosting && chaseView) kick = 1f;
+            wasBoosting = boosting;
+            kick = Mathf.MoveTowards(kick, 0f, dt * 2f);
             float t = Time.time * shakeFrequency;
-            float shake = shakeOn ? (intensity * 0.6f + boost) * shakeDegrees * strength : 0f;
+            float shake = shakeOn ? ((intensity * 0.6f + boost) * shakeDegrees + boost * boostShakeDegrees + kick * kick * boostKickDegrees) * strength : 0f;
+            Rumble(shakeOn ? Mathf.Clamp01(boost * boostRumble + kick * kick * 0.6f) : 0f, shakeOn ? Mathf.Clamp01(intensity * 0.06f + boost * boostRumble * 0.6f) : 0f);
             cam.transform.localPosition = new Vector3(0f, -drop * intensity * strength, -pull);
             cam.transform.localRotation = Quaternion.Euler(
                 (Mathf.PerlinNoise(t, 0.3f) - 0.5f) * 2f * shake,
@@ -114,6 +127,29 @@ namespace ShiftRush.CameraFX
             lens.intensity.value = lensAmount * maxLensDistortion;
             vignette.intensity.value = lensAmount * vignetteAtSpeed;
         }
+
+        /// <summary>Controller motors (low = heavy, high = buzz). Only touches the pad while it has something to say.</summary>
+        void Rumble(float low, float high)
+        {
+            var pad = UnityEngine.InputSystem.Gamepad.current;
+            if (pad == null) return;
+            if (Time.timeScale < 0.5f) low = high = 0f; // quiet through the SHIFT slow motion
+            bool on = low > 0.01f || high > 0.01f;
+            if (!on && !rumbling) return;
+            pad.SetMotorSpeeds(low, high);
+            rumbling = on;
+        }
+
+        /// <summary>Stops the controller rumble (paused, race over, camera gone).</summary>
+        public void StopRumble()
+        {
+            if (!rumbling) return;
+            var pad = UnityEngine.InputSystem.Gamepad.current;
+            if (pad != null) pad.SetMotorSpeeds(0f, 0f);
+            rumbling = false;
+        }
+
+        void OnDisable() { StopRumble(); }
 
         void Bind(Camera cam)
         {
