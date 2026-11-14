@@ -22,6 +22,7 @@ MonoBehaviour:
     acceleration: 6
     handling: 7
     boost: 5
+    thumbnail: {fileID: 21300000, guid: b619e8c76a54f43569d285d174ec83c4, type: 3}
     accent: {r: 1, g: 0.2509804, b: 0.8509804, a: 1}
   tracks:
   - id: alpine
@@ -31,6 +32,7 @@ MonoBehaviour:
       through the avalanche gallery.
     lengthKm: 2.5
     thumbnail: {fileID: 21300000, guid: 1edf2f524652c484d801673713f24afe, type: 3}
+    map: {fileID: 21300000, guid: d63e55460e5334446a89cfb30086a5d5, type: 3}
     loadingTips:
     - Brake before the hairpins, not in them.
     - Hold Shift for nitro on the gallery straight.
@@ -43,6 +45,7 @@ MonoBehaviour:
       through the village.
     lengthKm: 2.3
     thumbnail: {fileID: 21300000, guid: 11edc4d378ba74ad3b189cce8665f941, type: 3}
+    map: {fileID: 21300000, guid: 9a85447eafade4e1fba9cf32c5000a93, type: 3}
     loadingTips:
     - Keep it pinned through the lakeside sweepers.
     - The bridge kink is flat out if you're brave.

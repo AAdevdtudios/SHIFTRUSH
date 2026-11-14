@@ -29,10 +29,32 @@ namespace ShiftRush.Core
             }
         }
 
-        /// <summary>"starting_line-final" → "STARTING LINE FINAL".</summary>
+        /// <summary>Longest song name shown in the menus; longer ones end in "...".</summary>
+        public const int MaxLabel = 24;
+
+        /// <summary>
+        /// "starting_line-final" → "STARTING LINE FINAL". Pixabay downloads ("artist-song-title-123456") lose the
+        /// artist and the number: "octosound-chosen-one-178816" → "CHOSEN ONE" (the artist is in the Credits).
+        /// Long names are cut to <see cref="MaxLabel"/> characters with "...".
+        /// </summary>
         public static string Pretty(string fileName)
         {
-            return fileName.Replace('_', ' ').Replace('-', ' ').Trim().ToUpperInvariant();
+            var words = new System.Collections.Generic.List<string>(
+                fileName.Replace('_', ' ').Replace('-', ' ').Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries));
+            if (words.Count >= 3 && words[words.Count - 1].Length >= 5 && IsDigits(words[words.Count - 1]))
+            {
+                words.RemoveAt(words.Count - 1); // the Pixabay number
+                words.RemoveAt(0);               // the uploader
+            }
+            string s = string.Join(" ", words.ToArray()).ToUpperInvariant();
+            if (s.Length > MaxLabel) s = s.Substring(0, MaxLabel - 3).TrimEnd() + "...";
+            return s;
+        }
+
+        static bool IsDigits(string w)
+        {
+            foreach (char ch in w) if (ch < '0' || ch > '9') return false;
+            return true;
         }
 
         /// <summary>Settings labels: SHUFFLE ALL, OFF, then each song.</summary>

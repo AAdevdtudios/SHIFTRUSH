@@ -45,6 +45,13 @@ MonoBehaviour:
     - MicroVerse (Jason Booth)
     - 'Heat: Complete Modern UI (Michsky)'
     - UI SFX Mega Pack
+  - headerTitle: Music
+    headerTitleKey: 
+    items:
+    - '"Chosen One" by OctoSound (Pixabay)'
+    - '"Background Music" by Andrii Poradovskyi (Pixabay)'
+    - '"Trap Dynamic Brass Thunder Power" by alexzavesa (Pixabay)'
+    - '"Dance Funk" by roybushband (Pixabay)'
   - headerTitle: Controller graphics
     headerTitleKey: 
     items:

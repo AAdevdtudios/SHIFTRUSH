@@ -13,7 +13,7 @@ namespace ShiftRush.Shift
     /// magenta diamond closes in on a fixed target diamond, easing as it gets there, three tries; Shift pressed as
     /// they line up is a hit. Two hits warp the car into a random SHIFT world for about 10 seconds. Reach its finish in time and
     /// the car comes back running in a random 1st, 2nd or 3rd place (never worse than where it left from); run out
-    /// of time and it comes back second-to-last. Nitro is paid in proportion to the world's score. Fewer than two
+    /// of time and it keeps a share of a win's gain by how far it got (never lower than where it left). Nitro is paid in proportion to the world's score. Fewer than two
     /// hits: time comes back, the jump carries on, and a little nitro. The race clock keeps running.
     /// Spawns itself in any scene that has a <see cref="ShiftRamp"/>.
     /// </summary>
@@ -47,6 +47,8 @@ namespace ShiftRush.Shift
         /// <summary>Nitro handed out after a SHIFT (0..1 of the tank).</summary>
         public static event System.Action<float> NitroAwarded;
         public State CurrentState { get; private set; }
+        /// <summary>The closing diamond is on the target right now (a press would hit).</summary>
+        public bool InWindow { get; private set; }
 
         ShiftHUD hud;
         ShiftArena[] arenas;
@@ -121,16 +123,21 @@ namespace ShiftRush.Shift
 
             // ---- timing diamond: it closes on the target and slows as it gets there; press as they line up.
             int tries = closeSeconds.Length, hits = 0, misses = 0;
+            // Tutorial: until the first SHIFT lands, the diamond closes slower and the window is wider.
+            bool assist = RaceCoach.AssistShift;
+            float slower = assist ? 1.4f : 1f, window = assist ? tolerance + 0.08f : tolerance;
             const float endScale = 0.55f; // it carries on shrinking past the target, so waiting too long misses
             for (int t = 0; t < tries && hits < hitsNeeded && misses <= tries - hitsNeeded; t++)
             {
                 bool pressed = false;
-                for (float u = 0f; u < closeSeconds[t]; u += Time.unscaledDeltaTime)
+                float span = closeSeconds[t] * slower;
+                for (float u = 0f; u < span; u += Time.unscaledDeltaTime)
                 {
-                    float k = u / closeSeconds[t];
+                    float k = u / span;
                     float ease = 1f - (1f - k) * (1f - k); // fast at first, easing in towards the target
                     float scale = Mathf.Lerp(startScale, endScale, ease);
-                    bool inside = Mathf.Abs(scale - 1f) <= tolerance;
+                    bool inside = Mathf.Abs(scale - 1f) <= window;
+                    InWindow = inside;
                     if (hud != null) hud.SetDiamond(scale, inside);
                     if (ShiftPressed())
                     {
@@ -142,6 +149,7 @@ namespace ShiftRush.Shift
                     }
                     yield return null;
                 }
+                InWindow = false;
                 if (!pressed) { misses++; if (hud != null) hud.MarkPip(t, false); TimingPress?.Invoke(hits, false); }
                 yield return new WaitForSecondsRealtime(0.25f);
             }
@@ -189,10 +197,20 @@ namespace ShiftRush.Shift
             bool placed = false;
             if (race != null && race.Player != null && race.Racers.Count > 1)
             {
-                int target = arena.Won ? Random.Range(1, 4) : race.Racers.Count - 1;
-                if (arena.Won && leftFrom > 0) target = Mathf.Min(target, leftFrom); // a win never sets you back
+                int from = leftFrom > 0 ? leftFrom : race.Racers.Count;
+                int target;
+                if (arena.Won) target = Mathf.Min(Random.Range(1, 4), from); // a win never sets you back
+                else
+                {
+                    // Late: never lower than where you left; the further you got, the more of a win's gain you keep
+                    // (a win lands around P2). 80% of the way ≈ most of it; 20% ≈ where you were.
+                    int best = Mathf.Min(2, from);
+                    target = Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(from, best, arena.Progress)), 1, from);
+                }
                 placed = race.PlaceAtPosition(race.Player, target, backSpeed);
-                headline = arena.Won ? "WARPED TO P" + target : "TOO LATE  //  P" + target;
+                headline = arena.Won ? "WARPED TO P" + target
+                    : target < from ? "SO CLOSE  //  UP TO P" + target
+                    : "TOO LATE  //  HELD P" + target;
             }
             else headline = arena.Won ? "CLEARED" : "TOO LATE";
             if (!placed)

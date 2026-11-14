@@ -48,5 +48,10 @@ Without these packs, the project's own code (`Assets/_ShiftRush/`) is still publ
 - **Razorbill Studio**: design, code, level design
 - **Concept & Inspiration:** Jennifer Ugwoke
 - Third-party packs as listed above
+- **Music** (Pixabay Content License; the audio files themselves are not in this repo):
+  - Music by [OctoSound](https://pixabay.com/users/octosound-39205072/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=178816) from [Pixabay](https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=178816)
+  - Music by [Andrii Poradovskyi](https://pixabay.com/users/lnplusmusic-47631836/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=628850) from [Pixabay](https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=628850)
+  - "Trap Dynamic Brass Thunder Power" by alexzavesa from Pixabay
+  - "Dance Funk" by roybushband from Pixabay
 
 Any AI-generated art or audio used in the game will be listed here.

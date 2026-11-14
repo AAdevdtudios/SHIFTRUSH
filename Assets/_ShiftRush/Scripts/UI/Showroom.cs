@@ -36,7 +36,7 @@ namespace ShiftRush.UI
         [SerializeField] float tracksDistance = 9f;
         [Tooltip("Car heading relative to the camera on track select: 90 / -90 = side on, 180 = nose to camera.")]
         [SerializeField] float tracksYaw = -90f;
-        [Tooltip("Hidden on track select so the car stands alone in front of the track photo.")]
+        [Tooltip("Hidden on track select (the car too: that screen shows a picture of it instead).")]
         [SerializeField] GameObject[] hideWhenPosed;
 
         GameObject current;
@@ -66,13 +66,14 @@ namespace ShiftRush.UI
         public void FrameHome() { SetScreen(MenuScreen.Home); }
         public void FrameGarage() { SetScreen(MenuScreen.Garage); }
         /// <summary>Track select: the turntable eases to a fixed side-on angle and stops, the camera moves in close
-        /// and stops swaying, and the floor, plinth and ring disappear. Any other screen undoes it.</summary>
+        /// and stops swaying, and the floor, plinth, ring and car itself disappear. Any other screen undoes it.</summary>
         public void FrameTracks() { SetScreen(MenuScreen.Tracks); }
 
         void SetScreen(MenuScreen s)
         {
             screen = s;
             if (hideWhenPosed != null) foreach (var g in hideWhenPosed) if (g != null) g.SetActive(!posed);
+            if (current != null) current.SetActive(!posed); // track select shows a picture of the car instead
         }
 
         public void Kick(float amount) { kick = Mathf.Max(kick, amount); }
@@ -104,6 +105,7 @@ namespace ShiftRush.UI
                 model.transform.position += offset;
             }
             current = holder;
+            current.SetActive(!posed);
             Kick(1f);
         }
 

@@ -111,6 +111,16 @@ namespace ShiftRush.Vehicles
             Apply();
         }
 
+        /// <summary>The key currently bound (e.g. "W", "LEFT SHIFT"), for on-screen hints; empty if unknown.</summary>
+        public static string KeyName(string actionName, string composite, string part)
+        {
+            var asset = Asset;
+            var action = asset != null ? asset.FindAction(actionName) : null;
+            int i = FindKeyboardBinding(action, composite, part);
+            if (i < 0) return "";
+            return action.GetBindingDisplayString(i, InputBinding.DisplayStringOptions.DontIncludeInteractions).ToUpperInvariant();
+        }
+
         /// <summary>
         /// Finds the keyboard binding for an action. For composites (WASD throttle/steering) pass the composite's
         /// name ("wasd", "keyboard") and the part ("positive", "negative"); for plain buttons pass nulls.

@@ -22,6 +22,13 @@ namespace ShiftRush.UI
         [SerializeField] TMP_Text details;
         [Tooltip("Big soft-masked shot of the selected track behind the cards.")]
         [SerializeField] Image hero;
+        [Header("Right column")]
+        [Tooltip("Picture of the car picked in the garage.")]
+        [SerializeField] Image carPicture;
+        [SerializeField] TMP_Text carName;
+        [Tooltip("The selected track's circuit as a grey line.")]
+        [SerializeField] Image map;
+        RaceCatalog.Car shownCar;
         [Tooltip("Canvas behind the showroom car that holds the hero band; follows this panel's visibility.")]
         [SerializeField] CanvasGroup backdrop;
         float heroAlpha;
@@ -51,6 +58,7 @@ namespace ShiftRush.UI
         void LateUpdate()
         {
             if (backdrop != null) backdrop.alpha = visibleGroup != null && visibleGroup.gameObject.activeInHierarchy ? visibleGroup.alpha : 0f;
+            ShowCar();
             if (hero == null) return;
             heroAlpha = Mathf.MoveTowards(heroAlpha, 1f, Time.unscaledDeltaTime * 3f);
             var c = hero.color; c.a = heroAlpha; hero.color = c;
@@ -87,6 +95,20 @@ namespace ShiftRush.UI
             SceneLoader.LoadTrack(cat.tracks[i]);
         }
 
+        // The car can change in the garage while this panel stays built, so follow the session's pick.
+        void ShowCar()
+        {
+            var car = RaceSession.Car;
+            if (car == shownCar) return;
+            shownCar = car;
+            if (carName) carName.text = car != null ? car.displayName.ToUpperInvariant() : "";
+            if (carPicture)
+            {
+                carPicture.sprite = car != null ? car.thumbnail : null;
+                carPicture.enabled = carPicture.sprite != null;
+            }
+        }
+
         void Refresh()
         {
             var cat = RaceCatalog.Instance;
@@ -100,6 +122,11 @@ namespace ShiftRush.UI
                 hero.sprite = t.thumbnail;
                 hero.enabled = t.thumbnail != null;
                 heroAlpha = 0f; // fade the new track in
+            }
+            if (map)
+            {
+                map.sprite = t.map;
+                map.enabled = t.map != null;
             }
             for (int i = 0; i < cards.Count; i++) cards[i].SetSelected(i == index);
         }

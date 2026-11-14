@@ -95,18 +95,19 @@ namespace ShiftRush.EditorTools
             var rows = new List<OptionRow>
             {
                 OptionRowUI(column, 0, "Auto Accelerate", OptionRow.Kind.Toggle, GameSettings.AutoAccelerateKey, null, 0, false, ""),
-                OptionRowUI(column, 1, "Speed Effects", OptionRow.Kind.Choice, GameSettings.SpeedFxKey, GameSettings.SpeedFxLabels, 2, true, ""),
-                OptionRowUI(column, 2, "Camera Shake", OptionRow.Kind.Toggle, GameSettings.CameraShakeKey, null, 0, true, ""),
-                OptionRowUI(column, 3, "Reduced Motion", OptionRow.Kind.Toggle, GameSettings.ReducedMotionKey, null, 0, false, ""),
-                OptionRowUI(column, 4, "Minimap", OptionRow.Kind.Choice, GameSettings.MinimapKey, GameSettings.MinimapLabels, 0, true, ""),
-                OptionRowUI(column, 5, "Master Volume", OptionRow.Kind.Volume, "MasterVolume", null, 0, true, "Master"),
-                OptionRowUI(column, 6, "Car & Effects", OptionRow.Kind.Volume, "SFXVolume", null, 0, true, "SFX"),
-                OptionRowUI(column, 7, "Music Volume", OptionRow.Kind.Volume, "MusicVolume", null, 0, true, "Music"),
-                OptionRowUI(column, 8, "Music", OptionRow.Kind.Choice, MusicLibrary.ChoiceKey, new[] { "SHUFFLE ALL" }, 0, true, ""),
-                OptionRowUI(column, 9, "Menu Scroll Sound", OptionRow.Kind.Choice, GameSettings.ScrollSoundKey, GameSettings.ScrollSoundLabels, 0, true, ""),
+                OptionRowUI(column, 1, "Tutorial", OptionRow.Kind.Toggle, GameSettings.TutorialKey, null, 0, true, ""),
+                OptionRowUI(column, 2, "Speed Effects", OptionRow.Kind.Choice, GameSettings.SpeedFxKey, GameSettings.SpeedFxLabels, 2, true, ""),
+                OptionRowUI(column, 3, "Camera Shake", OptionRow.Kind.Toggle, GameSettings.CameraShakeKey, null, 0, true, ""),
+                OptionRowUI(column, 4, "Reduced Motion", OptionRow.Kind.Toggle, GameSettings.ReducedMotionKey, null, 0, false, ""),
+                OptionRowUI(column, 5, "Minimap", OptionRow.Kind.Choice, GameSettings.MinimapKey, GameSettings.MinimapLabels, 0, true, ""),
+                OptionRowUI(column, 6, "Master Volume", OptionRow.Kind.Volume, "MasterVolume", null, 0, true, "Master"),
+                OptionRowUI(column, 7, "Car & Effects", OptionRow.Kind.Volume, "SFXVolume", null, 0, true, "SFX"),
+                OptionRowUI(column, 8, "Music Volume", OptionRow.Kind.Volume, "MusicVolume", null, 0, true, "Music"),
+                OptionRowUI(column, 9, "Music", OptionRow.Kind.Choice, MusicLibrary.ChoiceKey, new[] { "SHUFFLE ALL" }, 0, true, ""),
+                OptionRowUI(column, 10, "Menu Scroll Sound", OptionRow.Kind.Choice, GameSettings.ScrollSoundKey, GameSettings.ScrollSoundLabels, 0, true, ""),
             };
             // The Music row lists the songs in Resources/Audio/Music when it's shown, not when it's built.
-            var musicRow = new SerializedObject(rows[8]);
+            var musicRow = new SerializedObject(rows[9]);
             musicRow.FindProperty("musicChoice").boolValue = true;
             musicRow.ApplyModifiedPropertiesWithoutUndo();
             var list = opts.gameObject.AddComponent<OptionsList>();
@@ -201,7 +202,7 @@ namespace ShiftRush.EditorTools
         {
             var row = new GameObject(title, typeof(RectTransform)).GetComponent<RectTransform>();
             row.SetParent(column, false);
-            Place(row, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, -i * 56), new Vector2(0, 50));
+            Place(row, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, -i * 51), new Vector2(0, 46)); // 11 rows above the key hints
             var bg = Img(row, "Background", slant, new Color(1, 1, 1, 0.05f));
             bg.type = Image.Type.Sliced;
             Stretch(bg.rectTransform);

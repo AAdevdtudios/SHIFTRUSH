@@ -17,6 +17,10 @@ namespace ShiftRush.Core
         public const string ScrollSoundKey = "SR_ScrollSound";
         public const string MinimapKey = "SR_Minimap";
         public const string AutoAccelerateKey = "SR_AutoAccelerate";
+        public const string TutorialKey = "SR_Tutorial";
+
+        /// <summary>Coach hints in the first races (see Race.RaceCoach). On until the player has done it all.</summary>
+        public static bool Tutorial { get { return GetSwitch(TutorialKey, true); } }
 
         /// <summary>The car keeps the throttle down by itself; the player steers, brakes and fires nitro.</summary>
         public static bool AutoAccelerate { get { return GetSwitch(AutoAccelerateKey, false); } }

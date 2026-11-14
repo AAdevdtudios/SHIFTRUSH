@@ -51,11 +51,14 @@ namespace ShiftRush.EditorTools
             var sounds = LoadSounds();
             StyleHeat(sounds);
             var catalog = MakeCatalog();
+            MakeCarPictures(catalog);
+            MakeTrackMaps(catalog);
             var credits = MakeCreditsPreset();
             MakeLoadingScreen();
             MakePauseMenu(sounds);
             MakeRaceHud(sounds);
             MakeShiftHud(sounds);
+            MakeCoach();
 
             AssetDatabase.SaveAssets(); // unsaved assets can be unloaded by the scene switch below
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -283,6 +286,13 @@ namespace ShiftRush.EditorTools
                 "MicroVerse (Jason Booth)",
                 "Heat: Complete Modern UI (Michsky)",
                 "UI SFX Mega Pack",
+            });
+            add("Music", new[]
+            {
+                "\"Chosen One\" by OctoSound (Pixabay)",
+                "\"Background Music\" by Andrii Poradovskyi (Pixabay)",
+                "\"Trap Dynamic Brass Thunder Power\" by alexzavesa (Pixabay)",
+                "\"Dance Funk\" by roybushband (Pixabay)",
             });
             add("Controller graphics", new[] { "Zacksly (CC BY 3.0)" });
             preset.mentions.Add(new CreditsPreset.MentionSection
@@ -828,6 +838,18 @@ namespace ShiftRush.EditorTools
             details.characterSpacing = 10;
             Place(details.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(128, 200), new Vector2(400, 40));
 
+            // Right column: the car you picked in the garage (a picture, not the live model), then the circuit.
+            var carBox = SidePanel(content, "Your Car", "YOUR CAR", -110f, 220f);
+            var carPic = Img(carBox, "Car Picture", null, Color.white);
+            carPic.raycastTarget = false; carPic.preserveAspect = true;
+            Place(carPic.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -6), new Vector2(-40, -44));
+            var carName = Txt(carBox, "Car Name", "ZEPHYR", fontTitle, 34, Color.white, TextAlignmentOptions.BottomRight);
+            Place(carName.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-34, 12), new Vector2(-60, 44));
+            var mapBox = SidePanel(content, "Circuit", "CIRCUIT", -360f, 280f);
+            var mapImg = Img(mapBox, "Circuit Line", null, new Color(0.66f, 0.68f, 0.74f, 0.75f)); // grey line
+            mapImg.raycastTarget = false; mapImg.preserveAspect = true;
+            Place(mapImg.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -12), new Vector2(-110, -84));
+
             var row = new GameObject("Cards", typeof(RectTransform)).GetComponent<RectTransform>();
             row.SetParent(content, false);
             Place(row, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(120, 190), new Vector2(-240, 240));
@@ -897,10 +919,38 @@ namespace ShiftRush.EditorTools
             so.FindProperty("details").objectReferenceValue = details;
             so.FindProperty("hero").objectReferenceValue = heroImg;
             so.FindProperty("backdrop").objectReferenceValue = backdropGroup;
+            so.FindProperty("carPicture").objectReferenceValue = carPic;
+            so.FindProperty("carName").objectReferenceValue = carName;
+            so.FindProperty("map").objectReferenceValue = mapImg;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             CloneHotkeys(canvas.Find("Main Content/Home Panel"), content, router, "Back", router.Back);
             return panel.GetComponent<Animator>();
+        }
+
+        /// <summary>A slanted panel down the right of the track select, with a small magenta tag in its corner.</summary>
+        static RectTransform SidePanel(Transform content, string name, string tag, float top, float height)
+        {
+            var box = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
+            box.SetParent(content, false);
+            Place(box, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, top), new Vector2(480, height));
+            var bg = Img(box, "Bg", slant, new Color(Panel.r, Panel.g, Panel.b, 0.72f));
+            bg.type = Image.Type.Sliced; bg.raycastTarget = false;
+            Stretch(bg.rectTransform);
+            var lines = Img(box, "Streaks", streaks, new Color(1, 1, 1, 0.05f));
+            lines.type = Image.Type.Tiled; lines.raycastTarget = false;
+            Stretch(lines.rectTransform);
+            lines.rectTransform.offsetMin = new Vector2(30, 8); lines.rectTransform.offsetMax = new Vector2(-30, -8);
+            var frame = Img(box, "Frame", slantFrame, new Color(1, 1, 1, 0.15f));
+            frame.type = Image.Type.Sliced; frame.raycastTarget = false;
+            Stretch(frame.rectTransform);
+            var stripe = Img(box, "Tag Stripe", slant, Magenta);
+            stripe.type = Image.Type.Sliced; stripe.raycastTarget = false; stripe.pixelsPerUnitMultiplier = 4f;
+            Place(stripe.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(40, -20), new Vector2(46, 8));
+            var label = Txt(box, "Tag", tag, fontBold, 18, Magenta, TextAlignmentOptions.Left);
+            label.characterSpacing = 10; label.raycastTarget = false;
+            Place(label.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(98, -12), new Vector2(300, 24));
+            return box;
         }
 
         /// <summary>Takes a Heat demo panel (for its show/hide animation), empties it and renames it.</summary>
@@ -980,15 +1030,19 @@ namespace ShiftRush.EditorTools
             var auto = Object.Instantiate(items["Enable Hints"].gameObject, items["Enable Hints"].parent).transform;
             ConfigureSwitch(auto, "Auto Accelerate", GameSettings.AutoAccelerateKey, false,
                 "The car keeps the throttle down for you. You steer, brake and fire nitro. Braking still slows you and backs you up.");
+            var tutorial = Object.Instantiate(items["Enable Hints"].gameObject, items["Enable Hints"].parent).transform;
+            ConfigureSwitch(tutorial, "Tutorial", GameSettings.TutorialKey, true,
+                "Coach hints in your first races: driving, SHIFT ramps, the timing, the worlds and nitro. For your first race only: they turn themselves off after it. Switch back on to see them again.");
             items["Speed Effects"] = items["Language"];
-            // Order: auto accelerate, speed effects, shake, reduced motion, units, minimap, menu scale.
+            // Order: auto accelerate, tutorial, speed effects, shake, reduced motion, units, minimap, menu scale.
             auto.SetSiblingIndex(0);
-            items["Language"].SetSiblingIndex(1);
-            items["Enable Hints"].SetSiblingIndex(2);
-            items["Enable Subtitles"].SetSiblingIndex(3);
-            items["Subtitle Scale"].SetSiblingIndex(4);
-            mini.SetSiblingIndex(5);
-            items["UI Scale"].SetSiblingIndex(6);
+            tutorial.SetSiblingIndex(1);
+            items["Language"].SetSiblingIndex(2);
+            items["Enable Hints"].SetSiblingIndex(3);
+            items["Enable Subtitles"].SetSiblingIndex(4);
+            items["Subtitle Scale"].SetSiblingIndex(5);
+            mini.SetSiblingIndex(6);
+            items["UI Scale"].SetSiblingIndex(7);
             HideSectionHeaders(gen);
 
             // Controls.
