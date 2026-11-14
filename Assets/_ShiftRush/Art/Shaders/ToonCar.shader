@@ -43,7 +43,7 @@ Shader "ShiftRush/Toon Car"
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fog
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
+            #pragma multi_compile_local_fragment _ _ALPHATEST_ON // always built: liveries switch it on at runtime
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"

@@ -24,6 +24,36 @@ namespace ShiftRush.EditorTools
         [MenuItem("SHIFT RUSH/Tracks/Instance Scenery")]
         static void InstanceAll() { RunOnTracks(Instance); }
 
+        /// <summary>
+        /// Points every instanced plant at a saved, instancing-enabled copy of its material (Art/Track/Baked/Materials).
+        /// Builds keep a shader's instancing variant only if a saved material uses it, so without these the plants
+        /// would draw in the editor but not in a build. Run by Instance Scenery; also on its own for tracks already done.
+        /// </summary>
+        [MenuItem("SHIFT RUSH/Tracks/Save Instanced Materials")]
+        static void SaveMaterialsAll() { RunOnTracks(s => { foreach (var c in Object.FindObjectsByType<InstancedScenery>(FindObjectsSortMode.None)) SaveMaterials(c); }); }
+
+        static void SaveMaterials(InstancedScenery comp)
+        {
+            string dir = BakedDir + "Materials/";
+            Directory.CreateDirectory(dir);
+            foreach (var kind in comp.kinds)
+                foreach (var level in kind.levels)
+                    for (int m = 0; m < level.materials.Length; m++)
+                    {
+                        var src = level.materials[m];
+                        if (src == null || src.enableInstancing) continue;
+                        string path = dir + src.name + "_Instanced.mat";
+                        var copy = AssetDatabase.LoadAssetAtPath<Material>(path);
+                        if (copy == null)
+                        {
+                            copy = new Material(src) { name = src.name + "_Instanced", enableInstancing = true };
+                            AssetDatabase.CreateAsset(copy, path);
+                        }
+                        level.materials[m] = copy;
+                    }
+            EditorUtility.SetDirty(comp);
+        }
+
         [MenuItem("SHIFT RUSH/Tracks/Restore Scenery")]
         static void RestoreAll() { RunOnTracks(Restore); }
 
@@ -135,6 +165,7 @@ namespace ShiftRush.EditorTools
             PrefabUtility.SaveAsPrefabAsset(source, BakedDir + scene.name + "_ScenerySource.prefab");
             Object.DestroyImmediate(source);
 
+            SaveMaterials(comp);
             comp.enabled = true;
             Debug.Log("[SHIFT//RUSH] " + scene.name + ": " + plants + " plants instanced in " + comp.chunks.Count + " chunks (" + comp.kinds.Count + " kinds), " + trunks.Count + " trunk collider chunks.");
         }
