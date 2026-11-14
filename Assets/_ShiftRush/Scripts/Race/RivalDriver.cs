@@ -90,7 +90,10 @@ namespace ShiftRush.Race
             if (race.Player != null && !me.finished)
             {
                 float gap = race.Player.Score(line.length) - me.Score(line.length);
-                vLimit *= 1f + Mathf.Clamp(gap / 300f, -1f, 1f) * field.catchUp;
+                float band = Mathf.Clamp(gap / 300f, -1f, 1f); // + = the player is ahead of this rival
+                float push = field.pushFromBehind >= 0f ? field.pushFromBehind : field.catchUp;
+                float ease = field.easeOutFront >= 0f ? field.easeOutFront : field.catchUp;
+                vLimit *= 1f + band * (band > 0f ? push : ease);
             }
             if (me.finished) vLimit *= 0.55f; // cool-down lap
 
@@ -109,6 +112,7 @@ namespace ShiftRush.Race
 
             // ---- nitro: earned on SHIFT ramps, fired on straights
             CheckRamps(p);
+            if (tank != null && field.nitroPerSecond > 0f && !me.finished) tank.AddNitro(field.nitroPerSecond * dt);
             bool nitro = tank != null && tank.Nitro01 > 0.05f && err > 8f && Mathf.Abs(steerSmooth) < 0.2f && !me.finished;
 
             // ---- stuck: back on the line

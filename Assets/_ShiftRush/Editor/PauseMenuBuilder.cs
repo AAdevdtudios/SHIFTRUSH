@@ -104,7 +104,8 @@ namespace ShiftRush.EditorTools
                 OptionRowUI(column, 7, "Car & Effects", OptionRow.Kind.Volume, "SFXVolume", null, 0, true, "SFX"),
                 OptionRowUI(column, 8, "Music Volume", OptionRow.Kind.Volume, "MusicVolume", null, 0, true, "Music"),
                 OptionRowUI(column, 9, "Music", OptionRow.Kind.Choice, MusicLibrary.ChoiceKey, new[] { "SHUFFLE ALL" }, 0, true, ""),
-                OptionRowUI(column, 10, "Menu Scroll Sound", OptionRow.Kind.Choice, GameSettings.ScrollSoundKey, GameSettings.ScrollSoundLabels, 0, true, ""),
+                // Menu Scroll Sound lives in the main Settings only; mid-race the look matters more.
+                OptionRowUI(column, 10, "Toon Look", OptionRow.Kind.Toggle, GameSettings.ToonLookKey, null, 0, true, ""),
             };
             // The Music row lists the songs in Resources/Audio/Music when it's shown, not when it's built.
             var musicRow = new SerializedObject(rows[9]);

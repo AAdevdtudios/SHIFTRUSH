@@ -30,6 +30,12 @@ namespace ShiftRush.Core
             [Tooltip("Paint colour used for the card accent.")]
             public Color accent = new Color(1f, 0.25f, 0.85f);
 
+            [Header("Chase camera")]
+            [Tooltip("Metres behind the car. 0 = the track's own setting. Raise it for big vehicles.")]
+            public float cameraDistance = 0f;
+            [Tooltip("Metres above the car. 0 = the track's own setting. Raise it so a tall vehicle doesn't hide the road.")]
+            public float cameraHeight = 0f;
+
             [Header("Nitro")]
             [Tooltip("The effect at each exhaust while nitro burns: any particle prefab (a GabrielAguiar Sci-Fi Thruster, say). Empty = the game's own neon flame.")]
             public GameObject nitroVfx;

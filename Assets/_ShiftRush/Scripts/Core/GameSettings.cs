@@ -18,9 +18,12 @@ namespace ShiftRush.Core
         public const string MinimapKey = "SR_Minimap";
         public const string AutoAccelerateKey = "SR_AutoAccelerate";
         public const string TutorialKey = "SR_Tutorial";
+        public const string ToonLookKey = "SR_ToonLook";
 
         /// <summary>Coach hints in the first races (see Race.RaceCoach). On until the player has done it all.</summary>
         public static bool Tutorial { get { return GetSwitch(TutorialKey, true); } }
+        /// <summary>Toon shading on the cars and ink outlines over the scene.</summary>
+        public static bool ToonLook { get { return GetSwitch(ToonLookKey, true); } }
 
         /// <summary>The car keeps the throttle down by itself; the player steers, brakes and fires nitro.</summary>
         public static bool AutoAccelerate { get { return GetSwitch(AutoAccelerateKey, false); } }

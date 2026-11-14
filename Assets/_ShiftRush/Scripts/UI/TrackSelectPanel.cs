@@ -29,6 +29,15 @@ namespace ShiftRush.UI
         [Tooltip("The selected track's circuit as a grey line.")]
         [SerializeField] Image map;
         RaceCatalog.Car shownCar;
+        [Header("Difficulty")]
+        [SerializeField] TMP_Text difficultyValue;
+        [SerializeField] TMP_Text difficultyBlurb;
+        [Tooltip("One per level, lit up to the chosen one.")]
+        [SerializeField] Image[] difficultyPips;
+        [SerializeField] Button difficultyDown, difficultyUp;
+        [SerializeField] Color pipOff = new Color(1f, 1f, 1f, 0.15f);
+        [SerializeField] Color[] levelColours = { new Color32(56, 225, 255, 255), new Color32(255, 64, 217, 255), new Color32(255, 120, 40, 255) };
+        float difficultyPunch;
         [Tooltip("Canvas behind the showroom car that holds the hero band; follows this panel's visibility.")]
         [SerializeField] CanvasGroup backdrop;
         float heroAlpha;
@@ -48,7 +57,10 @@ namespace ShiftRush.UI
                 cards.Add(card);
             }
             index = RaceSession.TrackIndex;
+            if (difficultyDown) difficultyDown.onClick.AddListener(() => StepDifficulty(-1));
+            if (difficultyUp) difficultyUp.onClick.AddListener(() => StepDifficulty(1));
             Refresh();
+            ShowDifficulty();
         }
 
         bool Accepting { get { return visibleGroup == null || (visibleGroup.alpha > 0.95f && visibleGroup.interactable); } }
@@ -59,6 +71,11 @@ namespace ShiftRush.UI
         {
             if (backdrop != null) backdrop.alpha = visibleGroup != null && visibleGroup.gameObject.activeInHierarchy ? visibleGroup.alpha : 0f;
             ShowCar();
+            if (difficultyValue != null)
+            {
+                difficultyPunch = Mathf.MoveTowards(difficultyPunch, 0f, Time.unscaledDeltaTime * 4f);
+                difficultyValue.transform.localScale = Vector3.one * (1f + 0.15f * difficultyPunch * difficultyPunch);
+            }
             if (hero == null) return;
             heroAlpha = Mathf.MoveTowards(heroAlpha, 1f, Time.unscaledDeltaTime * 3f);
             var c = hero.color; c.a = heroAlpha; hero.color = c;
@@ -68,8 +85,10 @@ namespace ShiftRush.UI
         void Update()
         {
             if (!Accepting || SceneLoader.IsLoading) return;
-            if (MenuInput.Left || MenuInput.Up) Select(index - 1, true);
-            else if (MenuInput.Right || MenuInput.Down) Select(index + 1, true);
+            if (MenuInput.Left) Select(index - 1, true);
+            else if (MenuInput.Right) Select(index + 1, true);
+            else if (MenuInput.Up) StepDifficulty(1);
+            else if (MenuInput.Down) StepDifficulty(-1);
             else if (MenuInput.Submit) Go(index);
         }
 
@@ -93,6 +112,30 @@ namespace ShiftRush.UI
             RaceSession.TrackIndex = i;
             MenuSounds.Confirm();
             SceneLoader.LoadTrack(cat.tracks[i]);
+        }
+
+        /// <summary>Up a level (+1) or down (-1), clamped: CRUISE, RUSH, OVERDRIVE.</summary>
+        public void StepDifficulty(int dir)
+        {
+            int next = Mathf.Clamp(Difficulty.Chosen + dir, 0, Difficulty.Labels.Length - 1);
+            if (next == Difficulty.Chosen) { MenuSounds.Tick(); return; }
+            Difficulty.Chosen = next;
+            MenuSounds.Shift();
+            difficultyPunch = 1f;
+            ShowDifficulty();
+        }
+
+        void ShowDifficulty()
+        {
+            int lv = Difficulty.Chosen;
+            var col = levelColours != null && lv < levelColours.Length ? levelColours[lv] : Color.white;
+            if (difficultyValue) { difficultyValue.text = Difficulty.Labels[lv]; difficultyValue.color = col; }
+            if (difficultyBlurb)
+                difficultyBlurb.text = GameSettings.Tutorial ? "Your first race runs on CRUISE, with the tutorial." : Difficulty.Of(lv).blurb;
+            if (difficultyPips != null)
+                for (int i = 0; i < difficultyPips.Length; i++) if (difficultyPips[i]) difficultyPips[i].color = i <= lv ? col : pipOff;
+            if (difficultyDown) difficultyDown.interactable = lv > 0;
+            if (difficultyUp) difficultyUp.interactable = lv < Difficulty.Labels.Length - 1;
         }
 
         // The car can change in the garage while this panel stays built, so follow the session's pick.

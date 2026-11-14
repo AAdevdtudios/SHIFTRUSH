@@ -138,6 +138,19 @@ namespace ShiftRush.Vehicles
                 RCCP.SetExternalControl(car, true);
                 return car.GetComponent<IVehicle>();
             };
+            VehicleSpawn.Boost = (car, factor) =>
+            {
+                var engine = car.GetComponentInChildren<RCCP_Engine>(true);
+                if (engine != null) { engine.maximumTorqueAsNM *= factor; engine.maximumSpeed *= factor; }
+                foreach (var w in car.GetComponentsInChildren<RCCP_WheelCollider>(true)) w.grip *= factor;
+            };
+            VehicleSpawn.Player = (prefab, pos, rot) =>
+            {
+                var rc = prefab != null ? prefab.GetComponent<RCCP_CarController>() : null;
+                if (rc == null) return null;
+                var car = RCCP.SpawnRCC(rc, pos, rot, true, true, true); // the camera and keyboard follow it
+                return car.GetComponent<IVehicle>();
+            };
         }
 
         RCCP_Inputs driverInputs;

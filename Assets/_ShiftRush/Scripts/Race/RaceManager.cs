@@ -154,6 +154,7 @@ namespace ShiftRush.Race
         /// <summary>
         /// Puts a racer back on the circuit so it is running in a given position (1 = leading): just ahead of the
         /// car that should be behind it, beside the road's centre on the side away from nearby cars, at a speed.
+        /// Never further back along the track than where the racer left from (a leader keeps its gap).
         /// Lap, checkpoints and progress follow the new spot. Ends a SHIFT world's suspension. False when there's
         /// nobody to place against (the caller then puts the car back where it left).
         /// </summary>
@@ -181,6 +182,9 @@ namespace ShiftRush.Race
                 float front = running[ahead - 1].Score(len), back = running[ahead].Score(len);
                 target = Mathf.Min(back + 25f, (front + back) * 0.5f);
             }
+            // Never back down the road from where this racer left (it is suspended, so its score is still the
+            // spot it jumped from): a big lead stays a big lead. It comes back at least past its own jump.
+            target = Mathf.Max(target, r.Score(len) + 40f);
             target = Mathf.Clamp(target, 10f, TotalLaps * len - 80f);
 
             // Not on top of a SHIFT ramp (it would launch the car again).

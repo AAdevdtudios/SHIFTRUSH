@@ -24,7 +24,93 @@ MonoBehaviour:
     boost: 5
     thumbnail: {fileID: 21300000, guid: b619e8c76a54f43569d285d174ec83c4, type: 3}
     accent: {r: 1, g: 0.2509804, b: 0.8509804, a: 1}
+    cameraDistance: 0
+    cameraHeight: 0
     nitroVfx: {fileID: 8877627154093148493, guid: 387c65f17c2b3714083c66fdf9747a17, type: 3}
+    nitroExhausts:
+    - {x: -0.252, y: -0.287, z: -2.288}
+    - {x: 0.252, y: -0.287, z: -2.288}
+    nitroRotation: {x: 0, y: -90, z: 0}
+    nitroScale: 0.3
+    nitroHide:
+    - SpaceshipMesh
+  - id: fireburst
+    displayName: Fireburst
+    tagline: Flat out or nothing. Twitchy at the limit.
+    prefab: {fileID: 8936669675758852984, guid: 4f9fd4e6cb93f454fb073e1396b51386, type: 3}
+    showroomPrefab: {fileID: 0}
+    topSpeed: 9
+    acceleration: 7
+    handling: 5
+    boost: 5
+    thumbnail: {fileID: 21300000, guid: c5267f73c4a8b44fc85f243b2ec1a554, type: 3}
+    accent: {r: 0.21960784, g: 0.88235295, b: 1, a: 1}
+    cameraDistance: 0
+    cameraHeight: 0
+    nitroVfx: {fileID: 3327366037713865010, guid: ee8dcc89d5f4eb240aa5312d61829a14, type: 3}
+    nitroExhausts:
+    - {x: -0.253, y: -0.032, z: -2.386}
+    - {x: 0.253, y: -0.032, z: -2.386}
+    nitroRotation: {x: 0, y: -90, z: 0}
+    nitroScale: 0.3
+    nitroHide:
+    - SpaceshipMesh
+  - id: predator
+    displayName: Predator
+    tagline: A race car on a leash. Corners like it's on rails.
+    prefab: {fileID: 8176232413722470093, guid: 9809cc2a9de8149c5b077fd5f60fa848, type: 3}
+    showroomPrefab: {fileID: 0}
+    topSpeed: 6
+    acceleration: 6
+    handling: 9
+    boost: 5
+    thumbnail: {fileID: 21300000, guid: 26fc0e6c100a244638400d1d6a29cdfe, type: 3}
+    accent: {r: 1, g: 0.5882353, b: 0.11764706, a: 1}
+    cameraDistance: 0
+    cameraHeight: 0
+    nitroVfx: {fileID: 4165431073209105999, guid: 6731f151230e91946b0017d22a6fd6a2, type: 3}
+    nitroExhausts:
+    - {x: -0.2, y: 0.078, z: -2.423}
+    - {x: 0.145, y: 0.078, z: -2.423}
+    nitroRotation: {x: 0, y: -90, z: 0}
+    nitroScale: 0.3
+    nitroHide:
+    - SpaceshipMesh
+  - id: blackout
+    displayName: Blackout
+    tagline: All muscle. The biggest, longest nitro burn.
+    prefab: {fileID: 8722409306801786800, guid: 95454484ab89e4318913057a58a109fd, type: 3}
+    showroomPrefab: {fileID: 0}
+    topSpeed: 7
+    acceleration: 8
+    handling: 4
+    boost: 9
+    thumbnail: {fileID: 21300000, guid: d6218476e1ca0476a9e44bfd192f2f9f, type: 3}
+    accent: {r: 0.15686275, g: 0.43137255, b: 1, a: 1}
+    cameraDistance: 0
+    cameraHeight: 0
+    nitroVfx: {fileID: 8541377478608203761, guid: a17730a999adbba4db276c01fced2652, type: 3}
+    nitroExhausts:
+    - {x: -0.468, y: -0.216, z: -2.947}
+    - {x: 0.448, y: -0.216, z: -2.947}
+    nitroRotation: {x: 0, y: -90, z: 0}
+    nitroScale: 0.36
+    nitroHide:
+    - SpaceshipMesh
+  - id: tetsuo
+    displayName: Tetsuo
+    tagline: Born sideways. Throw it in and hold the slide.
+    prefab: {fileID: 5810208036851785621, guid: 582f364dbd99247ecba80fd56335e945, type: 3}
+    showroomPrefab: {fileID: 0}
+    topSpeed: 7
+    acceleration: 7
+    handling: 7
+    boost: 6
+    thumbnail: {fileID: 21300000, guid: f53a20dc9800d4cc89896fba12abd76a, type: 3}
+    accent: {r: 1, g: 0.23529412, b: 0.3137255, a: 1}
+    cameraDistance: 0
+    cameraHeight: 0
+    nitroVfx: {fileID: 2868397938883470032, guid: 64c2a07ff6bc4564faae42475839b7c8, type: 3}
     nitroExhausts: []
     nitroRotation: {x: 0, y: -90, z: 0}
     nitroScale: 0.3

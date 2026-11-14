@@ -1,9 +1,13 @@
+using ShiftRush.Core;
 using ShiftRush.Vehicles;
 using UnityEngine;
 
 namespace ShiftRush.Race
 {
-    /// <summary>Lines the field up behind the start line (staggered two-wide) and spawns the rivals.</summary>
+    /// <summary>
+    /// Lines the field up behind the start line (staggered two-wide) and spawns the rivals, set to the race's
+    /// <see cref="Difficulty"/>: the player's grid slot, the rivals' pace and how much they ease off or push.
+    /// </summary>
     public static class RaceGrid
     {
         public static Vector3 Slot(RaceLine line, RivalField f, int slot, out Quaternion rot, out float lateral)
@@ -29,8 +33,13 @@ namespace ShiftRush.Race
             var line = race.Line;
             if (f == null || line == null || line.points == null || line.points.Length < 2) return;
 
+            var level = Difficulty.Current;
             int total = f.rivals.Count + 1;
-            int playerSlot = Mathf.Clamp(f.playerGridSlot, 0, total - 1);
+            int playerSlot = Mathf.Clamp(level.gridSlot, 0, total - 1);
+            var raceField = Object.Instantiate(f); // this race's copy: the asset stays as authored
+            raceField.pushFromBehind = level.push;
+            raceField.easeOutFront = level.ease;
+            raceField.nitroPerSecond = level.rivalNitro;
             if (player != null)
             {
                 Quaternion pr; float pl;
@@ -53,10 +62,20 @@ namespace ShiftRush.Race
                 Paint(go, f.paintToReplace, rival.livery);
                 var reset = go.GetComponent<VehicleReset>();
                 if (reset != null) reset.listenForInput = false;
+                if (level.carBoost != 1f) VehicleSpawn.Boost(go, level.carBoost);
                 var racer = race.AddRacer(v, rival.name, false);
                 racer.color = rival.color;
-                go.AddComponent<RivalDriver>().Init(race, racer, rival, f, lateral);
+                go.AddComponent<RivalDriver>().Init(race, racer, Paced(rival, level.pace), raceField, lateral);
             }
+        }
+
+        static RivalField.Rival Paced(RivalField.Rival r, float pace)
+        {
+            return new RivalField.Rival
+            {
+                name = r.name, livery = r.livery, color = r.color, shortcutChance = r.shortcutChance,
+                grip = r.grip * pace, topSpeedKmh = r.topSpeedKmh * pace,
+            };
         }
 
         static void Paint(GameObject car, Material from, Material to)

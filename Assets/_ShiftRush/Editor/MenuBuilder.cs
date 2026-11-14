@@ -90,7 +90,7 @@ namespace ShiftRush.EditorTools
             BuildHintBar(canvas);
             Hint(home.transform.Find("Content"), "<color=#FF40D9>W S</color>  SHIFT     <color=#FF40D9>1 2 3 R</color>  JUMP     <color=#FF40D9>ENTER</color>  ENGAGE");
             Hint(garage.transform.Find("Content"), "<color=#FF40D9>A D</color>  CHANGE CAR     <color=#FF40D9>ENTER</color>  SELECT");
-            Hint(tracks.transform.Find("Content"), "<color=#FF40D9>A D</color>  CHANGE TRACK     <color=#FF40D9>ENTER</color>  RACE");
+            Hint(tracks.transform.Find("Content"), "<color=#FF40D9>A D</color>  CHANGE TRACK     <color=#FF40D9>W S</color>  DIFFICULTY     <color=#FF40D9>ENTER</color>  RACE");
 
             var so = new SerializedObject(router);
             so.FindProperty("panels").objectReferenceValue = panels;
@@ -851,6 +851,33 @@ namespace ShiftRush.EditorTools
             mapImg.raycastTarget = false; mapImg.preserveAspect = true;
             Place(mapImg.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -12), new Vector2(-110, -84));
 
+            // Difficulty, under the circuit: arrows round the level's name, three pips, and what it means.
+            var diffBox = SidePanel(content, "Difficulty", "DIFFICULTY", -660f, 170f);
+            var diffValue = Txt(diffBox, "Value", "RUSH", fontTitle, 46, Magenta, TextAlignmentOptions.Center);
+            Place(diffValue.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -62), new Vector2(300, 56));
+            Button DiffArrow(string name, string glyph, float x)
+            {
+                var a = Txt(diffBox, name, glyph, fontTitle, 44, Color.white, TextAlignmentOptions.Center);
+                a.raycastTarget = true;
+                Place(a.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(x, -62), new Vector2(60, 56));
+                var b = a.gameObject.AddComponent<Button>();
+                b.targetGraphic = a;
+                var cb = b.colors; cb.normalColor = Color.white; cb.highlightedColor = Magenta; cb.disabledColor = new Color(1, 1, 1, 0.15f); b.colors = cb;
+                return b;
+            }
+            var diffDown = DiffArrow("Down", "\u2039", -170f);
+            var diffUp = DiffArrow("Up", "\u203A", 170f);
+            var diffPips = new Image[3];
+            for (int k = 0; k < 3; k++)
+            {
+                diffPips[k] = Img(diffBox, "Pip " + (k + 1), slant, new Color(1, 1, 1, 0.15f));
+                diffPips[k].type = Image.Type.Sliced; diffPips[k].pixelsPerUnitMultiplier = 4f; diffPips[k].raycastTarget = false;
+                Place(diffPips[k].rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2((k - 1) * 62, -100), new Vector2(54, 8));
+            }
+            var diffBlurb = Txt(diffBox, "Blurb", "", fontBold, 17, Steel, TextAlignmentOptions.Center);
+            diffBlurb.enableAutoSizing = true; diffBlurb.fontSizeMin = 13; diffBlurb.fontSizeMax = 17;
+            Place(diffBlurb.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 14), new Vector2(-70, 44));
+
             var row = new GameObject("Cards", typeof(RectTransform)).GetComponent<RectTransform>();
             row.SetParent(content, false);
             Place(row, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(120, 190), new Vector2(-240, 240));
@@ -923,6 +950,13 @@ namespace ShiftRush.EditorTools
             so.FindProperty("carPicture").objectReferenceValue = carPic;
             so.FindProperty("carName").objectReferenceValue = carName;
             so.FindProperty("map").objectReferenceValue = mapImg;
+            so.FindProperty("difficultyValue").objectReferenceValue = diffValue;
+            so.FindProperty("difficultyBlurb").objectReferenceValue = diffBlurb;
+            so.FindProperty("difficultyDown").objectReferenceValue = diffDown;
+            so.FindProperty("difficultyUp").objectReferenceValue = diffUp;
+            var pipsProp = so.FindProperty("difficultyPips");
+            pipsProp.arraySize = diffPips.Length;
+            for (int k = 0; k < diffPips.Length; k++) pipsProp.GetArrayElementAtIndex(k).objectReferenceValue = diffPips[k];
             so.ApplyModifiedPropertiesWithoutUndo();
 
             CloneHotkeys(canvas.Find("Main Content/Home Panel"), content, router, "Back", router.Back);
@@ -1031,19 +1065,23 @@ namespace ShiftRush.EditorTools
             var auto = Object.Instantiate(items["Enable Hints"].gameObject, items["Enable Hints"].parent).transform;
             ConfigureSwitch(auto, "Auto Accelerate", GameSettings.AutoAccelerateKey, false,
                 "The car keeps the throttle down for you. You steer, brake and fire nitro. Braking still slows you and backs you up.");
+            var difficulty = Object.Instantiate(items["Subtitle Scale"].gameObject, items["Subtitle Scale"].parent).transform;
+            ConfigureSelector(difficulty, "Difficulty", Difficulty.Key, Difficulty.Labels, Difficulty.Default,
+                "CRUISE: gentler rivals, a wider SHIFT window and more nitro, start 3rd. RUSH: the race as meant. OVERDRIVE: faster rivals who never wait, a tight SHIFT window, a SHIFT lands you P2-P4, start last. Also on the track select screen.");
             var tutorial = Object.Instantiate(items["Enable Hints"].gameObject, items["Enable Hints"].parent).transform;
             ConfigureSwitch(tutorial, "Tutorial", GameSettings.TutorialKey, true,
                 "Coach hints in your first races: driving, SHIFT ramps, the timing, the worlds and nitro. For your first race only: they turn themselves off after it. Switch back on to see them again.");
             items["Speed Effects"] = items["Language"];
-            // Order: auto accelerate, tutorial, speed effects, shake, reduced motion, units, minimap, menu scale.
+            // Order: auto accelerate, tutorial, difficulty, speed effects, shake, reduced motion, units, minimap, menu scale.
             auto.SetSiblingIndex(0);
             tutorial.SetSiblingIndex(1);
-            items["Language"].SetSiblingIndex(2);
-            items["Enable Hints"].SetSiblingIndex(3);
-            items["Enable Subtitles"].SetSiblingIndex(4);
-            items["Subtitle Scale"].SetSiblingIndex(5);
-            mini.SetSiblingIndex(6);
-            items["UI Scale"].SetSiblingIndex(7);
+            difficulty.SetSiblingIndex(2);
+            items["Language"].SetSiblingIndex(3);
+            items["Enable Hints"].SetSiblingIndex(4);
+            items["Enable Subtitles"].SetSiblingIndex(5);
+            items["Subtitle Scale"].SetSiblingIndex(6);
+            mini.SetSiblingIndex(7);
+            items["UI Scale"].SetSiblingIndex(8);
             HideSectionHeaders(gen);
 
             // Controls.
@@ -1147,6 +1185,11 @@ namespace ShiftRush.EditorTools
                 var qb = settings.gameObject.AddComponent<QualityBoot>();
                 UnityEventTools.AddPersistentListener(hs.onValueChanged, qb.SetLevel);
             }
+            // Toon Look: a switch (cloned from Gameplay's) right under Graphics Quality.
+            var toon = Object.Instantiate(items["Enable Hints"].gameObject, vis).transform;
+            ConfigureSwitch(toon, "Toon Look", GameSettings.ToonLookKey, true,
+                "Cel-shaded cars with a coloured rim, and ink outlines round everything. Off for the plain look, or if the game stutters.");
+            toon.SetSiblingIndex(1);
             HideSectionHeaders(vis);
             // Applies window mode, frame rate, VSync, textures and filtering as they change (see DisplaySettings).
             if (vis.GetComponent<DisplaySettingsBinder>() == null) vis.gameObject.AddComponent<DisplaySettingsBinder>();

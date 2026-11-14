@@ -23,8 +23,8 @@ namespace ShiftRush.Core
         [Tooltip("Soft-masked shot of the track behind the title.")]
         [SerializeField] Image hero;
         [Tooltip("Minimum time on screen, so the track name can be read even on a fast load.")]
-        [SerializeField] float minimumShow = 1.6f;
-        [SerializeField] float fade = 0.35f;
+        [SerializeField] float minimumShow = 0.7f;
+        [SerializeField] float fade = 0.25f;
 
         static SceneLoader instance;
         public static bool IsLoading { get; private set; }
@@ -62,7 +62,7 @@ namespace ShiftRush.Core
             string tipText = track.loadingTips != null && track.loadingTips.Length > 0
                 ? track.loadingTips[Random.Range(0, track.loadingTips.Length)] : "";
             var car = RaceSession.Car;
-            string sub = (car != null ? car.displayName.ToUpperInvariant() + "  //  " : "") + track.LengthLabel;
+            string sub = (car != null ? car.displayName.ToUpperInvariant() + "  //  " : "") + Difficulty.Label + "  //  " + track.LengthLabel;
             Load(track.scene, track.displayName, sub, tipText, track.thumbnail);
         }
 

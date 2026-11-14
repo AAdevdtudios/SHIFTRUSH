@@ -44,6 +44,8 @@ namespace ShiftRush.Race
         [Header("Pace")]
         [Tooltip("Rivals far behind the player find a few % more speed, rivals far ahead lose a few %.")]
         [Range(0f, 0.2f)] public float catchUp = 0.06f;
+        // Set per race from the difficulty (RaceGrid): split rubber band and a nitro trickle. -1 = use catchUp.
+        [System.NonSerialized] public float pushFromBehind = -1f, easeOutFront = -1f, nitroPerSecond;
         [Tooltip("Nitro a rival earns when it jumps a SHIFT ramp (min, max of a full tank).")]
         public Vector2 rampNitro = new Vector2(0.35f, 0.9f);
 

@@ -238,7 +238,7 @@ namespace ShiftRush.Race
             if (p == null) return;
             chain = Time.time - lastBonus <= chainWindow ? Mathf.Min(chain + 1, chainMax) : 1;
             lastBonus = Time.time;
-            float pay = nitro * (1f + (chain - 1) * chainStep);
+            float pay = nitro * (1f + (chain - 1) * chainStep) * Core.Difficulty.Current.bonusNitro;
             if (p.vehicle is INitroTank tank && tank.Nitro01 >= 0f) tank.AddNitro(pay);
             Awarded?.Invoke(label, pay);
 

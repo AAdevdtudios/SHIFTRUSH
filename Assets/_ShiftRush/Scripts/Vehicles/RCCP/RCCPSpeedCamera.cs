@@ -19,6 +19,7 @@ namespace ShiftRush.Vehicles
         RCCP_CarController car;
         IVehicle vehicle;
         RCCP_Nos nos;
+        float trackDistance = -1f, trackHeight;
 
         void Awake()
         {
@@ -39,6 +40,7 @@ namespace ShiftRush.Vehicles
                 car = current;
                 vehicle = car != null ? car.GetComponent<IVehicle>() : null;
                 nos = car != null ? car.GetComponentInChildren<RCCP_Nos>(true) : null;
+                FrameFor(car);
             }
 
             bool chase = car != null && rig.cameraMode == RCCP_Camera.CameraMode.TPS;
@@ -47,6 +49,17 @@ namespace ShiftRush.Vehicles
 
             // Overwrite (not add to) RCCP's chase FOV each frame, so nothing accumulates.
             if (chase) rig.targetFieldOfView = baseFov + speedFeel.ExtraFov;
+        }
+
+        // Each car can ask for its own chase framing (a monster truck needs the camera higher and further back to
+        // see over its own roof); otherwise the track's setting stands.
+        void FrameFor(RCCP_CarController c)
+        {
+            if (trackDistance < 0f) { trackDistance = rig.TPSDistance; trackHeight = rig.TPSHeight; }
+            var cat = Core.RaceCatalog.Instance;
+            var spec = c != null && cat != null ? cat.FindCar(c.gameObject) : null;
+            rig.TPSDistance = spec != null && spec.cameraDistance > 0f ? spec.cameraDistance : trackDistance;
+            rig.TPSHeight = spec != null && spec.cameraHeight > 0f ? spec.cameraHeight : trackHeight;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace ShiftRush.Shift
     /// Runs the SHIFT moment. Leaving a SHIFT ramp drops the game into slow motion and shows the timing diamond: a
     /// magenta diamond closes in on a fixed target diamond, easing as it gets there, three tries; Shift pressed as
     /// they line up is a hit. Two hits warp the car into a random SHIFT world for about 10 seconds. Reach its finish in time and
-    /// the car comes back running in a random 1st, 2nd or 3rd place (never worse than where it left from); run out
+    /// the car comes back running in a random top place set by the difficulty (1st-3rd on RUSH; never worse than where it left from); run out
     /// of time and it keeps a share of a win's gain by how far it got (never lower than where it left). Nitro is paid in proportion to the world's score. Fewer than two
     /// hits: time comes back, the jump carries on, and a little nitro. The race clock keeps running.
     /// Spawns itself in any scene that has a <see cref="ShiftRamp"/>.
@@ -125,7 +125,7 @@ namespace ShiftRush.Shift
             int tries = closeSeconds.Length, hits = 0, misses = 0;
             // Tutorial: until the first SHIFT lands, the diamond closes slower and the window is wider.
             bool assist = RaceCoach.AssistShift;
-            float slower = assist ? 1.4f : 1f, window = assist ? tolerance + 0.08f : tolerance;
+            float slower = assist ? 1.4f : 1f, window = (assist ? tolerance + 0.08f : tolerance) * Core.Difficulty.Current.shiftWindow;
             const float endScale = 0.55f; // it carries on shrinking past the target, so waiting too long misses
             for (int t = 0; t < tries && hits < hitsNeeded && misses <= tries - hitsNeeded; t++)
             {
@@ -199,12 +199,13 @@ namespace ShiftRush.Shift
             {
                 int from = leftFrom > 0 ? leftFrom : race.Racers.Count;
                 int target;
-                if (arena.Won) target = Mathf.Min(Random.Range(1, 4), from); // a win never sets you back
+                var level = Core.Difficulty.Current;
+                if (arena.Won) target = Mathf.Min(Random.Range(level.warpBest, level.warpWorst + 1), from); // a win never sets you back
                 else
                 {
                     // Late: never lower than where you left; the further you got, the more of a win's gain you keep
                     // (a win lands around P2). 80% of the way ≈ most of it; 20% ≈ where you were.
-                    int best = Mathf.Min(2, from);
+                    int best = Mathf.Min(level.warpBest + 1, from);
                     target = Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(from, best, arena.Progress)), 1, from);
                 }
                 placed = race.PlaceAtPosition(race.Player, target, backSpeed);

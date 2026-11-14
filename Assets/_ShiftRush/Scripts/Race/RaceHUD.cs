@@ -96,6 +96,7 @@ namespace ShiftRush.Race
         static void Spawn(Scene scene)
         {
             if (scene.name == MenuScene || FindFirstObjectByType<RaceHUD>() != null) return;
+            PlayerCarSwap.Apply(scene); // the garage's car onto the grid first
             bool hasCar = false;
             foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)) if (mb is IVehicle) { hasCar = true; break; }
             if (!hasCar) return;
@@ -186,6 +187,7 @@ namespace ShiftRush.Race
                 float fastest = float.MaxValue;
                 foreach (var t in r.lapTimes) fastest = Mathf.Min(fastest, t);
                 var sb = new System.Text.StringBuilder();
+                sb.Append("<color=#FF40D9>" + Difficulty.Label + "</color>\n");
                 for (int i = 0; i < r.lapTimes.Count; i++)
                 {
                     bool f = Mathf.Approximately(r.lapTimes[i], fastest);

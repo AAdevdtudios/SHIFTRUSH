@@ -144,8 +144,8 @@ MonoBehaviour:
   fill: {fileID: 8158289995239697259}
   streaks: {fileID: 7398450192275464136}
   hero: {fileID: 7194915771267612883}
-  minimumShow: 1.6
-  fade: 0.35
+  minimumShow: 0.7
+  fade: 0.25
 --- !u!1 &728387421698378828
 GameObject:
   m_ObjectHideFlags: 0

@@ -63,6 +63,9 @@ namespace ShiftRush.UI
             if (car != null) Show(car);
         }
 
+        /// <summary>The car on the plinth right now (null between cars).</summary>
+        public GameObject CurrentCar { get { return current; } }
+
         public void FrameHome() { SetScreen(MenuScreen.Home); }
         public void FrameGarage() { SetScreen(MenuScreen.Garage); }
         /// <summary>Track select: the turntable eases to a fixed side-on angle and stops, the camera moves in close
