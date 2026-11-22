@@ -16,6 +16,15 @@ namespace ShiftRush.VFX
         public ParticleSystem landingPuff;
         public ParticleSystem dirtSpray;
 
+        [Tooltip("Wind aura around the player's car, driven by speed (PixPlays Elemental Auras, a paid, git-ignored pack).")]
+        public GameObject windAura;
+
+        [Header("Drift")]
+        public Material driftSmoke;
+        public Material driftSparks;
+        [Tooltip("Tyre screech loop while drifting (RCC Pro's asphalt skid, a paid, git-ignored pack).")]
+        public AudioClip driftScreech;
+
         [Header("SHIFT")]
         public ParticleSystem arrivalBurst;
 

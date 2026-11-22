@@ -10,6 +10,9 @@ namespace ShiftRush.Race
     /// the rival's lane); speed comes from the line's corner limits, scaled by the rival's grip, so they brake
     /// for bends the way a driver would. They pull out to pass cars in front, sometimes take shortcuts, earn
     /// nitro when they jump a SHIFT ramp and fire it on straights. A rival that gets stuck is put back on the line.
+    /// They use the player's moves too, by their profile: drift the tight corners (<see cref="RivalField.Rival.driftSkill"/>),
+    /// spiral roll into a car alongside or forward-roll into one just ahead (<see cref="RivalField.Rival.aggression"/>),
+    /// and roll out of the way of a roll coming at them.
     /// </summary>
     [DefaultExecutionOrder(50)]
     public class RivalDriver : MonoBehaviour
@@ -33,6 +36,15 @@ namespace ShiftRush.Race
         readonly List<Transform> ramps = new List<Transform>();
         Transform lastRamp;
 
+        // moves
+        GripMoves moves;
+        DriftMoves drift;
+        float nextMoveCheck, lastRollAt = -10f, dodgeAt = -1f;
+        int dodgeDir, driftCornerAt = -1000, driftDir;
+        bool driftThisCorner;
+        float driftSince;
+        const float RollGap = 2.5f; // seconds between a rival's own rolls
+
         public void Init(RaceManager race, RaceManager.Racer me, RivalField.Rival profile, RivalField field, float startLane)
         {
             this.race = race; this.me = me; this.profile = profile; this.field = field;
@@ -45,6 +57,29 @@ namespace ShiftRush.Race
             // Each rival keeps to its own part of the road, so they don't all queue on the centreline.
             baseLane = Mathf.Clamp(startLane * 0.5f + Random.Range(-2f, 2f), -5f, 5f);
             foreach (var r in FindObjectsByType<ShiftRamp>(FindObjectsSortMode.None)) ramps.Add(r.transform);
+
+            moves = GetComponent<GripMoves>();
+            if (moves == null) moves = gameObject.AddComponent<GripMoves>();
+            moves.playerControlled = false;
+            drift = GetComponent<DriftMoves>();
+            if (drift == null) drift = gameObject.AddComponent<DriftMoves>();
+            drift.playerControlled = false;
+            GripMoves.Leapt -= OnSomeoneRolled;
+            GripMoves.Leapt += OnSomeoneRolled;
+        }
+
+        void OnDestroy() { GripMoves.Leapt -= OnSomeoneRolled; }
+
+        /// <summary>A roll coming this way: a sharp rival rolls out of its path.</summary>
+        void OnSomeoneRolled(GripMoves roller, int dir)
+        {
+            if (roller == moves || moves == null || dir == 0 || profile == null) return;
+            Vector3 rel = roller.transform.InverseTransformPoint(transform.position); // me, from the roller
+            if (rel.magnitude > 9f || Mathf.Abs(rel.z) > 3.5f) return;
+            if (Mathf.Sign(rel.x) != dir) return; // rolling away from me
+            if (Random.value > 0.25f + profile.driftSkill * 0.6f) return;
+            dodgeDir = (int)Mathf.Sign(rel.x); // away from the roller: further the way it was rolling
+            dodgeAt = Time.time + Random.Range(0.06f, 0.16f); // reaction time
         }
 
         void FixedUpdate()
@@ -100,6 +135,9 @@ namespace ShiftRush.Race
             // ---- steering
             Vector3 local = transform.InverseTransformPoint(target);
             float ang = Mathf.Atan2(local.x, Mathf.Max(local.z, 0.1f)) * Mathf.Rad2Deg;
+            // In a drift the nose points into the corner, so steer by the direction of travel instead.
+            if (drift != null && drift.Drifting && speed > 3f)
+                ang = Vector3.SignedAngle(new Vector3(vel.x, 0f, vel.z), Vector3.ProjectOnPlane(target - p, Vector3.up), Vector3.up);
             float steer = Mathf.Clamp(ang / MaxSteerAngle, -1f, 1f);
             steerSmooth = Mathf.MoveTowards(steerSmooth, steer, dt * 6f);
 
@@ -120,7 +158,82 @@ namespace ShiftRush.Race
             stuckTime = racing && speed < 2f ? stuckTime + dt : 0f;
             if (stuckTime > 3f && reset != null) { stuckTime = 0f; onShortcut = null; reset.ResetNow(); }
 
+            // ---- moves: drift the tight corners, roll to knock or dodge
+            bool drifting = DriftCorner(speed, sqrtGrip);
+            if (drifting) { throttle = 1f; brake = 0f; }
+            UseRolls(p, speed);
+
             input.SetDriverInput(steerSmooth, throttle, brake, 0f, nitro);
+        }
+
+        /// <summary>Drift a corner that's tighter than the speed allows, if this rival is the drifting kind.</summary>
+        bool DriftCorner(float speed, float sqrtGrip)
+        {
+            if (drift == null || me.finished) return false;
+            float cornerLimit = float.MaxValue;
+            for (int k = 2; k < 8; k++) cornerLimit = Mathf.Min(cornerLimit, line.CornerSpeed(nearest + k) * sqrtGrip);
+            bool tight = cornerLimit < speed * 0.92f && Mathf.Abs(steerSmooth) > 0.35f;
+            // One decision per corner, so a rival commits or doesn't.
+            if (tight && Mathf.Abs(nearest - driftCornerAt) > 25) { driftCornerAt = nearest; driftThisCorner = Random.value < profile.driftSkill * drift.DriftEagerness; }
+            bool hold;
+            if (drift.Drifting)
+            {
+                // Like the player: the handbrake held while the corner keeps bending, let go as it straightens.
+                bool bending = cornerLimit < speed * 1.1f;
+                float least = Mathf.Lerp(0.2f, 0.5f, profile.driftSkill);
+                hold = Time.time - driftSince < least || (bending && Time.time - driftSince < 3f);
+                if (!hold) driftThisCorner = false; // one drift per corner
+            }
+            else
+            {
+                hold = driftThisCorner && tight && speed * 3.6f > drift.minKmh + 5f && Mathf.Abs(nearest - driftCornerAt) < 40
+                       && Time.time - driftSince > 1.5f;
+                if (hold) { driftDir = steerSmooth > 0f ? 1 : -1; driftSince = Time.time; }
+            }
+            drift.SetAIDrift(hold, driftDir);
+            return drift.Drifting;
+        }
+
+        /// <summary>Spiral roll into a car alongside, forward-roll into one just ahead, or dodge a roll coming in.</summary>
+        void UseRolls(Vector3 p, float speed)
+        {
+            if (moves == null || me.finished || race.CurrentState == RaceManager.State.Countdown) return;
+            if (dodgeAt > 0f && Time.time >= dodgeAt)
+            {
+                dodgeAt = -1f;
+                if (RoomToRoll(p, dodgeDir) && moves.TryLeap(dodgeDir)) lastRollAt = Time.time;
+                return;
+            }
+            if (Time.time < nextMoveCheck || Time.time - lastRollAt < RollGap || speed < 12f) return;
+            nextMoveCheck = Time.time + 0.25f;
+            if (drift != null && drift.Drifting) return;
+
+            foreach (var r in race.Racers)
+            {
+                if (r == me || r.suspended || r.vehicle == null) continue;
+                Vector3 rel = transform.InverseTransformPoint(r.vehicle.Transform.position);
+                // Alongside: roll into them. Chance per check scales with aggression.
+                if (Mathf.Abs(rel.z) < 2.5f && Mathf.Abs(rel.x) > 1.8f && Mathf.Abs(rel.x) < 5.5f)
+                {
+                    int dir = rel.x > 0f ? 1 : -1;
+                    if (Random.value < profile.aggression * 0.25f && RoomToRoll(p, dir) && moves.TryLeap(dir)) { lastRollAt = Time.time; return; }
+                }
+                // Just ahead and slower: forward roll into them.
+                else if (rel.z > 3f && rel.z < 9f && Mathf.Abs(rel.x) < 1.6f)
+                {
+                    float theirs = r.vehicle.Body != null ? Vector3.Dot(r.vehicle.Body.linearVelocity, transform.forward) : speed;
+                    if (speed - theirs > 3f && Random.value < profile.aggression * 0.2f && moves.TryLeap(0)) { lastRollAt = Time.time; return; }
+                }
+            }
+        }
+
+        /// <summary>True if a sideways roll that way stays on the road.</summary>
+        bool RoomToRoll(Vector3 p, int dir)
+        {
+            float lat = line.Lateral(p, nearest);
+            float lateralDir = Vector3.Dot(transform.right * dir, line.Right(nearest));
+            float landing = lat + lateralDir * (moves != null ? moves.rollSide : 8f);
+            return Mathf.Abs(landing) < line.halfWidth - 1.5f;
         }
 
         /// <summary>Lane to aim for: own lane, or round the side of a car in front. Slows if boxed in.</summary>

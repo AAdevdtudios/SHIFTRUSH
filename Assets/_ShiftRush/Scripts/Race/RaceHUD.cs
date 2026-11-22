@@ -179,7 +179,7 @@ namespace ShiftRush.Race
             Play(go, 1f);
             if (r.vehicle != null) r.vehicle.SetControllable(false);
             finishShownAt = Time.unscaledTime + 1.6f;
-            if (finishPosition != null) finishPosition.text = Ordinal(race.PositionOf(r)) + "<size=50%><color=#9AA0B4>  /  " + race.Racers.Count + "</color></size>";
+            if (finishPosition != null) finishPosition.text = Ordinal(race.PositionOf(r)) + "<size=40%><color=#6B1440>  /  " + race.Racers.Count + "</color></size>";
             if (finishTotal != null) finishTotal.text = RaceManager.FormatTime(r.finishTime);
             if (finishBest != null) finishBest.text = RaceManager.FormatTime(race.BestLap);
             if (finishLaps != null)
@@ -187,12 +187,12 @@ namespace ShiftRush.Race
                 float fastest = float.MaxValue;
                 foreach (var t in r.lapTimes) fastest = Mathf.Min(fastest, t);
                 var sb = new System.Text.StringBuilder();
-                sb.Append("<color=#FF40D9>" + Difficulty.Label + "</color>\n");
+                sb.Append("<color=#0B0A12>" + Difficulty.Label + "</color>\n");
                 for (int i = 0; i < r.lapTimes.Count; i++)
                 {
                     bool f = Mathf.Approximately(r.lapTimes[i], fastest);
-                    sb.Append("<color=#9AA0B4>LAP " + (i + 1) + "</color>    ");
-                    sb.Append(f ? "<color=#FF40D9>" + RaceManager.FormatTime(r.lapTimes[i]) + "</color>" : RaceManager.FormatTime(r.lapTimes[i]));
+                    sb.Append("<color=#6B1440>LAP " + (i + 1) + "</color>    ");
+                    sb.Append(f ? "<color=#FFFFFF>" + RaceManager.FormatTime(r.lapTimes[i]) + "</color>" : RaceManager.FormatTime(r.lapTimes[i]));
                     if (i < r.lapTimes.Count - 1) sb.Append('\n');
                 }
                 finishLaps.text = sb.ToString();

@@ -26,6 +26,7 @@ namespace ShiftRush.Vehicles
         [HideInInspector] public bool listenForInput = true;
 
         IVehicle vehicle;
+        GripMoves moves;
         Vector3 safePos;
         Quaternion safeRot;
         bool hasOverride;
@@ -35,6 +36,7 @@ namespace ShiftRush.Vehicles
         void Awake()
         {
             vehicle = GetComponent<IVehicle>();
+            moves = GetComponent<GripMoves>();
             safePos = transform.position;
             safeRot = FlatRotation(transform.forward);
         }
@@ -54,6 +56,9 @@ namespace ShiftRush.Vehicles
             if (listenForInput && kb != null && kb.rKey.wasPressedThisFrame) { ResetNow(); return; }
 
             if (transform.position.y < killHeight) { ResetNow(); return; }
+
+            // Riding a grip wall looks like being flipped or beached, so those checks wait until the car is off it.
+            if (moves != null && moves.WallRiding) { flippedTimer = 0f; beachedTimer = 0f; offTimer = 0f; return; }
 
             bool upsideDown = Vector3.Dot(transform.up, Vector3.up) < 0.2f;
             flippedTimer = upsideDown && vehicle.Body.linearVelocity.magnitude < 3f ? flippedTimer + Time.deltaTime : 0f;

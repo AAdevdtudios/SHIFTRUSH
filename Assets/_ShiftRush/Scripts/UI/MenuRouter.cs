@@ -43,6 +43,21 @@ namespace ShiftRush.UI
             }
         }
 
+        /// <summary>Straight into a race: the car and track picked last time.</summary>
+        public void QuickRace()
+        {
+            var track = ShiftRush.Core.RaceSession.Track;
+            if (track == null) { OpenGarage(); return; }
+            ShiftRush.Core.SceneLoader.LoadTrack(track);
+        }
+
+        /// <summary>The practice yard: no race, no rules, every move to play with.</summary>
+        public void FreeRoam()
+        {
+            ShiftRush.Core.SceneLoader.Load("MovesLab", "Free Roam", "THE YARD  //  NO CAMERAS, NO RULES",
+                "Q and E roll you sideways. Hold Space through a corner to drift, let go to boost.");
+        }
+
         public void OpenCredits()
         {
             if (credits != null) credits.OpenPanel();

@@ -16,6 +16,10 @@ MonoBehaviour:
   nitroTrail: {fileID: 2100000, guid: beca3a28e689841a68a7e3f6db6f1af0, type: 2}
   landingPuff: {fileID: 1395573303058050731, guid: 7d88ed57474fb4dfbb960d09356a1b97, type: 3}
   dirtSpray: {fileID: 5195691426217496597, guid: 0cc943e0dad864eef81ac0ef6f31a140, type: 3}
+  windAura: {fileID: 207745087118991948, guid: e656699b143494148a872961a9feb410, type: 3}
+  driftSmoke: {fileID: 2100000, guid: 8300ce6cab194478380fd7a7eaf6c57f, type: 2}
+  driftSparks: {fileID: 2100000, guid: c6df537528d814e5eb911dcb575708d1, type: 2}
+  driftScreech: {fileID: 8300000, guid: cd9122599cbb06444921dbb3637ed9ac, type: 3}
   arrivalBurst: {fileID: 7610157754217046829, guid: bf6cbfb1db09346f5b16c0b9177d6d0e, type: 3}
   snow: {fileID: 2516268969048315367, guid: e27792880e3834670a35f4bd03603e2a, type: 3}
   motes: {fileID: 9154701954147851260, guid: 67420b44ee0d64c759edb1906509b27a, type: 3}

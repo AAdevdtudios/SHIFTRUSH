@@ -48,6 +48,16 @@ namespace ShiftRush.CameraFX
         [Tooltip("Controller rumble while nitro burns (0..1), with a stronger hit as it lights.")]
         [SerializeField] float boostRumble = 0.35f;
 
+        [Header("Drift")]
+        [Tooltip("At full drift the camera turns this many degrees back toward the direction of travel, so the car's angle shows.")]
+        [SerializeField] float driftSwingDegrees = 16f;
+        [Tooltip("And slides out to the side of the slide this far, metres.")]
+        [SerializeField] float driftSwingMetres = 1.3f;
+        [Tooltip("And pulls back this much further, metres.")]
+        [SerializeField] float driftPullBack = 0.7f;
+        [Tooltip("Controller rumble at full drift (0..1).")]
+        [SerializeField] float driftRumble = 0.3f;
+
         [Header("Speed lines")]
         [SerializeField] Material lineMaterial;
         [SerializeField] float maxLinesPerSecond = 110f;
@@ -60,7 +70,13 @@ namespace ShiftRush.CameraFX
         [SerializeField] float maxLensDistortion = -0.22f;
         [SerializeField] float vignetteAtSpeed = 0.32f;
 
-        float intensity, boost, surge, pull, lastSpeed, kick;
+        float intensity, boost, surge, pull, lastSpeed, kick, swing, swingSide;
+        DriftMoves drift;
+        IVehicle driftOf;
+        static float pendingJolt;
+
+        /// <summary>A one-off camera jolt and rumble, 0..1 (a big landing, a hit). Uses the nitro-light kick.</summary>
+        public static void Jolt(float amount) { pendingJolt = Mathf.Max(pendingJolt, Mathf.Clamp01(amount)); }
         bool wasBoosting, rumbling;
         Camera boundCamera;
         Transform lines;
@@ -100,19 +116,29 @@ namespace ShiftRush.CameraFX
 
             // Camera: back and low. The actual camera is a child of the chase rig, so offsetting it locally
             // never fights the rig's own smoothing.
-            float pullTarget = (intensity * pullBack + boost * boostPullBack + surge * surgePullBack) * strength * (calm ? 0.5f : 1f);
+            // Drift: the camera swings back toward the line of travel and out to the side, so the slide angle reads.
+            if (vehicle != driftOf) { driftOf = vehicle; drift = vehicle != null ? vehicle.Transform.GetComponent<DriftMoves>() : null; }
+            float swingTarget = drift != null && drift.Drifting && chaseView ? drift.Intensity * Mathf.InverseLerp(0f, drift.maxAngle, drift.SlipAngle) : 0f;
+            if (drift != null && drift.Drifting) swingSide = drift.Direction;
+            swing = Mathf.Lerp(swing, swingTarget, dt * (swingTarget > swing ? 3f : 2f));
+            float swingK = swing * strength * (calm ? 0.4f : 1f);
+
+            float pullTarget = (intensity * pullBack + boost * boostPullBack + surge * surgePullBack + swing * driftPullBack) * strength * (calm ? 0.5f : 1f);
             pull = Mathf.Lerp(pull, pullTarget, dt * pullResponse);
             // Nitro lighting up: a jolt that fades.
             if (boosting && !wasBoosting && chaseView) kick = 1f;
             wasBoosting = boosting;
+            if (pendingJolt > 0f && chaseView) { kick = Mathf.Max(kick, pendingJolt); }
+            pendingJolt = 0f;
             kick = Mathf.MoveTowards(kick, 0f, dt * 2f);
             float t = Time.time * shakeFrequency;
             float shake = shakeOn ? ((intensity * 0.6f + boost) * shakeDegrees + boost * boostShakeDegrees + kick * kick * boostKickDegrees) * strength : 0f;
-            Rumble(shakeOn ? Mathf.Clamp01(boost * boostRumble + kick * kick * 0.6f) : 0f, shakeOn ? Mathf.Clamp01(intensity * 0.06f + boost * boostRumble * 0.6f) : 0f);
-            cam.transform.localPosition = new Vector3(0f, -drop * intensity * strength, -pull);
+            float driftShake = drift != null && drift.Drifting ? drift.Intensity * driftRumble : 0f;
+            Rumble(shakeOn ? Mathf.Clamp01(boost * boostRumble + kick * kick * 0.6f + driftShake * 0.7f) : 0f, shakeOn ? Mathf.Clamp01(intensity * 0.06f + boost * boostRumble * 0.6f + driftShake) : 0f);
+            cam.transform.localPosition = new Vector3(-swingSide * driftSwingMetres * swingK, -drop * intensity * strength, -pull);
             cam.transform.localRotation = Quaternion.Euler(
                 (Mathf.PerlinNoise(t, 0.3f) - 0.5f) * 2f * shake,
-                (Mathf.PerlinNoise(0.7f, t) - 0.5f) * 2f * shake, 0f);
+                (Mathf.PerlinNoise(0.7f, t) - 0.5f) * 2f * shake - swingSide * driftSwingDegrees * swingK, 0f);
 
             // Speed lines.
             float lineAmount = calm ? 0f : Mathf.Clamp01(Mathf.InverseLerp(0.25f, 1f, intensity) + boost) * Mathf.Min(strength, 1f);

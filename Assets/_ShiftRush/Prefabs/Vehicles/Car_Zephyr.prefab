@@ -104,6 +104,10 @@ GameObject:
   - component: {fileID: 4401507668857251009}
   - component: {fileID: 8160616338532956801}
   - component: {fileID: 2439919402996461523}
+  - component: {fileID: 8121617899810741925}
+  - component: {fileID: 8163215096175675610}
+  - component: {fileID: 9079515148164844287}
+  - component: {fileID: 4528260446370393466}
   m_Layer: 8
   m_Name: Car_Zephyr
   m_TagString: Untagged
@@ -251,6 +255,9 @@ MonoBehaviour:
   safePointInterval: 0.75
   controlLockSeconds: 0.6
   respawnLift: 0.8
+  offTrackSeconds: 2
+  offTrackMargin: 6
+  listenForInput: 1
 --- !u!114 &2439919402996461523
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -264,9 +271,150 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Vehicles.AirControl
   yawStrength: 1.6
-  pitchStrength: 1.2
-  selfLevel: 1.5
+  levelStrength: 6
+  tiltDamping: 3
   airborneDelay: 0.15
+  logJumps: 1
+--- !u!114 &8121617899810741925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618919482974570354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 295bff01270f8444cad510841b5343d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Vehicles.GripMoves
+  playerControlled: 1
+  leapHeight: 2.5
+  leapAirTime: 0.65
+  leapSide: 4.5
+  leapCooldown: 0.8
+  frontWindow: 0.08
+  airSteer: 30
+  leanDegrees: 14
+  pitchDegrees: 6
+  rollHeight: 3
+  rollAirTime: 0.9
+  rollTurns: 1
+  rollFinishAt: 0.82
+  rollSide: 8
+  rollDodgeSnap: 1
+  knockWindow: 0.4
+  knockReach: 0.5
+  bounceBelow: 0.6
+  knockJolt: 0.9
+  hitStopSeconds: 0.06
+  landSlam: 6
+  landBoostKmh: 10
+  landJolt: 0.8
+  gripMinKmh: 55
+  gripFadeKmh: 15
+  gripProbe: 2.4
+  stickAccel: 4
+  alignStrength: 10
+  alignDamping: 4
+  latchReach: 7
+  latchTime: 0.28
+  wallRollAway: 4
+  wallRollPop: 6
+  wallRollGravity: 26
+  wallRollMinTime: 0.7
+  wallRollExtraTurns: 1
+  unrollTime: 0.32
+  unrollAwayMeters: 1.2
+  wallHoldLine: 3
+--- !u!114 &8163215096175675610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618919482974570354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc14282a872b04e76b548b39b2d1cac3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Vehicles.DriftMoves
+  playerControlled: 1
+  character: 2
+  autoResolvesTo: 2
+  customTuning: 0
+  addEffects: 1
+  minKmh: 50
+  steerToStart: 0.38
+  startAngle: 8
+  maxAngle: 40
+  kickRate: 37.732742
+  angleResponse: 3.3143625
+  recoverRate: 138
+  endAngle: 4
+  yawGain: 9
+  latAccel: 13
+  dragKmh: 11.217843
+  dragKmhOnThrottle: 2.8044608
+  handbrakeDragKmh: 12
+  sideGripWhileDrifting: 0.45
+  tierCharge:
+  - 0.9
+  - 2
+  - 3.4
+  tierBoostKmh:
+  - 12
+  - 24
+  - 38
+  boostJolt: 0.7
+  chargeRate: 0.9
+  boostScale: 1.2
+--- !u!114 &9079515148164844287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618919482974570354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6725394ff1714e79b33b649a1abe89f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.VFX.DriftFX
+  tierColours:
+  - {r: 1, g: 1, b: 1, a: 1}
+  - {r: 0.21960784, g: 0.88235295, b: 1, a: 1}
+  - {r: 1, g: 0.2509804, b: 0.8509804, a: 1}
+  - {r: 1, g: 0.78431374, b: 0.23529412, a: 1}
+  smokeRate: 60
+  sparkRate: 70
+  screechVolume: 0.8
+--- !u!114 &4528260446370393466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618919482974570354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d2a27ee111f94b8eaebc16c9061e661, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.VFX.SpeedAura
+  prefab: {fileID: 0}
+  showKmh: 35
+  fullKmh: 200
+  minSimSpeed: 0.5
+  maxSimSpeed: 3.2
+  minRingsPerSecond: 8
+  maxRingsPerSecond: 18
+  burstRings: 3
+  tint: {r: 0.72, g: 0.93, b: 1, a: 1}
+  maxAlpha: 0.85
+  glow: 1.8
+  ringRun: 0.6
+  rearTrail: 0.35
+  widthPad: 1.25
+  heightPad: 1.35
 --- !u!1 &980608062911419756
 GameObject:
   m_ObjectHideFlags: 0

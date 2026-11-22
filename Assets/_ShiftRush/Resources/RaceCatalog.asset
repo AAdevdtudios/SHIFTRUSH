@@ -16,6 +16,7 @@ MonoBehaviour:
   - id: zephyr
     displayName: Zephyr
     tagline: Light, twitchy, loves a jump.
+    type: 0
     prefab: {fileID: 618919482974570354, guid: f7cef4fc8817248b58bee806fb810876, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 7
@@ -37,6 +38,7 @@ MonoBehaviour:
   - id: fireburst
     displayName: Fireburst
     tagline: Flat out or nothing. Twitchy at the limit.
+    type: 1
     prefab: {fileID: 8936669675758852984, guid: 4f9fd4e6cb93f454fb073e1396b51386, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 9
@@ -58,6 +60,7 @@ MonoBehaviour:
   - id: predator
     displayName: Predator
     tagline: A race car on a leash. Corners like it's on rails.
+    type: 2
     prefab: {fileID: 8176232413722470093, guid: 9809cc2a9de8149c5b077fd5f60fa848, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 6
@@ -79,6 +82,7 @@ MonoBehaviour:
   - id: blackout
     displayName: Blackout
     tagline: All muscle. The biggest, longest nitro burn.
+    type: 3
     prefab: {fileID: 8722409306801786800, guid: 95454484ab89e4318913057a58a109fd, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 7
@@ -100,6 +104,7 @@ MonoBehaviour:
   - id: tetsuo
     displayName: Tetsuo
     tagline: Born sideways. Throw it in and hold the slide.
+    type: 4
     prefab: {fileID: 5810208036851785621, guid: 582f364dbd99247ecba80fd56335e945, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 7
@@ -114,6 +119,26 @@ MonoBehaviour:
     nitroExhausts: []
     nitroRotation: {x: 0, y: -90, z: 0}
     nitroScale: 0.3
+    nitroHide:
+    - SpaceshipMesh
+  - id: phobos
+    displayName: Phobos
+    tagline: Monster truck. Huge air off SHIFT ramps, shrugs off bumps.
+    type: 5
+    prefab: {fileID: 2235965477127437176, guid: ae9c5ad600828488f90ccb4a6d5fc79d, type: 3}
+    showroomPrefab: {fileID: 0}
+    topSpeed: 4
+    acceleration: 5
+    handling: 5
+    boost: 6
+    thumbnail: {fileID: 21300000, guid: 3dcbdc546e8564901b03e9315ff2e7f6, type: 3}
+    accent: {r: 0.5882353, g: 1, b: 0.23529412, a: 1}
+    cameraDistance: 7.2
+    cameraHeight: 2.7
+    nitroVfx: {fileID: 96586629116298727, guid: f930d2dd83faeff418ea2b2fd441bee2, type: 3}
+    nitroExhausts: []
+    nitroRotation: {x: 0, y: -90, z: 0}
+    nitroScale: 0.42
     nitroHide:
     - SpaceshipMesh
   tracks:

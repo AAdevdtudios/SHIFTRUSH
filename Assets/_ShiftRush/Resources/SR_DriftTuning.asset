@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b16a47f08c1284d2bbc7ac30acda4f7f, type: 3}
+  m_Name: SR_DriftTuning
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Vehicles.DriftTuning
+  drifty:
+    startKmh: 45
+    steerToStart: 0.3
+    tapAngle: 10
+    maxAngle: 53
+    openPerSecond: 44
+    swingSpeed: 3.5
+    letGoRecovery: 137
+    cornerGrip: 12
+    speedLoss: 8
+    speedLossOnThrottle: 1.5
+    handbrakeSpeedLoss: 10
+    tyreGripInDrift: 0.65
+    chargeRate: 1
+    boostScale: 1
+  balanced:
+    startKmh: 50
+    steerToStart: 0.38
+    tapAngle: 8
+    maxAngle: 40
+    openPerSecond: 37
+    swingSpeed: 3.25
+    letGoRecovery: 138
+    cornerGrip: 13
+    speedLoss: 11
+    speedLossOnThrottle: 2.75
+    handbrakeSpeedLoss: 12
+    tyreGripInDrift: 0.45
+    chargeRate: 0.9
+    boostScale: 1.2
+  grippy:
+    startKmh: 55
+    steerToStart: 0.45
+    tapAngle: 6
+    maxAngle: 28
+    openPerSecond: 30
+    swingSpeed: 3
+    letGoRecovery: 140
+    cornerGrip: 14
+    speedLoss: 14
+    speedLossOnThrottle: 4
+    handbrakeSpeedLoss: 14
+    tyreGripInDrift: 0.25
+    chargeRate: 0.8
+    boostScale: 1.4
+  weightEffect: 1
+  middleWeightKg: 1300

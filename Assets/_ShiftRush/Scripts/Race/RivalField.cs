@@ -24,6 +24,10 @@ namespace ShiftRush.Race
             [Range(120f, 320f)] public float topSpeedKmh = 230f;
             [Tooltip("Chance they dive into a shortcut when they reach one.")]
             [Range(0f, 1f)] public float shortcutChance = 0.5f;
+            [Tooltip("How often they roll into other cars to knock them. 0 = clean racer, 1 = hunts for hits.")]
+            [Range(0f, 1f)] public float aggression = 0.5f;
+            [Tooltip("How often they drift the tight corners, and how sharp they are at dodging a roll coming at them.")]
+            [Range(0f, 1f)] public float driftSkill = 0.6f;
         }
 
         [Tooltip("The drivable car the rivals race (an RCC prefab).")]

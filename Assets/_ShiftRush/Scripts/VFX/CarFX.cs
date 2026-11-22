@@ -32,7 +32,14 @@ namespace ShiftRush.VFX
             vehicle = v; dash = v as IVehicleDash; colour = c; isPlayer = player;
             kit = VFXKit.Instance;
             local = LocalBounds();
+            // The player's moves: spiral rolls, knocks and wall riding, and the held drift (rivals get theirs from RivalDriver).
+            if (isPlayer)
+            {
+                if (GetComponent<GripMoves>() == null) gameObject.AddComponent<GripMoves>();
+                if (GetComponent<DriftMoves>() == null) gameObject.AddComponent<DriftMoves>();
+            }
             if (kit == null) return;
+            if (isPlayer && kit.windAura != null && GetComponent<SpeedAura>() == null) gameObject.AddComponent<SpeedAura>();
 
             // Nitro: two flames at the exhausts (lower rear, either side of centre) and one trail between.
             float back = local.min.z + 0.05f, low = local.min.y + Mathf.Max(0.3f, local.size.y * 0.28f);

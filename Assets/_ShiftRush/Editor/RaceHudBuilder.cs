@@ -19,6 +19,7 @@ namespace ShiftRush.EditorTools
         static void BuildRaceHudOnly()
         {
             LoadFonts();
+            LoadBroadcastFonts();
             MakeArt();
             MakeRaceHud(LoadSounds());
             AssetDatabase.SaveAssets();
@@ -72,6 +73,8 @@ namespace ShiftRush.EditorTools
         static void MakeRaceHud(Sounds sounds)
         {
             MakeHudArt();
+            if (bsBlack == null) LoadBroadcastFonts();
+            if (outline == null) outline = SaveSprite("T_Outline", 64, 64, (x, y, w, h) => (x < 3 || y < 3 || x >= w - 3 || y >= h - 3) ? 1f : 0f, new Vector4(4, 4, 4, 4));
             var root = new GameObject("SR_RaceHUD", typeof(RectTransform));
             var canvas = root.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -81,49 +84,51 @@ namespace ShiftRush.EditorTools
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
             var hud = root.AddComponent<RaceHUD>();
+            var stream = root.AddComponent<StreamHud>();
             var src = root.AddComponent<AudioSource>();
             src.playOnAwake = false;
             src.outputAudioMixerGroup = MixerGroup("UI");
             var so = new SerializedObject(hud);
+            var ss = new SerializedObject(stream);
+            var dim = new Color(Night.r, Night.g, Night.b, 0.78f);
 
-            // ---------------- race panels (hidden in free roam)
-            var race = new GameObject("Race", typeof(RectTransform)).GetComponent<RectTransform>();
-            race.SetParent(root.transform, false);
+            // ================= race panels (hidden in free roam)
+            var race = Rect(root.transform, "Race");
             Stretch(race);
             var raceGroup = race.gameObject.AddComponent<CanvasGroup>();
             raceGroup.blocksRaycasts = false;
 
-            // Position, top left.
-            var tl = Corner(race, "Position", new Vector2(0, 1));
-            var tlBar = Img(tl, "Accent", slant, Magenta);
-            Place(tlBar.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(60, -46), new Vector2(84, 10));
-            var posLabel = Label(tl, "Label", "POSITION", new Vector2(0, 1), new Vector2(64, -64), TextAlignmentOptions.Left);
-            var posValue = Txt(tl, "Value", "1/1", fontTitle, 112, Color.white, TextAlignmentOptions.TopLeft);
-            Place(posValue.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(56, -84), new Vector2(420, 120));
+            // Position, top left: a huge pink number with the cyan echo, the lap chip beside it.
+            var posEcho = Txt(race, "Position Echo", "1/8", bsBlack, 150, Signal, TextAlignmentOptions.TopLeft);
+            Place(posEcho.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(54, -26), new Vector2(420, 170));
+            var posValue = Txt(race, "Position", "1/8", bsBlack, 150, Pink, TextAlignmentOptions.TopLeft);
+            Place(posValue.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(46, -20), new Vector2(420, 170));
+            posEcho.gameObject.AddComponent<ShiftRush.UI.TextEcho>().source = posValue;
+            var lapBox = Img(race, "Lap", null, dim);
+            Place(lapBox.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(46, -170), new Vector2(150, 38));
+            var lapLabel = Txt(lapBox.transform, "Label", "LAP", monoBold, 15, Dim, TextAlignmentOptions.Left);
+            lapLabel.characterSpacing = 8;
+            Place(lapLabel.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(12, 0), new Vector2(50, 0));
+            var lapValue = Txt(lapBox.transform, "Value", "1/3", monoBold, 20, Paper, TextAlignmentOptions.Right);
+            Place(lapValue.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-12, 0), new Vector2(90, 0));
 
-            // Leaderboard under it (6 slots: you + 5 opponents).
-            var board = new GameObject("Leaderboard", typeof(RectTransform)).GetComponent<RectTransform>();
-            board.SetParent(tl, false);
-            Place(board, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(52, -214), new Vector2(380, 6 * 40));
+            // Leaderboard (you and the cars around you), flat rows with a colour tag.
+            var board = Rect(race, "Leaderboard");
+            Place(board, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(46, -220), new Vector2(340, 6 * 36));
             var rowsProp = so.FindProperty("rows");
             rowsProp.arraySize = 6;
             for (int i = 0; i < 6; i++)
             {
-                var row = new GameObject("Row " + (i + 1), typeof(RectTransform)).GetComponent<RectTransform>();
-                row.SetParent(board, false);
-                Place(row, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(i * -4f, -i * 40f), new Vector2(0, 34));
-                var bg = Img(row, "Bg", slant, new Color(Panel.r, Panel.g, Panel.b, 0.72f));
-                bg.type = Image.Type.Sliced; Stretch(bg.rectTransform);
-                var hl = Img(row, "You", slant, new Color(Magenta.r, Magenta.g, Magenta.b, 0.9f));
-                hl.type = Image.Type.Sliced; Stretch(hl.rectTransform);
-                hl.rectTransform.offsetMax = new Vector2(-(380 - 46), 0);
-                var rank = Txt(row, "Rank", "1", fontTitle, 24, Color.white, TextAlignmentOptions.Center);
-                Place(rank.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(8, 0), new Vector2(34, 0));
-                var name = Txt(row, "Name", "YOU", fontBold, 22, Color.white, TextAlignmentOptions.Left);
-                name.characterSpacing = 4;
-                Place(name.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), new Vector2(60, 0), new Vector2(-170, 0));
-                var gap = Txt(row, "Gap", "LEADER", fontMedium, 20, Steel, TextAlignmentOptions.Right);
-                Place(gap.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-24, 0), new Vector2(120, 0));
+                var row = Rect(board, "Row " + (i + 1));
+                Place(row, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(0, -i * 36f), new Vector2(0, 32));
+                var bg = Img(row, "Bg", null, dim); Stretch(bg.rectTransform);
+                var hl = Img(row, "You", null, Pink); Stretch(hl.rectTransform);
+                var rank = Txt(row, "Rank", "1", bsBlack, 24, Paper, TextAlignmentOptions.Center);
+                Place(rank.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(6, 0), new Vector2(30, 0));
+                var name = Txt(row, "Name", "YOU", barlowBold, 22, Paper, TextAlignmentOptions.Left);
+                Place(name.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), new Vector2(44, 0), new Vector2(-150, 0));
+                var gap = Txt(row, "Gap", "LEADER", monoMedium, 16, Mist, TextAlignmentOptions.Right);
+                Place(gap.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-12, 0), new Vector2(110, 0));
                 var el = rowsProp.GetArrayElementAtIndex(i);
                 el.FindPropertyRelative("root").objectReferenceValue = row.gameObject;
                 el.FindPropertyRelative("highlight").objectReferenceValue = hl;
@@ -131,154 +136,282 @@ namespace ShiftRush.EditorTools
                 el.FindPropertyRelative("name").objectReferenceValue = name;
                 el.FindPropertyRelative("gap").objectReferenceValue = gap;
             }
-
-            // Lap + times, top right.
-            var tr = Corner(race, "Lap", new Vector2(1, 1));
-            var trBar = Img(tr, "Accent", slant, Magenta);
-            Place(trBar.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-60, -46), new Vector2(84, 10));
-            Label(tr, "Label", "LAP", new Vector2(1, 1), new Vector2(-64, -64), TextAlignmentOptions.Right);
-            var lapValue = Txt(tr, "Value", "1/3", fontTitle, 112, Color.white, TextAlignmentOptions.TopRight);
-            Place(lapValue.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-60, -84), new Vector2(420, 120));
-            var times = new GameObject("Times", typeof(RectTransform)).GetComponent<RectTransform>();
-            times.SetParent(tr, false);
-            Place(times, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-52, -214), new Vector2(380, 3 * 40));
-            TMP_Text[] timeVals = new TMP_Text[3];
+            // Times under the board, quiet mono lines.
+            var timeVals = new TMP_Text[3];
             string[] timeNames = { "TIME", "LAP", "BEST" };
             for (int i = 0; i < 3; i++)
             {
-                var row = new GameObject(timeNames[i], typeof(RectTransform)).GetComponent<RectTransform>();
-                row.SetParent(times, false);
-                Place(row, new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(i * -4f, -i * 40f), new Vector2(0, 34));
-                var bg = Img(row, "Bg", slant, new Color(Panel.r, Panel.g, Panel.b, 0.72f));
-                bg.type = Image.Type.Sliced; Stretch(bg.rectTransform);
-                var l = Txt(row, "Label", timeNames[i], fontBold, 20, Steel, TextAlignmentOptions.Left);
+                var l = Txt(race, timeNames[i] + " Label", timeNames[i], monoBold, 14, Dim, TextAlignmentOptions.Left);
                 l.characterSpacing = 8;
-                Place(l.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(30, 0), new Vector2(120, 0));
-                var v = Txt(row, "Value", "--:--.---", fontTitle, 26, i == 2 ? Magenta : Color.white, TextAlignmentOptions.Right);
-                Place(v.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-26, 0), new Vector2(220, 0));
+                Place(l.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(50, -446 - i * 24), new Vector2(80, 22));
+                var v = Txt(race, timeNames[i] + " Value", "--:--.---", monoBold, 17, i == 2 ? Pink : Paper, TextAlignmentOptions.Left);
+                Place(v.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(130, -444 - i * 24), new Vector2(200, 24));
                 timeVals[i] = v;
             }
 
             // Minimap, bottom left.
-            var bl = Corner(race, "Minimap", new Vector2(0, 0));
-            var mapRoot = new GameObject("Map", typeof(RectTransform)).GetComponent<RectTransform>();
-            mapRoot.SetParent(bl, false);
-            Place(mapRoot, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(40, 40), new Vector2(320, 320));
-            // No frame: just the track line, faded out towards the edge by a soft round mask.
+            var mapRoot = Rect(race, "Map");
+            Place(mapRoot, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(30, 30), new Vector2(280, 280));
             var mapMask = mapRoot.gameObject.AddComponent<AMS.UI.SoftMask.UISoftMask>();
-            mapMask.mask = softDisc;
-            mapMask.fallOff = 1f;
-            var map = Img(mapRoot, "Track", null, new Color(1, 1, 1, 0.75f));
-            Place(map.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(280, 280));
-            map.raycastTarget = false;
-            var dot = Img(mapRoot, "You", mapArrow, Magenta);
+            mapMask.mask = softDisc; mapMask.fallOff = 1f;
+            var map = Img(mapRoot, "Track", null, new Color(0.96f, 0.95f, 0.98f, 0.8f));
+            Place(map.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(250, 250));
+            var dot = Img(mapRoot, "You", mapArrow, Pink);
             Place(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.45f), Vector2.zero, new Vector2(30, 30));
 
-            // ---------------- free roam tag
-            var free = new GameObject("Free Roam", typeof(RectTransform)).GetComponent<RectTransform>();
-            free.SetParent(root.transform, false);
-            Place(free, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), Vector2.zero, new Vector2(500, 160));
-            var fBar = Img(free, "Accent", slant, Magenta);
-            Place(fBar.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(60, -46), new Vector2(84, 10));
-            Label(free, "Label", "TEST ARENA", new Vector2(0, 1), new Vector2(64, -64), TextAlignmentOptions.Left);
-            var fv = Txt(free, "Value", "FREE ROAM", fontTitle, 56, Color.white, TextAlignmentOptions.TopLeft);
-            Place(fv.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(58, -88), new Vector2(460, 70));
+            // ================= free roam tag
+            var free = Rect(root.transform, "Free Roam");
+            Place(free, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), Vector2.zero, new Vector2(600, 200));
+            var fTag = Txt(free, "Label", "THE YARD", monoBold, 16, Pink, TextAlignmentOptions.Left);
+            fTag.characterSpacing = 10;
+            Place(fTag.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(50, -40), new Vector2(400, 24));
+            var fv = Txt(free, "Value", "FREE ROAM", bsBlack, 84, Paper, TextAlignmentOptions.TopLeft);
+            Place(fv.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(46, -60), new Vector2(560, 100));
 
-            // ---------------- centre: countdown + messages
+            // Everything live sits on one layer that clears when the results come up.
+            var liveLayer = Rect(root.transform, "Live");
+            Stretch(liveLayer);
+            var liveGroup = liveLayer.gameObject.AddComponent<CanvasGroup>();
+            liveGroup.blocksRaycasts = false;
+
+            // ================= stream corner, top right
+            var corner = Rect(liveLayer, "Stream Corner");
+            Place(corner, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-40, -32), new Vector2(400, 420));
+            var chips = Rect(corner, "Chips");
+            Place(chips, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), Vector2.zero, new Vector2(400, 36));
+            var ch = chips.gameObject.AddComponent<HorizontalLayoutGroup>();
+            ch.childAlignment = TextAnchor.MiddleRight; ch.spacing = 10;
+            ch.childControlWidth = ch.childControlHeight = true; ch.childForceExpandWidth = ch.childForceExpandHeight = false;
+            var live = Chip(chips, "Live", Live, "LIVE", monoBold, 15, Color.white, true);
+            var ldot = Img(live, "Dot", AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd"), Color.white);
+            ldot.transform.SetAsFirstSibling();
+            var lle = ldot.gameObject.AddComponent<LayoutElement>(); lle.preferredWidth = lle.preferredHeight = 9;
+            ldot.gameObject.AddComponent<ShiftRush.UI.LivePulse>();
+            var viewers = Chip(chips, "Viewers", dim, "48.2K", monoMedium, 16, Paper, false);
+            var hypeBox = Img(corner, "Hype Streak", null, dim);
+            Place(hypeBox.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(0, -46), new Vector2(360, 64));
+            var hl2 = Txt(hypeBox.transform, "Label", "HYPE", monoBold, 15, Gold, TextAlignmentOptions.Left);
+            hl2.characterSpacing = 8;
+            Place(hl2.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(14, -8), new Vector2(80, 20));
+            var hs = Txt(hypeBox.transform, "Session", "+0", monoBold, 15, Gold, TextAlignmentOptions.Left);
+            Place(hs.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(80, -8), new Vector2(120, 20));
+            var streakText = Txt(hypeBox.transform, "Streak", "x1.0 STREAK", monoBold, 15, Paper, TextAlignmentOptions.Right);
+            Place(streakText.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-14, -8), new Vector2(200, 20));
+            var segs = new Image[8];
+            for (int i = 0; i < 8; i++)
+            {
+                segs[i] = Img(hypeBox.transform, "Seg " + i, null, new Color32(42, 37, 64, 255));
+                float w = (360f - 28f - 7 * 4f) / 8f;
+                Place(segs[i].rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(14 + i * (w + 4f), 12), new Vector2(w, 12));
+            }
+            var chatList = Rect(corner, "Chat");
+            Place(chatList, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(0, -124), new Vector2(400, 160));
+            var cv = chatList.gameObject.AddComponent<VerticalLayoutGroup>();
+            cv.childAlignment = TextAnchor.UpperRight; cv.spacing = 6;
+            cv.childControlWidth = cv.childControlHeight = true; cv.childForceExpandWidth = cv.childForceExpandHeight = false;
+
+            // ================= fan dare card, left middle
+            var dare = Rect(liveLayer, "Fan Dare");
+            Place(dare, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(46, -92), new Vector2(380, 190));
+            var dareGroup = dare.gameObject.AddComponent<CanvasGroup>();
+            var dShadow = Img(dare, "Shadow", null, Gold);
+            Place(dShadow.rectTransform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), new Vector2(7, -7), Vector2.zero);
+            var dBody = Img(dare, "Body", null, Night); Stretch(dBody.rectTransform);
+            var dEdge = Img(dBody.transform, "Edge", outline, Gold);
+            dEdge.type = Image.Type.Sliced; Stretch(dEdge.rectTransform);
+            var dTagBg = Img(dBody.transform, "Tag", null, Gold);
+            Place(dTagBg.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(16, -14), new Vector2(110, 24));
+            var dTag = Txt(dTagBg.transform, "Text", "FAN DARE", monoBold, 14, Night, TextAlignmentOptions.Center); Stretch(dTag.rectTransform);
+            var dVotes = Txt(dBody.transform, "Votes", "2,140 VOTES", monoMedium, 14, Mist, TextAlignmentOptions.Right);
+            Place(dVotes.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-16, -16), new Vector2(200, 22));
+            var dFrom = Txt(dBody.transform, "From", "", barlowSemi, 19, Mist, TextAlignmentOptions.Left);
+            Place(dFrom.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(16, -46), new Vector2(-32, 24));
+            var dTitle = Txt(dBody.transform, "Title", "HIT DRIFT TIER 3", bsBlack, 38, Paper, TextAlignmentOptions.TopLeft);
+            Place(dTitle.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(16, -70), new Vector2(-32, 48));
+            var dReward = Txt(dBody.transform, "Reward", "+600 HYPE", monoBold, 18, Gold, TextAlignmentOptions.Left);
+            Place(dReward.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(16, 48), new Vector2(200, 24));
+            var dTimer = Txt(dBody.transform, "Timer", "0:20", monoBold, 18, Paper, TextAlignmentOptions.Right);
+            Place(dTimer.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 48), new Vector2(120, 24));
+            var dBar = Img(dBody.transform, "Bar", null, new Color32(42, 37, 64, 255));
+            Place(dBar.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 30), new Vector2(-32, 6));
+            var dFill = Img(dBar.transform, "Fill", null, Gold); Stretch(dFill.rectTransform);
+            var dNote = Txt(dBody.transform, "Note", "DO IT TO TAKE IT. IGNORE IT, NOTHING LOST.", monoMedium, 12, Dim, TextAlignmentOptions.Left);
+            Place(dNote.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(16, 8), new Vector2(-32, 18));
+
+            // ================= centre: callout, countdown, messages
+            var callout = Rect(liveLayer, "Callout");
+            Place(callout, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -150), new Vector2(560, 120));
+            var calloutGroup = callout.gameObject.AddComponent<CanvasGroup>();
+            var cBody = Rect(callout, "Body"); Stretch(cBody);
+            var cShadow = Img(cBody, "Shadow", null, Signal);
+            Place(cShadow.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(7, -7), new Vector2(520, 66));
+            var cSlab = Img(cBody, "Slab", null, Pink);
+            Place(cSlab.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), Vector2.zero, new Vector2(520, 66));
+            var cTitle = Txt(cSlab.transform, "Title", "CHAIN KNOCK x2", bsBlack, 50, Night, TextAlignmentOptions.Center); Stretch(cTitle.rectTransform);
+            var cSubBg = Img(cBody, "Sub Bg", null, new Color(Night.r, Night.g, Night.b, 0.85f));
+            Place(cSubBg.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -80), new Vector2(220, 32));
+            var cSub = Txt(cSubBg.transform, "Sub", "+350 HYPE", monoBold, 20, Gold, TextAlignmentOptions.Center);
+            Stretch(cSub.rectTransform);
+
             var ring = Img(root.transform, "Countdown Ring", gaugeRing, Color.white);
             ring.type = Image.Type.Filled; ring.fillMethod = Image.FillMethod.Radial360;
             ring.fillOrigin = (int)Image.Origin360.Top; ring.fillClockwise = false;
             Place(ring.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 90), new Vector2(300, 300));
-            var count = Txt(root.transform, "Countdown", "3", fontTitle, 190, Color.white, TextAlignmentOptions.Center);
-            Place(count.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 90), new Vector2(600, 260));
+            var count = Txt(root.transform, "Countdown", "3", bsBlack, 220, Paper, TextAlignmentOptions.Center);
+            Place(count.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 90), new Vector2(600, 280));
 
-            var msg = new GameObject("Message", typeof(RectTransform)).GetComponent<RectTransform>();
-            msg.SetParent(root.transform, false);
-            Place(msg, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 300), new Vector2(760, 80));
+            var msg = Rect(root.transform, "Message");
+            Place(msg, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 250), new Vector2(620, 74));
             var msgGroup = msg.gameObject.AddComponent<CanvasGroup>();
             msgGroup.blocksRaycasts = false;
-            var msgBg = Img(msg, "Bg", slant, new Color(Panel.r, Panel.g, Panel.b, 0.85f));
-            msgBg.type = Image.Type.Sliced; Stretch(msgBg.rectTransform);
-            var msgFrame = Img(msg, "Frame", slantFrame, Magenta);
-            msgFrame.type = Image.Type.Sliced; Stretch(msgFrame.rectTransform);
-            var msgText = Txt(msg, "Text", "FINAL LAP", fontTitle, 46, Color.white, TextAlignmentOptions.Center);
-            msgText.characterSpacing = 8;
+            var msgBg = Img(msg, "Bg", null, new Color(Night.r, Night.g, Night.b, 0.88f)); Stretch(msgBg.rectTransform);
+            var msgEdge = Img(msg, "Edge", null, Pink);
+            Place(msgEdge.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(6, 0));
+            var msgText = Txt(msg, "Text", "FINAL LAP", bsBlack, 46, Paper, TextAlignmentOptions.Center);
             Stretch(msgText.rectTransform);
 
-            // ---------------- speedometer, bottom right
-            var br = Corner(root.transform, "Speedometer", new Vector2(1, 0));
-            var gauge = new GameObject("Gauge", typeof(RectTransform)).GetComponent<RectTransform>();
-            gauge.SetParent(br, false);
-            Place(gauge, Vector2.one * 0, Vector2.one * 0, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(340, 340));
-            gauge.anchorMin = gauge.anchorMax = new Vector2(1, 0);
-            gauge.anchoredPosition = new Vector2(-60 - 170, 50 + 170);
-            var gBg = Img(gauge, "Disc", disc, new Color(Panel.r, Panel.g, Panel.b, 0.55f));
-            Stretch(gBg.rectTransform);
-            var track = Img(gauge, "Arc", gaugeRing, new Color(1, 1, 1, 0.1f));
-            track.type = Image.Type.Filled; track.fillMethod = Image.FillMethod.Radial360;
-            track.fillOrigin = (int)Image.Origin360.Bottom; track.fillClockwise = true; track.fillAmount = 0.75f;
-            Stretch(track.rectTransform); track.rectTransform.localEulerAngles = new Vector3(0, 0, -45f);
-            var rpm = Img(gauge, "RPM", gaugeRing, Magenta);
-            rpm.type = Image.Type.Filled; rpm.fillMethod = Image.FillMethod.Radial360;
-            rpm.fillOrigin = (int)Image.Origin360.Bottom; rpm.fillClockwise = true; rpm.fillAmount = 0.4f;
-            Stretch(rpm.rectTransform); rpm.rectTransform.localEulerAngles = new Vector3(0, 0, -45f);
-            var ticks = Img(gauge, "Ticks", gaugeTicks, new Color(1, 1, 1, 0.55f));
-            Stretch(ticks.rectTransform);
-            var speed = Txt(gauge, "Speed", "000", fontTitle, 104, Color.white, TextAlignmentOptions.Center);
-            Place(speed.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 18), new Vector2(260, 110));
-            var unit = Txt(gauge, "Unit", "KM/H", fontBold, 20, Steel, TextAlignmentOptions.Center);
-            unit.characterSpacing = 10;
-            Place(unit.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -40), new Vector2(200, 30));
-            var gearBox = Img(gauge, "Gear", slant, Magenta);
-            gearBox.type = Image.Type.Sliced;
-            Place(gearBox.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -92), new Vector2(84, 46));
-            var gear = Txt(gearBox.rectTransform, "Value", "1", fontTitle, 36, Color.white, TextAlignmentOptions.Center);
-            Stretch(gear.rectTransform);
+            // Drift meter, above the power-ups.
+            var driftRoot = Rect(liveLayer, "Drift Meter");
+            Place(driftRoot, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 236), new Vector2(440, 70));
+            var driftGroup = driftRoot.gameObject.AddComponent<CanvasGroup>();
+            var dmTitle = Txt(driftRoot, "Title", "DRIFT TIER 2", bsBlack, 32, Signal, TextAlignmentOptions.TopLeft);
+            Place(dmTitle.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), Vector2.zero, new Vector2(0, 36));
+            var dmInfo = Txt(driftRoot, "Angle", "38°", monoBold, 16, Paper, TextAlignmentOptions.TopRight);
+            Place(dmInfo.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(0, -8), new Vector2(0, 24));
+            var dmFills = new RectTransform[3];
+            Color[] tierCol = { Paper, Signal, Pink };
+            for (int i = 0; i < 3; i++)
+            {
+                float w = (440f - 12f) / 3f;
+                var bg = Img(driftRoot, "Tier " + (i + 1), null, dim);
+                Place(bg.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(i * (w + 6f), 16), new Vector2(w, 12));
+                var f = Img(bg.transform, "Fill", null, tierCol[i]);
+                Stretch(f.rectTransform);
+                dmFills[i] = f.rectTransform;
+                var lab = Txt(driftRoot, "Boost " + (i + 1), i == 2 ? "+38 KM/H" : (i == 0 ? "+12" : "+24"), monoBold, 12, Mist, TextAlignmentOptions.TopLeft);
+                Place(lab.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(i * (w + 6f), -2), new Vector2(w, 16));
+            }
 
-            var nos = new GameObject("Nitro", typeof(RectTransform)).GetComponent<RectTransform>();
-            nos.SetParent(br, false);
-            Place(nos, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-90, 34), new Vector2(280, 14));
-            var nosLabel = Txt(nos, "Label", "NOS", fontBold, 18, Steel, TextAlignmentOptions.Right);
+            // Power-ups, bottom centre: the active one big, two in reserve.
+            var pu = Rect(liveLayer, "Power-ups");
+            Place(pu, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 30), new Vector2(330, 160));
+            var bigShadow = Img(pu, "Active Shadow", null, Pink);
+            Place(bigShadow.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(46, 30), new Vector2(118, 118));
+            var big = Img(pu, "Active", null, Night);
+            Place(big.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(40, 36), new Vector2(118, 118));
+            var bigEdge = Img(big.transform, "Edge", outline, Paper); bigEdge.type = Image.Type.Sliced; Stretch(bigEdge.rectTransform);
+            var bigText = Txt(big.transform, "Text", "EMPTY", bsBold, 26, Dim, TextAlignmentOptions.Center); Stretch(bigText.rectTransform);
+            for (int i = 0; i < 2; i++)
+            {
+                var s2 = Img(pu, "Reserve " + (i + 1), null, new Color(Night.r, Night.g, Night.b, 0.6f));
+                Place(s2.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(172 + i * 80, 36), new Vector2(72, 72));
+                var e2 = Img(s2.transform, "Edge", outline, new Color(1, 1, 1, 0.25f)); e2.type = Image.Type.Sliced; Stretch(e2.rectTransform);
+                var t2 = Txt(s2.transform, "Text", "EMPTY", monoBold, 11, Dim, TextAlignmentOptions.Center); Stretch(t2.rectTransform);
+            }
+            var puNote = Txt(pu, "Note", "POWER-UPS ARRIVE SOON", monoMedium, 13, Dim, TextAlignmentOptions.Center);
+            puNote.characterSpacing = 4;
+            Place(puNote.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 6), new Vector2(0, 20));
+
+            // ================= speed, nitro and move cooldowns, bottom right
+            var br = Rect(liveLayer, "Dash");
+            Place(br, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-40, 30), new Vector2(460, 330));
+            // Cooldown chips.
+            string[] chipKeys = { "Q / E", "Q + E", "SPACE" }, chipNames = { "ROLL", "FWD ROLL", "DRIFT" };
+            var cdFills = new RectTransform[3]; var cdImgs = new Image[3]; var cdStatus = new TMP_Text[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var chip = Img(br, chipNames[i], null, dim);
+                Place(chip.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-(2 - i) * 104f, 0), new Vector2(98, 62));
+                var k = Txt(chip.transform, "Key", chipKeys[i], monoBold, 12, Mist, TextAlignmentOptions.TopLeft);
+                Place(k.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(8, -6), new Vector2(-16, 16));
+                var st = Txt(chip.transform, "Status", "READY", monoBold, 12, Gold, TextAlignmentOptions.TopRight);
+                Place(st.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-8, -6), new Vector2(-16, 16));
+                var n2 = Txt(chip.transform, "Name", chipNames[i], barlowBold, 19, Paper, TextAlignmentOptions.TopLeft);
+                Place(n2.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(8, -22), new Vector2(-16, 24));
+                var bar = Img(chip.transform, "Bar", null, new Color32(42, 37, 64, 255));
+                Place(bar.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 6), new Vector2(-16, 4));
+                var f = Img(bar.transform, "Fill", null, Gold); Stretch(f.rectTransform);
+                cdFills[i] = f.rectTransform; cdImgs[i] = f; cdStatus[i] = st;
+            }
+            // Gear and speed.
+            var gearLabel = Txt(br, "Gear Label", "GEAR", monoBold, 15, Paper, TextAlignmentOptions.Right);
+            gearLabel.characterSpacing = 8;
+            Place(gearLabel.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-330, 150), new Vector2(90, 22));
+            var gear = Txt(br, "Gear", "1", bsBlack, 64, Signal, TextAlignmentOptions.BottomRight);
+            Place(gear.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-330, 82), new Vector2(90, 72));
+            var speedShadow = Txt(br, "Speed Shadow", "000", bsBlack, 150, Night, TextAlignmentOptions.BottomRight);
+            Place(speedShadow.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-64, 74), new Vector2(300, 160));
+            var speed = Txt(br, "Speed", "000", bsBlack, 150, Paper, TextAlignmentOptions.BottomRight);
+            Place(speed.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-70, 80), new Vector2(300, 160));
+            speedShadow.gameObject.AddComponent<ShiftRush.UI.TextEcho>().source = speed;
+            var unit = Txt(br, "Unit", "KM/H", monoBold, 16, Paper, TextAlignmentOptions.BottomLeft);
+            Place(unit.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(0, 92), new Vector2(64, 24));
+            // RPM: a flat bar that fills, flashing at the limiter.
+            var rpmBg = Img(br, "RPM Bg", null, dim);
+            Place(rpmBg.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(0, 62), new Vector2(440, 10));
+            var rpm = Img(rpmBg.transform, "RPM", null, Pink);
+            rpm.type = Image.Type.Filled; rpm.fillMethod = Image.FillMethod.Horizontal; rpm.fillOrigin = 0; rpm.fillAmount = 0.5f;
+            rpm.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            Stretch(rpm.rectTransform);
+            // Nitro bar on F.
+            var nos = Rect(br, "Nitro");
+            Place(nos, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(0, 14), new Vector2(440, 30));
+            var nosLabel = Txt(nos, "Label", "NITRO", monoBold, 14, Signal, TextAlignmentOptions.Left);
             nosLabel.characterSpacing = 8;
-            Place(nosLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(-12, 0), new Vector2(80, 24));
-            var nosBg = Img(nos, "Bg", slant, new Color(1, 1, 1, 0.12f));
-            nosBg.type = Image.Type.Sliced; Stretch(nosBg.rectTransform);
-            var nosFill = Img(nos, "Fill", slant, Magenta);
-            nosFill.type = Image.Type.Sliced;
+            Place(nosLabel.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(80, 0));
+            var nosKey = Txt(nos, "Key", "F", monoBold, 14, Paper, TextAlignmentOptions.Right);
+            Place(nosKey.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), Vector2.zero, new Vector2(24, 0));
+            var nosBg = Img(nos, "Bg", null, dim);
+            Place(nosBg.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(26, 0), new Vector2(-140, -10));
+            var nosFill = Img(nosBg.transform, "Fill", null, Signal);
             nosFill.rectTransform.anchorMin = Vector2.zero; nosFill.rectTransform.anchorMax = Vector2.one;
-            nosFill.rectTransform.offsetMin = nosFill.rectTransform.offsetMax = Vector2.zero;
+            nosFill.rectTransform.offsetMin = new Vector2(3, 3); nosFill.rectTransform.offsetMax = new Vector2(-3, -3);
 
-            // ---------------- results
-            var fin = new GameObject("Results", typeof(RectTransform)).GetComponent<RectTransform>();
-            fin.SetParent(root.transform, false);
+            // ================= results: the stream pays out
+            var fin = Rect(root.transform, "Results");
             Stretch(fin);
             var finGroup = fin.gameObject.AddComponent<CanvasGroup>();
-            var finShade = Img(fin, "Shade", null, new Color(Ink.r, Ink.g, Ink.b, 0.45f));
-            Stretch(finShade.rectTransform);
-            var finDim = Img(fin, "Dim", fadeLeft, new Color(Ink.r, Ink.g, Ink.b, 0.95f));
-            Stretch(finDim.rectTransform);
-            finDim.rectTransform.anchorMax = new Vector2(0.7f, 1f);
-            var finBar = Img(fin, "Accent", slant, Magenta);
-            Place(finBar.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(120, 300), new Vector2(110, 12));
-            var finTitle = Txt(fin, "Title", "RACE COMPLETE", fontTitle, 96, Color.white, TextAlignmentOptions.Left);
-            Place(finTitle.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(116, 230), new Vector2(1000, 110));
-            Label(fin, "Position Label", "FINISHED", new Vector2(0, 0.5f), new Vector2(124, 160), TextAlignmentOptions.Left);
-            var finPos = Txt(fin, "Position", "1ST", fontTitle, 150, Magenta, TextAlignmentOptions.TopLeft);
-            Place(finPos.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 1), new Vector2(116, 150), new Vector2(600, 170));
-            Label(fin, "Total Label", "TOTAL TIME", new Vector2(0, 0.5f), new Vector2(124, -36), TextAlignmentOptions.Left);
-            var finTotal = Txt(fin, "Total", "00:00.000", fontTitle, 56, Color.white, TextAlignmentOptions.TopLeft);
-            Place(finTotal.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 1), new Vector2(120, -50), new Vector2(400, 70));
-            Label(fin, "Best Label", "BEST LAP EVER", new Vector2(0, 0.5f), new Vector2(504, -36), TextAlignmentOptions.Left);
-            var finBest = Txt(fin, "Best", "00:00.000", fontTitle, 56, Magenta, TextAlignmentOptions.TopLeft);
-            Place(finBest.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 1), new Vector2(500, -50), new Vector2(400, 70));
-            var finLaps = Txt(fin, "Laps", "", fontBold, 28, Color.white, TextAlignmentOptions.TopLeft);
-            finLaps.lineSpacing = 18;
-            Place(finLaps.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 1), new Vector2(124, -150), new Vector2(600, 180));
-            var finHint = Txt(fin, "Hint", "<color=#FF40D9>ENTER</color>  RACE AGAIN      <color=#FF40D9>M</color>  MAIN MENU", fontBold, 22, Color.white, TextAlignmentOptions.Left);
-            finHint.characterSpacing = 6;
-            Place(finHint.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(124, 70), new Vector2(900, 40));
+            var finShade = Img(fin, "Shade", null, new Color(Night.r, Night.g, Night.b, 0.86f)); Stretch(finShade.rectTransform);
+            var slab = Img(fin, "Slab", null, Pink);
+            Place(slab.rectTransform, new Vector2(0, 0), new Vector2(0.44f, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
+            var slabEdge = Img(fin, "Slab Edge", null, Signal);
+            Place(slabEdge.rectTransform, new Vector2(0.44f, 0), new Vector2(0.44f, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(14, 0));
+            var clip = Img(fin, "Clip Tag", null, Night);
+            Place(clip.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(80, -70), new Vector2(300, 32));
+            var clipText = Txt(clip.transform, "Text", "CLIP SAVED  //  CH 13", monoBold, 15, Paper, TextAlignmentOptions.Center); Stretch(clipText.rectTransform);
+            var finPos = Txt(fin, "Position", "1ST", bsBlack, 320, Night, TextAlignmentOptions.TopLeft);
+            Place(finPos.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(72, -120), new Vector2(760, 330));
+            var finTitle = Txt(fin, "Title", "YOU OUTRAN THE LEAGUE", bsBlack, 50, Night, TextAlignmentOptions.TopLeft);
+            Place(finTitle.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(80, -450), new Vector2(760, 60));
+            var tl = Txt(fin, "Total Label", "TOTAL", monoBold, 15, Night, TextAlignmentOptions.TopLeft);
+            Place(tl.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(84, -530), new Vector2(200, 22));
+            var finTotal = Txt(fin, "Total", "00:00.000", bsBlack, 46, Night, TextAlignmentOptions.TopLeft);
+            Place(finTotal.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(80, -552), new Vector2(300, 60));
+            var bl = Txt(fin, "Best Label", "BEST LAP EVER", monoBold, 15, Night, TextAlignmentOptions.TopLeft);
+            Place(bl.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(384, -530), new Vector2(260, 22));
+            var finBest = Txt(fin, "Best", "00:00.000", bsBlack, 46, Night, TextAlignmentOptions.TopLeft);
+            Place(finBest.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(380, -552), new Vector2(300, 60));
+            var finLaps = Txt(fin, "Laps", "", monoBold, 18, Night, TextAlignmentOptions.TopLeft);
+            finLaps.lineSpacing = 12;
+            Place(finLaps.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(84, -630), new Vector2(600, 260));
 
-            // ---------------- wire up
+            var payTag = Txt(fin, "Pay Tag", "THE STREAM PAYS OUT", monoBold, 16, Mist, TextAlignmentOptions.TopLeft);
+            payTag.characterSpacing = 8;
+            Place(payTag.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(90, -90), new Vector2(760, 26));
+            var payLines = Txt(fin, "Pay Lines", "", barlowBold, 30, Paper, TextAlignmentOptions.TopLeft);
+            payLines.lineSpacing = 22;
+            Place(payLines.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(90, -130), new Vector2(760, 420));
+            var payLabel = Txt(fin, "Pay Label", "TOTAL HYPE", bsBlack, 48, Paper, TextAlignmentOptions.BottomLeft);
+            Place(payLabel.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(90, -560), new Vector2(400, 70));
+            var payTotal = Txt(fin, "Pay Total", "+0", bsBlack, 110, Gold, TextAlignmentOptions.BottomRight);
+            Place(payTotal.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(390, -540), new Vector2(460, 120));
+            var payBal = Txt(fin, "Pay Balance", "", monoBold, 16, Mist, TextAlignmentOptions.TopRight);
+            Place(payBal.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(390, -668), new Vector2(460, 24));
+            var finHint = Txt(fin, "Hint", "<color=#FF2E9A>ENTER</color>  RACE AGAIN      <color=#FF2E9A>M</color>  MAIN MENU", monoBold, 18, Paper, TextAlignmentOptions.Left);
+            finHint.characterSpacing = 6;
+            Place(finHint.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 0), new Vector2(90, 70), new Vector2(900, 30));
+
+            // ================= wire up RaceHUD
             so.FindProperty("raceGroup").objectReferenceValue = raceGroup;
             so.FindProperty("freeRoamTag").objectReferenceValue = free.gameObject;
             so.FindProperty("positionValue").objectReferenceValue = posValue;
@@ -294,6 +427,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("unitText").objectReferenceValue = unit;
             so.FindProperty("gearText").objectReferenceValue = gear;
             so.FindProperty("rpmFill").objectReferenceValue = rpm;
+            so.FindProperty("rpmArc").floatValue = 1f;
             so.FindProperty("nitroFill").objectReferenceValue = nosFill.rectTransform;
             so.FindProperty("nitroFillImage").objectReferenceValue = nosFill;
             so.FindProperty("nitroGroup").objectReferenceValue = nos.gameObject;
@@ -311,9 +445,41 @@ namespace ShiftRush.EditorTools
             so.FindProperty("beep").objectReferenceValue = sounds.select;
             so.FindProperty("go").objectReferenceValue = sounds.confirm;
             so.FindProperty("lap").objectReferenceValue = sounds.shift;
-            so.FindProperty("accent").colorValue = Magenta;
-            so.FindProperty("steel").colorValue = Steel;
+            so.FindProperty("accent").colorValue = Pink;
+            so.FindProperty("steel").colorValue = Mist;
             so.ApplyModifiedPropertiesWithoutUndo();
+
+            // ================= wire up StreamHud
+            ss.FindProperty("viewersText").objectReferenceValue = viewers.GetComponentInChildren<TMP_Text>();
+            ss.FindProperty("streakText").objectReferenceValue = streakText;
+            SetArray(ss, "streakSegments", segs);
+            ss.FindProperty("sessionHypeText").objectReferenceValue = hs;
+            ss.FindProperty("chatParent").objectReferenceValue = chatList;
+            ss.FindProperty("chatFont").objectReferenceValue = barlowSemi;
+            ss.FindProperty("calloutGroup").objectReferenceValue = calloutGroup;
+            ss.FindProperty("calloutBody").objectReferenceValue = cBody;
+            ss.FindProperty("calloutTitle").objectReferenceValue = cTitle;
+            ss.FindProperty("calloutSub").objectReferenceValue = cSub;
+            ss.FindProperty("driftGroup").objectReferenceValue = driftGroup;
+            ss.FindProperty("driftTitle").objectReferenceValue = dmTitle;
+            ss.FindProperty("driftInfo").objectReferenceValue = dmInfo;
+            SetArray(ss, "driftFills", dmFills);
+            SetArray(ss, "cooldownFills", cdFills);
+            SetArray(ss, "cooldownFillImages", cdImgs);
+            SetArray(ss, "cooldownStatus", cdStatus);
+            ss.FindProperty("dareGroup").objectReferenceValue = dareGroup;
+            ss.FindProperty("dareFrom").objectReferenceValue = dFrom;
+            ss.FindProperty("dareTitle").objectReferenceValue = dTitle;
+            ss.FindProperty("dareReward").objectReferenceValue = dReward;
+            ss.FindProperty("dareTimer").objectReferenceValue = dTimer;
+            ss.FindProperty("dareVotes").objectReferenceValue = dVotes;
+            ss.FindProperty("dareTimerFill").objectReferenceValue = dFill.rectTransform;
+            ss.FindProperty("payoutLines").objectReferenceValue = payLines;
+            ss.FindProperty("payoutHeadline").objectReferenceValue = finTitle;
+            ss.FindProperty("liveLayer").objectReferenceValue = liveGroup;
+            ss.FindProperty("payoutTotal").objectReferenceValue = payTotal;
+            ss.FindProperty("payoutBalance").objectReferenceValue = payBal;
+            ss.ApplyModifiedPropertiesWithoutUndo();
 
             foreach (var g in root.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
             PrefabUtility.SaveAsPrefabAsset(root, HudPath);

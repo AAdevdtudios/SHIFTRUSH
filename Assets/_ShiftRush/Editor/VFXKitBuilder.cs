@@ -71,6 +71,10 @@ namespace ShiftRush.EditorTools
             kit.slowMoOverlay = AssetDatabase.LoadAssetAtPath<GameObject>(Hovl + "Screen hex.prefab");
             kit.warpOverlay = AssetDatabase.LoadAssetAtPath<GameObject>(Hovl + "Screen microcircuit.prefab");
             kit.nitroOverlay = AssetDatabase.LoadAssetAtPath<GameObject>(Hovl + "Screen wind straight.prefab");
+            kit.driftSmoke = mSmoke;
+            kit.driftSparks = mSoftAdd;
+            kit.driftScreech = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Realistic Car Controller Pro/Audio/Skid/Skid_Asphalt.wav");
+            kit.windAura = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PixPlays/ElementalAuras/WindAura/Version_BuiltIn/WindAura.prefab");
             kit.magenta = Magenta; kit.cyan = Cyan;
             EditorUtility.SetDirty(kit);
             AssetDatabase.SaveAssets();

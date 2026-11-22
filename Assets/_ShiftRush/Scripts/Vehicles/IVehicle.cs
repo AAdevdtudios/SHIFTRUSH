@@ -26,6 +26,9 @@ namespace ShiftRush.Vehicles
         /// <summary>Throttle minus brake, -1..1.</summary>
         float PitchInput { get; }
 
+        /// <summary>True for the car the player is driving right now (not a rival, parked car or traffic).</summary>
+        bool PlayerDriven { get; }
+
         void SetControllable(bool controllable);
 
         /// <summary>Move the car instantly, optionally keeping a forward speed (km/h).</summary>

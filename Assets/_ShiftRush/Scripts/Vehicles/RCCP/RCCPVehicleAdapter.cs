@@ -8,7 +8,7 @@ namespace ShiftRush.Vehicles
     /// </summary>
     [RequireComponent(typeof(RCCP_CarController))]
     [DefaultExecutionOrder(50)] // after RCCP_Input has read the keys this frame (auto-accelerate builds on it)
-    public class RCCPVehicleAdapter : MonoBehaviour, IVehicle, IVehicleDash, INitroTank, IDriverInput
+    public class RCCPVehicleAdapter : MonoBehaviour, IVehicle, IVehicleDash, INitroTank, IDriverInput, IDriftInput
     {
         RCCP_CarController car;
         Rigidbody body;
@@ -155,6 +155,21 @@ namespace ShiftRush.Vehicles
 
         RCCP_Inputs driverInputs;
 
+        // ---- IDriftInput: the held drift reads the handbrake and takes it off RCCP while sliding
+        float rawHandbrake;
+        public float HandbrakeInput { get { return rawHandbrake; } }
+        UnityEngine.InputSystem.InputAction steerAction, handbrakeAction;
+        public float SteerIntent
+        {
+            get
+            {
+                if (steerAction == null) { var a = ControlBindings.Asset; steerAction = a != null ? a.FindAction("Steering") : null; }
+                if (steerAction != null && steerAction.enabled) return Mathf.Clamp(steerAction.ReadValue<float>(), -1f, 1f);
+                return car.Inputs != null ? car.Inputs.steerInput : 0f;
+            }
+        }
+        public bool MuteHandbrake { get; set; }
+
         public void SetDriverInput(float steer, float throttle, float brake, float handbrake, bool nitro)
         {
             if (car.Inputs == null) return;
@@ -189,10 +204,18 @@ namespace ShiftRush.Vehicles
         void Update()
         {
             var inputs = car.Inputs;
+            if (inputs != null && driverInputs == null)
+            {
+                if (handbrakeAction == null) { var a = ControlBindings.Asset; handbrakeAction = a != null ? a.FindAction("Handbrake") : null; }
+                rawHandbrake = Mathf.Max(inputs.handbrakeInput, handbrakeAction != null && handbrakeAction.enabled ? handbrakeAction.ReadValue<float>() : 0f);
+                if (MuteHandbrake) inputs.handbrakeInput = 0f;
+            }
             if (inputs == null || !Core.GameSettings.AutoAccelerate || !car.IsControllableByPlayer()) return;
             if (inputs.brakeInput > 0.05f || car.shiftingNow || car.reversingNow) return;
             inputs.throttleInput = 1f;
         }
+
+        public bool PlayerDriven { get { return car != null && car.IsControllableByPlayer(); } }
 
         public void SetControllable(bool controllable)
         {

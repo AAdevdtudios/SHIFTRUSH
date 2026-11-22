@@ -49,6 +49,7 @@ namespace ShiftRush.EditorTools
             LoadFonts();
             MakeArt();
             var sounds = LoadSounds();
+            LoadBroadcastFonts(); // Heat's theme, the loading screen and every menu screen use the stream fonts
             StyleHeat(sounds);
             var catalog = MakeCatalog();
             MakeCarPictures(catalog);
@@ -79,19 +80,16 @@ namespace ShiftRush.EditorTools
             CleanBackground(canvas);
             RemoveDemoContent(canvas);
             var panels = canvas.Find("Main Content").GetComponent<PanelManager>();
-            var home = BuildHome(canvas, router, showroom);
-            var garage = BuildGarage(canvas, router, showroom);
-            var tracks = BuildTracks(canvas, router, showroom);
+            var home = BuildHomeBroadcast(canvas, router, showroom);
+            var garage = BuildGarageBroadcast(canvas, router, showroom);
+            var tracks = BuildTracksBroadcast(canvas, router, showroom);
             BuildSettings(canvas, router);
             BuildPanelList(panels, home, garage, tracks, canvas.Find("Main Content/Settings").GetComponent<Animator>());
             var creditsManager = BuildCredits(canvas, credits);
             var quit = BuildQuitWindow(canvas, router);
             BuildSplash(canvas);
             BuildHintBar(canvas);
-            Hint(home.transform.Find("Content"), "<color=#FF40D9>W S</color>  SHIFT     <color=#FF40D9>1 2 3 R</color>  JUMP     <color=#FF40D9>ENTER</color>  ENGAGE");
-            Hint(garage.transform.Find("Content"), "<color=#FF40D9>A D</color>  CHANGE CAR     <color=#FF40D9>ENTER</color>  SELECT");
-            Hint(tracks.transform.Find("Content"), "<color=#FF40D9>A D</color>  CHANGE TRACK     <color=#FF40D9>W S</color>  DIFFICULTY     <color=#FF40D9>ENTER</color>  RACE");
-
+            
             var so = new SerializedObject(router);
             so.FindProperty("panels").objectReferenceValue = panels;
             so.FindProperty("showroom").objectReferenceValue = showroom;
@@ -99,6 +97,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("quitWindow").objectReferenceValue = quit;
             so.ApplyModifiedPropertiesWithoutUndo();
 
+            ShowcaseSetBuilder.Build(); // the night airstrip behind the car
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             SetBuildScenes();
@@ -219,23 +218,24 @@ namespace ShiftRush.EditorTools
         {
             var ui = AssetDatabase.LoadAssetAtPath<UIManager>(HeatRoot + "Resources/Heat UI Manager.asset");
             Undo.RecordObject(ui, "Style Heat");
-            ui.accentColor = Magenta;
-            ui.accentColorInvert = Ink;
-            ui.primaryColor = Color.white;
-            ui.secondaryColor = Ink;
-            ui.negativeColor = new Color32(255, 75, 75, 255);
-            ui.backgroundColor = Panel;
-            ui.fontBold = fontTitle;          // headers and buttons lean forward, like the logo
-            ui.fontSemiBold = fontBold;
-            ui.fontMedium = fontMedium;
-            ui.fontRegular = fontRegular;
-            ui.fontLight = fontLight;
+            // The pirate stream theme: signal pink on night, Big Shoulders for headings, Barlow for the rest.
+            ui.accentColor = Pink;
+            ui.accentColorInvert = Night;
+            ui.primaryColor = Paper;
+            ui.secondaryColor = Night;
+            ui.negativeColor = Live;
+            ui.backgroundColor = new Color32(16, 14, 25, 255);
+            ui.fontBold = bsBold;
+            ui.fontSemiBold = barlowBold;
+            ui.fontMedium = barlowSemi;
+            ui.fontRegular = barlowMedium;
+            ui.fontLight = barlowMedium;
             ui.hoverSound = s.hover;
             ui.clickSound = s.select;
             ui.enableSplashScreen = true;
             ui.showSplashScreenOnce = true;
             ui.pakType = UIManager.PressAnyKeyTextType.Default; // "Default" is the one that reads pakText
-            ui.pakText = "Press {Any Key} To Shift";
+            ui.pakText = "Press {Any Key} To Go Live";
             EditorUtility.SetDirty(ui);
             AssetDatabase.SaveAssetIfDirty(ui);
         }
@@ -310,6 +310,8 @@ namespace ShiftRush.EditorTools
 
         static void MakeLoadingScreen()
         {
+            // Channel 13 cutting to the next event: night ground, the track photo in a melted band, a big title
+            // with the cyan echo, "connecting" chip, a flat pink bar and a tip from the crew.
             const string path = "Assets/_ShiftRush/Resources/SR_LoadingScreen.prefab";
             var root = new GameObject("SR_LoadingScreen", typeof(RectTransform));
             var canvas = root.AddComponent<Canvas>();
@@ -323,7 +325,7 @@ namespace ShiftRush.EditorTools
             var group = root.AddComponent<CanvasGroup>();
             var loader = root.AddComponent<SceneLoader>();
 
-            var bg = Img(root.transform, "Background", null, Ink);
+            var bg = Img(root.transform, "Background", null, Night);
             Stretch(bg.rectTransform);
 
             var heroBand = new GameObject("Hero Band", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -332,41 +334,57 @@ namespace ShiftRush.EditorTools
             var loadMask = heroBand.gameObject.AddComponent<AMS.UI.SoftMask.UISoftMask>();
             loadMask.mask = softBand;
             loadMask.fallOff = 0.6f;
-            var loadHero = Img(heroBand, "Hero", null, new Color(1, 1, 1, 0.85f));
+            var loadHero = Img(heroBand, "Hero", null, new Color(0.78f, 0.76f, 0.88f, 0.8f));
             loadHero.raycastTarget = false;
             Stretch(loadHero.rectTransform);
             var lfit = loadHero.gameObject.AddComponent<AspectRatioFitter>();
             lfit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; lfit.aspectRatio = 16f / 9f;
             loadHero.enabled = false;
 
-            var band = Img(root.transform, "Streaks", streaks, new Color(Magenta.r, Magenta.g, Magenta.b, 0.35f));
-            band.type = Image.Type.Tiled;
-            Place(band.rectTransform, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 40), new Vector2(400, 420));
+            // Chips, top left: LIVE and the channel cutting over.
+            var chips = new GameObject("Chips", typeof(RectTransform)).GetComponent<RectTransform>();
+            chips.SetParent(root.transform, false);
+            Place(chips, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(66, -54), new Vector2(900, 40));
+            var hl = chips.gameObject.AddComponent<HorizontalLayoutGroup>();
+            hl.childAlignment = TextAnchor.MiddleLeft; hl.spacing = 12;
+            hl.childControlWidth = hl.childControlHeight = true; hl.childForceExpandWidth = hl.childForceExpandHeight = false;
+            var live = Chip(chips, "Live", Live, "LIVE", monoBold, 17, Color.white, true);
+            var dot = Img(live, "Dot", AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd"), Color.white);
+            dot.raycastTarget = false; dot.transform.SetAsFirstSibling();
+            var dle = dot.gameObject.AddComponent<LayoutElement>(); dle.preferredWidth = dle.preferredHeight = 11;
+            dot.gameObject.AddComponent<LivePulse>();
+            Chip(chips, "Cut", new Color(Night.r, Night.g, Night.b, 0.85f), "CH 13  //  CUTTING TO THE NEXT EVENT", monoMedium, 17, Mist, false);
 
-            var stripe = Img(root.transform, "Stripe", slant, Magenta);
-            stripe.type = Image.Type.Sliced;
-            Place(stripe.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(110, 150), new Vector2(160, 16));
+            // The two logo stripes slide while loading (SceneLoader moves this group).
+            var stripes = new GameObject("Stripes", typeof(RectTransform)).GetComponent<RectTransform>();
+            stripes.SetParent(root.transform, false);
+            Place(stripes, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(66, 172), new Vector2(300, 24));
+            var sp = Img(stripes, "Pink", null, Pink); sp.raycastTarget = false;
+            Place(sp.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), Vector2.zero, new Vector2(288, 6));
+            var sc = Img(stripes, "Cyan", null, Signal); sc.raycastTarget = false;
+            Place(sc.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(30, -13), new Vector2(216, 6));
 
-            var title = Txt(root.transform, "Title", "TRACK", fontTitle, 150, Color.white, TextAlignmentOptions.Left);
-            Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(110, 40), new Vector2(-220, 190));
-            var sub = Txt(root.transform, "Subtitle", "ZEPHYR", fontBold, 30, Steel, TextAlignmentOptions.Left);
-            sub.characterSpacing = 12;
-            Place(sub.rectTransform, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(116, -70), new Vector2(-220, 50));
+            var echo = Txt(root.transform, "Title Echo", "TRACK", bsBlack, 160, Signal, TextAlignmentOptions.Left);
+            Place(echo.rectTransform, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(84, 52), new Vector2(-220, 190));
+            var title = Txt(root.transform, "Title", "TRACK", bsBlack, 160, Paper, TextAlignmentOptions.Left);
+            Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(66, 60), new Vector2(-220, 190));
+            echo.gameObject.AddComponent<TextEcho>().source = title; // the echo follows whatever the title says
+            var sub = Txt(root.transform, "Subtitle", "ZEPHYR", monoBold, 22, Pink, TextAlignmentOptions.Left);
+            sub.characterSpacing = 8;
+            Place(sub.rectTransform, new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(70, -54), new Vector2(-220, 40));
 
-            var track = Img(root.transform, "Bar Track", slant, new Color(1, 1, 1, 0.1f));
-            track.type = Image.Type.Sliced;
-            Place(track.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(110, 120), new Vector2(-220, 22));
-            var fill = Img(track.transform, "Fill", slant, Magenta);
-            fill.type = Image.Type.Sliced;
-            fill.pixelsPerUnitMultiplier = 2f;
+            var track = Img(root.transform, "Bar Track", null, new Color32(42, 37, 64, 255));
+            Place(track.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(66, 110), new Vector2(-132, 10));
+            var fill = Img(track.transform, "Fill", null, Pink);
             Stretch(fill.rectTransform);
-            fill.rectTransform.offsetMin = new Vector2(4, 3);
-            fill.rectTransform.offsetMax = new Vector2(-4, -3);
 
-            var pct = Txt(root.transform, "Percent", "00%", fontTitle, 44, Color.white, TextAlignmentOptions.Right);
-            Place(pct.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-110, 152), new Vector2(300, 60));
-            var tip = Txt(root.transform, "Tip", "", fontRegular, 26, Steel, TextAlignmentOptions.Left);
-            Place(tip.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(110, 160), new Vector2(-600, 50));
+            var pct = Txt(root.transform, "Percent", "00%", bsBlack, 56, Paper, TextAlignmentOptions.Right);
+            Place(pct.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-66, 130), new Vector2(300, 64));
+            var tipTag = Txt(root.transform, "Tip Tag", "FROM THE CREW", monoBold, 15, Dim, TextAlignmentOptions.Left);
+            tipTag.characterSpacing = 8;
+            Place(tipTag.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(66, 196), new Vector2(600, 24));
+            var tip = Txt(root.transform, "Tip", "", barlowSemi, 26, Mist, TextAlignmentOptions.Left);
+            Place(tip.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(66, 140), new Vector2(-560, 56));
 
             var so = new SerializedObject(loader);
             so.FindProperty("group").objectReferenceValue = group;
@@ -375,7 +393,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("tip").objectReferenceValue = tip;
             so.FindProperty("percent").objectReferenceValue = pct;
             so.FindProperty("fill").objectReferenceValue = fill;
-            so.FindProperty("streaks").objectReferenceValue = band.rectTransform;
+            so.FindProperty("streaks").objectReferenceValue = null; // the stripes stay still: calm, like the logo
             so.FindProperty("hero").objectReferenceValue = loadHero;
             so.ApplyModifiedPropertiesWithoutUndo();
 
@@ -569,9 +587,9 @@ namespace ShiftRush.EditorTools
             bg.Find("Image Parent").gameObject.SetActive(false);
             // Keep Heat's filter and shadows, which darken the left side so the menu reads over the car.
             bg.Find("Filter").gameObject.SetActive(false);
-            var fade = Img(bg, "Left Fade", fadeLeft, new Color(Ink.r, Ink.g, Ink.b, 0.92f));
+            var fade = Img(bg, "Left Fade", fadeLeft, new Color(Ink.r, Ink.g, Ink.b, 0.55f));
             fade.raycastTarget = false;
-            Place(fade.rectTransform, new Vector2(0, 0), new Vector2(0.62f, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
+            Place(fade.rectTransform, new Vector2(0, 0), new Vector2(0.4f, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
         }
 
         static void RemoveDemoContent(Transform canvas)
@@ -1195,8 +1213,13 @@ namespace ShiftRush.EditorTools
             if (vis.GetComponent<DisplaySettingsBinder>() == null) vis.gameObject.AddComponent<DisplaySettingsBinder>();
 
             // Header, and our own default for the description panel (Heat's shows its logo).
-            var head = Txt(settings.Find("Content"), "Header", "SETTINGS", fontTitle, 64, Color.white, TextAlignmentOptions.Left);
-            Place(head.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(84, -40), new Vector2(800, 80));
+            var headEcho = Txt(settings.Find("Content"), "Header Echo", "SETTINGS", bsBlack, 84, Signal, TextAlignmentOptions.Left);
+            Place(headEcho.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(66, -46), new Vector2(800, 100));
+            var head = Txt(settings.Find("Content"), "Header", "SETTINGS", bsBlack, 84, Paper, TextAlignmentOptions.Left);
+            Place(head.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(60, -40), new Vector2(800, 100));
+            var sTag = Txt(settings.Find("Content"), "Channel Tag", "CH 13  //  STUDIO DESK", monoMedium, 16, Dim, TextAlignmentOptions.Right);
+            sTag.characterSpacing = 6;
+            Place(sTag.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-60, -60), new Vector2(600, 26));
             var shot = LoadShowroomShot();
             var sdm = settings.GetComponentInChildren<SettingsDescriptionManager>(true);
             if (sdm != null)
@@ -1204,7 +1227,7 @@ namespace ShiftRush.EditorTools
                 var dso = new SerializedObject(sdm);
                 dso.FindProperty("cover").objectReferenceValue = shot;
                 dso.FindProperty("title").stringValue = "SETTINGS";
-                dso.FindProperty("description").stringValue = "Point at a setting to see what it does. Everything saves as you change it.";
+                dso.FindProperty("description").stringValue = "Point at a setting to see what it does. Everything saves as you change it, so the stream never drops.";
                 dso.FindProperty("titleKey").stringValue = "";
                 dso.FindProperty("descriptionKey").stringValue = "";
                 dso.FindProperty("useLocalization").boolValue = false;
@@ -1399,7 +1422,13 @@ namespace ShiftRush.EditorTools
             var splash = canvas.Find("Splash Screen");
             var holder = splash.Find("Content/Logo Holder");
             foreach (Transform c in holder) c.gameObject.SetActive(false);
-            var t = Txt(holder, "SHIFT RUSH Title", "SHIFT<color=#FF40D9>//</color>RUSH", fontTitle, 170, Color.white, TextAlignmentOptions.Center);
+            // GRIP PRO in the stream look: pink with a cyan echo, leaning forward.
+            var echo = Txt(holder, "Title Echo", "GRIP PRO", bsBlack, 190, Signal, TextAlignmentOptions.Center);
+            echo.fontStyle = FontStyles.Italic;
+            Stretch(echo.rectTransform);
+            echo.rectTransform.anchoredPosition = new Vector2(14, -8);
+            var t = Txt(holder, "Grip Pro Title", "GRIP PRO", bsBlack, 190, Pink, TextAlignmentOptions.Center);
+            t.fontStyle = FontStyles.Italic;
             Stretch(t.rectTransform);
             var le = holder.GetComponent<LayoutElement>() ?? holder.gameObject.AddComponent<LayoutElement>();
             le.preferredHeight = 200; le.preferredWidth = 1200;
@@ -1409,7 +1438,7 @@ namespace ShiftRush.EditorTools
         {
             var v = Txt(canvas.Find("Main Content"), "Build Tag", "JAM BUILD  " + Application.version, fontBold, 18, new Color(1, 1, 1, 0.25f), TextAlignmentOptions.Right);
             v.characterSpacing = 8;
-            Place(v.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-60, -40), new Vector2(500, 30));
+            Place(v.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-504 - 40, 22), new Vector2(500, 30)); // bottom right of the shot, clear of The Feed
         }
 
         static void Hint(Transform content, string text)
@@ -1425,7 +1454,7 @@ namespace ShiftRush.EditorTools
             {
                 new EditorBuildSettingsScene(ScenePath, true),
             };
-            foreach (var t in new[] { "Track_AlpinePass", "Track_GlacierValley" })
+            foreach (var t in new[] { "Track_AlpinePass", "Track_GlacierValley", "MovesLab" })
             {
                 string p = "Assets/_ShiftRush/Scenes/" + t + ".unity";
                 if (AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null) list.Add(new EditorBuildSettingsScene(p, true));

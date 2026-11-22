@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ShiftRush.Core;
+using ShiftRush.Vehicles;
 using UnityEditor;
 using UnityEngine;
 
@@ -35,6 +36,8 @@ namespace ShiftRush.EditorTools
             public float comY = -0.26f;
             public float antiroll = 500f;
             public float cameraDistance, cameraHeight; // 0 = the track's own
+            [Tooltip("What kind of car it is. Sets its drift character.")]
+            public CarType type = CarType.AllRounder;
 
         }
 
@@ -45,22 +48,22 @@ namespace ShiftRush.EditorTools
                 new Spec { id = "fireburst", name = "Fireburst", model = "Racing/R Class/Fireburst",
                     tagline = "Flat out or nothing. Twitchy at the limit.",
                     top = 9, accel = 7, handling = 5, boost = 5, accent = new Color32(56, 225, 255, 255),
-                    mass = 1180f, torque = 520f, maxKmh = 215f, steer = 37f, grip = 0.95f, thruster = "02" },
+                    mass = 1180f, torque = 520f, maxKmh = 215f, steer = 37f, grip = 0.95f, thruster = "02", type = CarType.Supercar },
                 new Spec { id = "predator", name = "Predator", model = "Racing/R Class/Predator",
                     tagline = "A race car on a leash. Corners like it's on rails.",
                     top = 6, accel = 6, handling = 9, boost = 5, accent = new Color32(255, 150, 30, 255),
-                    mass = 1300f, torque = 440f, maxKmh = 182f, steer = 42f, grip = 1.25f, thruster = "10" },
+                    mass = 1300f, torque = 440f, maxKmh = 182f, steer = 42f, grip = 1.25f, thruster = "10", type = CarType.RaceCar },
                 new Spec { id = "blackout", name = "Blackout", model = "Racing/B Class/Blackout",
                     tagline = "All muscle. The biggest, longest nitro burn.",
                     top = 7, accel = 8, handling = 4, boost = 9, accent = new Color32(40, 110, 255, 255),
                     mass = 1520f, torque = 560f, maxKmh = 196f, steer = 34f, grip = 0.92f,
-                    nosMultiplier = 3.3f, nosSeconds = 4.5f, nitroScale = 0.36f, thruster = "03" },
+                    nosMultiplier = 3.3f, nosSeconds = 4.5f, nitroScale = 0.36f, thruster = "03", type = CarType.Muscle },
                 new Spec { id = "tetsuo", name = "Tetsuo", model = "Racing/R Class/Tetsuo",
                     tagline = "Born sideways. Throw it in and hold the slide.",
                     top = 7, accel = 7, handling = 7, boost = 6, accent = new Color32(255, 60, 80, 255),
-                    mass = 1220f, torque = 470f, maxKmh = 192f, steer = 45f, grip = 1.08f, rearGrip = 0.86f, thruster = "07" },
-                // Shelved for now (a monster truck needs its own camera and stability work); set shelved = false to bring it back.
-                new Spec { id = "phobos", name = "Phobos", model = "Racing/X Class/Phobos", shelved = true,
+                    mass = 1220f, torque = 470f, maxKmh = 192f, steer = 45f, grip = 1.08f, rearGrip = 0.86f, thruster = "07", type = CarType.Tuner },
+                // The heavy type: slow to turn, impossible to stop, wins every knock.
+                new Spec { id = "phobos", name = "Phobos", model = "Racing/X Class/Phobos", type = CarType.Heavy,
                     tagline = "Monster truck. Huge air off SHIFT ramps, shrugs off bumps.",
                     top = 4, accel = 5, handling = 5, boost = 6, accent = new Color32(150, 255, 60, 255),
                     mass = 2400f, torque = 760f, maxKmh = 160f, steer = 33f, grip = 1.0f, nitroScale = 0.42f,
@@ -161,6 +164,8 @@ namespace ShiftRush.EditorTools
                 if (nos != null) { nos.torqueMultiplier = s.nosMultiplier; nos.durationTime = s.nosSeconds; nos.timer = s.nosSeconds; }
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(car, Out + "Car_" + s.name + ".prefab");
+                // Every Grip Pro feature, with this car's drift character.
+                Debug.Log("[SHIFT//RUSH] " + CarSetupWizard.Apply(prefab, new CarSetupWizard.Options { drift = CarTypes.Drift(s.type) }));
                 return prefab;
             }
             finally { Object.DestroyImmediate(car); }
@@ -171,7 +176,7 @@ namespace ShiftRush.EditorTools
             var c = cat.cars.Find(x => x.id == s.id);
             bool fresh = c == null;
             if (fresh) { c = new RaceCatalog.Car(); cat.cars.Add(c); }
-            c.id = s.id; c.displayName = s.name; c.tagline = s.tagline; c.prefab = prefab;
+            c.id = s.id; c.displayName = s.name; c.tagline = s.tagline; c.prefab = prefab; c.type = s.type;
             c.topSpeed = s.top; c.acceleration = s.accel; c.handling = s.handling; c.boost = s.boost; c.accent = s.accent;
             c.cameraDistance = s.cameraDistance; c.cameraHeight = s.cameraHeight;
             if (!fresh && c.nitroVfx != null) return; // nitro is tuned in the Nitro Bench after the first build: keep it

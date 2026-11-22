@@ -4,6 +4,13 @@ using UnityEngine;
 namespace ShiftRush.Core
 {
     /// <summary>
+    /// What kind of car it is. Each type makes a promise the look and the handling keep: muscle is heavy and drifty,
+    /// a race car grips, a tuner is playful, a supercar is the fastest but bites, the all-rounder forgives, the heavy
+    /// wins every knock. The type sets the car's drift character (see Vehicles.CarTypes).
+    /// </summary>
+    public enum CarType { AllRounder, Supercar, RaceCar, Muscle, Tuner, Heavy }
+
+    /// <summary>
     /// Every car and track the menu offers. Add a car or track here and it appears in the select screens.
     /// Lives at Resources/RaceCatalog so the race scenes can look up the player's choice too.
     /// </summary>
@@ -17,6 +24,8 @@ namespace ShiftRush.Core
             public string displayName = "Zephyr";
             [Tooltip("Short tagline under the name.")]
             public string tagline = "";
+            [Tooltip("What kind of car it is. Sets its drift character and shows on the car select card.")]
+            public CarType type = CarType.AllRounder;
             [Tooltip("The drivable RCC prefab.")]
             public GameObject prefab;
             [Tooltip("Optional model-only prefab for the showroom. If empty, the drivable prefab is shown with its physics and scripts stripped.")]

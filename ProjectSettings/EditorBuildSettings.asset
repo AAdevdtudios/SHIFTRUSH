@@ -7,13 +7,16 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/_ShiftRush/Scenes/MainMenu.unity
-    guid: c9530d56ac4a84e1a8fdbf3cb380946b
+    guid: 4c678b0531407454988d51028b02ecfc
   - enabled: 1
     path: Assets/_ShiftRush/Scenes/Track_AlpinePass.unity
-    guid: 042db659c3cee4b78b3cb733ef3cae62
+    guid: 577f30af5d52c452887076bfc977d429
   - enabled: 1
     path: Assets/_ShiftRush/Scenes/Track_GlacierValley.unity
-    guid: e034c703cffce430a866318924077112
+    guid: a7d6bceca0d8c4c5baf4af8339872264
+  - enabled: 1
+    path: Assets/_ShiftRush/Scenes/MovesLab.unity
+    guid: c824690939e1146fc8a68c17970414aa
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

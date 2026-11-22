@@ -14,7 +14,9 @@ namespace ShiftRush.Vehicles
     public static class ControlBindings
     {
         const string SaveKey = "SR_Bindings", VersionKey = "SR_BindingsVersion";
-        static readonly string[] UnbindKeyboard = { "Gear Shift Up", "Gear Shift Down", "Record", "Replay", "Feature Lab" };
+        // Q / E are Grip Pro's leap keys, so RCCP's indicators come off them.
+        static readonly string[] UnbindKeyboard = { "Gear Shift Up", "Gear Shift Down", "Record", "Replay", "Feature Lab", "Indicator Left", "Indicator Right" };
+        static readonly string[] UnbindGamepad = { "Gear Shift Up", "Gear Shift Down" };
 
         public static InputActionAsset Asset
         {
@@ -46,6 +48,15 @@ namespace ShiftRush.Vehicles
                 if (action == null) continue;
                 for (int i = 0; i < action.bindings.Count; i++)
                     if (action.bindings[i].path.StartsWith("<Keyboard>"))
+                        action.ApplyBindingOverride(i, string.Empty);
+            }
+            // LB / RB are the leap on a gamepad: gear shifting comes off them (the gearbox is automatic).
+            foreach (var name in UnbindGamepad)
+            {
+                var action = asset.FindAction(name);
+                if (action == null) continue;
+                for (int i = 0; i < action.bindings.Count; i++)
+                    if (action.bindings[i].path.StartsWith("<Gamepad>"))
                         action.ApplyBindingOverride(i, string.Empty);
             }
 
