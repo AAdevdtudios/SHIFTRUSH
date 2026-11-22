@@ -359,10 +359,10 @@ namespace ShiftRush.EditorTools
             var nosLabel = Txt(nos, "Label", "NITRO", monoBold, 14, Signal, TextAlignmentOptions.Left);
             nosLabel.characterSpacing = 8;
             Place(nosLabel.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(80, 0));
-            var nosKey = Txt(nos, "Key", "F", monoBold, 14, Paper, TextAlignmentOptions.Right);
-            Place(nosKey.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), Vector2.zero, new Vector2(24, 0));
+            var nosKey = Txt(nos, "Key", "SHIFT", monoBold, 14, Paper, TextAlignmentOptions.Right);
+            Place(nosKey.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), Vector2.zero, new Vector2(60, 0));
             var nosBg = Img(nos, "Bg", null, dim);
-            Place(nosBg.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(26, 0), new Vector2(-140, -10));
+            Place(nosBg.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(8, 0), new Vector2(-160, -10));
             var nosFill = Img(nosBg.transform, "Fill", null, Signal);
             nosFill.rectTransform.anchorMin = Vector2.zero; nosFill.rectTransform.anchorMax = Vector2.one;
             nosFill.rectTransform.offsetMin = new Vector2(3, 3); nosFill.rectTransform.offsetMax = new Vector2(-3, -3);
