@@ -172,6 +172,7 @@ namespace ShiftRush.Vehicles
                 handbrakeDragKmh = p.handbrakeSpeedLoss; sideGripWhileDrifting = p.tyreGripInDrift;
                 chargeRate = p.chargeRate; boostScale = p.boostScale;
                 Weigh(tuning.weightEffect, tuning.middleWeightKg);
+                maxAngle *= partAngleScale; // a big wing keeps the slide narrower
                 return;
             }
             switch (Character)
@@ -193,7 +194,11 @@ namespace ShiftRush.Vehicles
                     break;
             }
             Weigh(1f, 1300f);
+            maxAngle *= partAngleScale;
         }
+
+        [Tooltip("Set by fitted parts (spoilers): scales the widest slide. 1 = no change.")]
+        public float partAngleScale = 1f;
 
         /// <summary>Heavy cars swing in slower and keep their momentum, light ones flick in fast.</summary>
         void Weigh(float effect, float middleKg)

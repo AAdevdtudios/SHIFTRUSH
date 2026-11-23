@@ -52,6 +52,9 @@ MonoBehaviour:
     - '"Background Music" by Andrii Poradovskyi (Pixabay)'
     - '"Trap Dynamic Brass Thunder Power" by alexzavesa (Pixabay)'
     - '"Dance Funk" by roybushband (Pixabay)'
+    - '"Bricks" by Soundroll (Uppbeat, license HT0NEZRASPO4VVV7)'
+    - '"Dodgin'' Bullets" by Bosnow (Uppbeat, license H0XZQHXDFK9YUU62)'
+    - '"Furious" by FASS (Uppbeat, license GQHZBDC576X1ZPK5)'
   - headerTitle: Controller graphics
     headerTitleKey: 
     items:
@@ -59,7 +62,7 @@ MonoBehaviour:
   mentions:
   - ID: thanks
     icon: {fileID: 0}
-    description: Thanks for playing SHIFT//RUSH.
+    description: 'Thanks for playing GRIP PRO: CHANNEL 13.'
     descriptionKey: 
     descriptionSpacing: 30
     layoutSpacing: 160

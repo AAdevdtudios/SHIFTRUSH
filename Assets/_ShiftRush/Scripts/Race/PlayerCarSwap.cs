@@ -23,7 +23,8 @@ namespace ShiftRush.Race
             GameObject placed = null;
             foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
                 if (mb is IVehicle && mb.gameObject.scene == scene) { placed = mb.gameObject; break; }
-            if (placed == null || cat.FindCar(placed) == choice) return;
+            if (placed == null) return;
+            if (cat.FindCar(placed) == choice) { ShiftRush.Vehicles.CarLoadout.ApplyFitted(placed, choice, true); return; }
 
             var pos = placed.transform.position;
             var rot = placed.transform.rotation;
@@ -33,6 +34,7 @@ namespace ShiftRush.Race
             if (v != null)
             {
                 v.Transform.name = choice.prefab.name;
+                ShiftRush.Vehicles.CarLoadout.ApplyFitted(v.Transform.gameObject, choice, true); // tyres, wing and how they drive
                 SceneManager.MoveGameObjectToScene(v.Transform.gameObject, scene);
             }
         }

@@ -11,8 +11,16 @@ namespace ShiftRush.UI
 
         void OnEnable()
         {
+            ShiftRush.Core.PlayerProfile.Changed += Refresh;
+            Refresh();
+        }
+
+        void OnDisable() { ShiftRush.Core.PlayerProfile.Changed -= Refresh; }
+
+        void Refresh()
+        {
             if (text == null) text = GetComponentInChildren<TMP_Text>(true);
-            if (text != null) text.text = PlayerPrefs.GetInt(Key, 0).ToString("N0") + " HYPE";
+            if (text != null) text.text = ShiftRush.Core.PlayerProfile.Hype.ToString("N0") + " HYPE";
         }
     }
 }

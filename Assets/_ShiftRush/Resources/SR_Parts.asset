@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13f6861fa8c5c42e6a8781ec29373da0, type: 3}
+  m_Name: SR_Parts
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Core.PartCatalog
+  parts:
+  - id: stock
+    displayName: STOCK
+    slot: 0
+    prefab: {fileID: 0}
+    price: 0
+    driftStep: 0
+    downforce: 0
+    handlingBonus: 0
+    line: The wheels it came with.
+    notFor: 
+  - id: street
+    displayName: STREET SPORT
+    slot: 0
+    prefab: {fileID: 8767883074916495487, guid: 31fb75d32f831bf4aa139baf364a4f79, type: 3}
+    price: 600
+    driftStep: 0
+    downforce: 0
+    handlingBonus: 0
+    line: Fresh rims, same feel. For the camera.
+    notFor: 
+  - id: drift
+    displayName: DRIFT SLICKS
+    slot: 0
+    prefab: {fileID: 4732190590827173313, guid: 23b0028df1cf58748a6ffa51c3a93d38, type: 3}
+    price: 900
+    driftStep: 1
+    downforce: 0
+    handlingBonus: 0
+    line: Hard compound that lets go early. One step looser.
+    notFor: 
+  - id: grip
+    displayName: GRIP COMPOUND
+    slot: 0
+    prefab: {fileID: 4596708152096404405, guid: b3b06ef79476a5f42be264db85c5d619, type: 3}
+    price: 900
+    driftStep: -1
+    downforce: 0
+    handlingBonus: 1
+    line: Soft and sticky. One step tidier, more handling.
+    notFor: 
+  - id: attack
+    displayName: TIME ATTACK
+    slot: 0
+    prefab: {fileID: 4041300917870344698, guid: e74dff143ea8ea347bf14999b617867d, type: 3}
+    price: 1400
+    driftStep: -1
+    downforce: 0
+    handlingBonus: 2
+    line: Semi-slicks for lap times. Tidier, sharp turn-in.
+    notFor: 
+  - id: stock
+    displayName: STOCK
+    slot: 1
+    prefab: {fileID: 0}
+    price: 0
+    driftStep: 0
+    downforce: 0
+    handlingBonus: 0
+    line: The wing it came with.
+    notFor: 
+  - id: ducktail
+    displayName: DUCKTAIL
+    slot: 1
+    prefab: {fileID: 919132149155446097, guid: 89825671bedf948ed9b190969b2f3ba0, type: 3}
+    price: 500
+    driftStep: 0
+    downforce: 0.5
+    handlingBonus: 0
+    line: A small lip. A touch of downforce, all the style.
+    notFor: 
+  - id: lip
+    displayName: LIP WING
+    slot: 1
+    prefab: {fileID: 919132149155446097, guid: dcb95f40577c749018ecc7da8ef5038f, type: 3}
+    price: 900
+    driftStep: 0
+    downforce: 1
+    handlingBonus: 1
+    line: Light downforce. Steadier over crests.
+    notFor: 
+  - id: gt
+    displayName: GT WING
+    slot: 1
+    prefab: {fileID: 919132149155446097, guid: b9bbf8389b163456e95f03f02db76ee9, type: 3}
+    price: 1600
+    driftStep: 0
+    downforce: 1.6
+    handlingBonus: 1
+    line: Real downforce. Grips in fast corners, slides a bit narrower.
+    notFor: 
+  - id: attack
+    displayName: TIME ATTACK WING
+    slot: 1
+    prefab: {fileID: 919132149155446097, guid: 5a18fda3729304aa8baa9eb49f7cd3e9, type: 3}
+    price: 2200
+    driftStep: 0
+    downforce: 2.2
+    handlingBonus: 2
+    line: Maximum downforce. Planted at speed, tight drifts.
+    notFor: 

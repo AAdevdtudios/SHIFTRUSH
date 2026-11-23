@@ -41,6 +41,9 @@ namespace ShiftRush.Vehicles
             safeRot = FlatRotation(transform.forward);
         }
 
+        /// <summary>The race put the car somewhere new on the line (after a SHIFT world): resets go from there.</summary>
+        public void SyncLine(int index) { lineHint = index; offTimer = 0f; }
+
         public void SetRespawnPoint(Vector3 position, Quaternion rotation)
         {
             safePos = position; safeRot = rotation; hasOverride = true;
@@ -73,7 +76,11 @@ namespace ShiftRush.Vehicles
             var line = Race.RaceLine.Current;
             if (line != null && line.points != null && line.points.Length > 1)
             {
-                lineHint = line.Nearest(transform.position, lineHint);
+                // Track the car along the lap near where it was, and only while it's near the road: the last
+                // on-road point is where a reset puts it back.
+                int cand = line.NearestLocal(transform.position, lineHint, 60f);
+                float awayCand = Vector3.ProjectOnPlane(line.points[cand] - transform.position, Vector3.up).magnitude;
+                if (lineHint < 0 || awayCand < line.halfWidth + 30f || Race.ShortcutPath.OnAny(transform.position, 3f)) lineHint = cand;
                 float lat = Mathf.Abs(line.Lateral(transform.position, lineHint));
                 float away = (line.points[lineHint] - transform.position).magnitude;
                 bool off = away < 150f && lat > line.halfWidth + offTrackMargin && !Race.ShortcutPath.OnAny(transform.position, 3f);
@@ -114,8 +121,10 @@ namespace ShiftRush.Vehicles
             pos = Vector3.zero; rot = Quaternion.identity;
             var line = Race.RaceLine.Current;
             if (line == null || line.points == null || line.points.Length < 2) return false;
-            int i = line.Nearest(transform.position, lineHint);
-            if ((line.points[i] - transform.position).magnitude > 400f) return false;
+            // Back to the last place it was on the road, not the nearest road to where it landed
+            // (after flying off, that can be a different part of the circuit).
+            int i = lineHint >= 0 ? lineHint : line.Nearest(transform.position);
+            if (lineHint < 0 && (line.points[i] - transform.position).magnitude > 400f) return false;
             float d = line.distances[i];
             for (int tries = 0; tries < 6; tries++, d += 7f)
             {

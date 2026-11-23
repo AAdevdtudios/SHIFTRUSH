@@ -17,6 +17,25 @@ MonoBehaviour:
     displayName: Zephyr
     tagline: Light, twitchy, loves a jump.
     type: 0
+    price: 0
+    fit:
+      takesSpoiler: 1
+      takesTyres: 1
+      allowedTyres:
+      - street
+      - drift
+      - grip
+      - attack
+      allowedSpoilers:
+      - ducktail
+      - lip
+      - gt
+      - attack
+      tyreScale: {x: 1.45, y: 1.45, z: 1}
+      tyreOffset: {x: 0, y: -0.11, z: 0}
+      spoilerOffset: {x: 0.14, y: 0, z: 0}
+      spoilerScale: 1
+      spoilerTilt: 0
     prefab: {fileID: 618919482974570354, guid: f7cef4fc8817248b58bee806fb810876, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 7
@@ -39,6 +58,17 @@ MonoBehaviour:
     displayName: Fireburst
     tagline: Flat out or nothing. Twitchy at the limit.
     type: 1
+    price: 6000
+    fit:
+      takesSpoiler: 0
+      takesTyres: 1
+      allowedTyres: []
+      allowedSpoilers: []
+      tyreScale: {x: 1.45, y: 1.45, z: 1}
+      tyreOffset: {x: 0, y: 0, z: 0}
+      spoilerOffset: {x: 0, y: 0, z: 0}
+      spoilerScale: 1
+      spoilerTilt: 0
     prefab: {fileID: 8936669675758852984, guid: 4f9fd4e6cb93f454fb073e1396b51386, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 9
@@ -61,6 +91,25 @@ MonoBehaviour:
     displayName: Predator
     tagline: A race car on a leash. Corners like it's on rails.
     type: 2
+    price: 7000
+    fit:
+      takesSpoiler: 1
+      takesTyres: 1
+      allowedTyres:
+      - street
+      - drift
+      - grip
+      - attack
+      allowedSpoilers:
+      - ducktail
+      - lip
+      - gt
+      - attack
+      tyreScale: {x: 1.45, y: 1.45, z: 1}
+      tyreOffset: {x: 0, y: -0.08, z: 0}
+      spoilerOffset: {x: 0.25, y: -0.01, z: 0}
+      spoilerScale: 1
+      spoilerTilt: 0
     prefab: {fileID: 8176232413722470093, guid: 9809cc2a9de8149c5b077fd5f60fa848, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 6
@@ -83,6 +132,21 @@ MonoBehaviour:
     displayName: Blackout
     tagline: All muscle. The biggest, longest nitro burn.
     type: 3
+    price: 4000
+    fit:
+      takesSpoiler: 0
+      takesTyres: 1
+      allowedTyres:
+      - street
+      - drift
+      - grip
+      - attack
+      allowedSpoilers: []
+      tyreScale: {x: 1.5, y: 1.5, z: 1}
+      tyreOffset: {x: 0, y: -0.06, z: 0}
+      spoilerOffset: {x: 0, y: 0, z: 0}
+      spoilerScale: 1
+      spoilerTilt: 0
     prefab: {fileID: 8722409306801786800, guid: 95454484ab89e4318913057a58a109fd, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 7
@@ -105,6 +169,25 @@ MonoBehaviour:
     displayName: Tetsuo
     tagline: Born sideways. Throw it in and hold the slide.
     type: 4
+    price: 3000
+    fit:
+      takesSpoiler: 1
+      takesTyres: 1
+      allowedTyres:
+      - street
+      - drift
+      - grip
+      - attack
+      allowedSpoilers:
+      - ducktail
+      - lip
+      - gt
+      - attack
+      tyreScale: {x: 1.45, y: 1.45, z: 1}
+      tyreOffset: {x: 0, y: 0, z: 0}
+      spoilerOffset: {x: 0.28, y: 0, z: 0}
+      spoilerScale: 1
+      spoilerTilt: 0
     prefab: {fileID: 5810208036851785621, guid: 582f364dbd99247ecba80fd56335e945, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 7
@@ -125,6 +208,25 @@ MonoBehaviour:
     displayName: Phobos
     tagline: Monster truck. Huge air off SHIFT ramps, shrugs off bumps.
     type: 5
+    price: 9000
+    fit:
+      takesSpoiler: 1
+      takesTyres: 1
+      allowedTyres:
+      - street
+      - drift
+      - grip
+      - attack
+      allowedSpoilers:
+      - ducktail
+      - lip
+      - gt
+      - attack
+      tyreScale: {x: 1.45, y: 1.45, z: 1}
+      tyreOffset: {x: 0, y: 0, z: 0}
+      spoilerOffset: {x: 0, y: -0.08, z: 0}
+      spoilerScale: 1
+      spoilerTilt: 0
     prefab: {fileID: 2235965477127437176, guid: ae9c5ad600828488f90ccb4a6d5fc79d, type: 3}
     showroomPrefab: {fileID: 0}
     topSpeed: 4

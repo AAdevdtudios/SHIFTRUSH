@@ -63,6 +63,26 @@ namespace ShiftRush.Race
             return best;
         }
 
+        /// <summary>
+        /// Nearest point, but only within <paramref name="metres"/> of the hint along the lap. Never jumps to another
+        /// part of the circuit, however far the car has flown off: a loop's other side can be the closest road.
+        /// </summary>
+        public int NearestLocal(Vector3 p, int hint, float metres = 60f)
+        {
+            if (points == null || points.Length == 0) return 0;
+            if (hint < 0 || hint >= points.Length) return Nearest(p);
+            int n = points.Length;
+            int span = Mathf.Clamp(Mathf.CeilToInt(metres / Mathf.Max(0.5f, length / n)), 2, n / 2);
+            int best = hint; float bestD = float.MaxValue;
+            for (int k = -span; k <= span; k++)
+            {
+                int i = ((hint + k) % n + n) % n;
+                float d = (points[i] - p).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = i; }
+            }
+            return best;
+        }
+
         public Vector3 Direction(int i)
         {
             int n = points.Length;

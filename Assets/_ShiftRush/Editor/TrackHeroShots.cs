@@ -59,15 +59,21 @@ namespace ShiftRush.EditorTools
             var cat = AssetDatabase.LoadAssetAtPath<RaceCatalog>("Assets/_ShiftRush/Resources/RaceCatalog.asset");
             if (cat != null)
             {
-                // Only the real circuits. TestArena stays in the project for trying cars, off the menu and out of builds.
-                cat.tracks.Clear();
-                cat.tracks.AddRange(tracks);
+                // Update the built circuits in place and keep every other track (ones made with the Race Track Wizard).
+                // TestArena stays off the menu and out of builds.
+                cat.tracks.RemoveAll(t => t.scene == "TestArena");
+                foreach (var t in tracks)
+                {
+                    int i = cat.tracks.FindIndex(x => x.id == t.id || x.scene == t.scene);
+                    if (i >= 0) cat.tracks[i] = t; else cat.tracks.Add(t);
+                }
                 EditorUtility.SetDirty(cat);
                 AssetDatabase.SaveAssets();
             }
 
-            var scenes = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene("Assets/_ShiftRush/Scenes/MainMenu.unity", true) };
-            foreach (var s in shots) scenes.Add(new EditorBuildSettingsScene(s.spec.scene, true));
+            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            foreach (var s in shots)
+                if (!scenes.Exists(x => x.path == s.spec.scene)) scenes.Add(new EditorBuildSettingsScene(s.spec.scene, true));
             EditorBuildSettings.scenes = scenes.ToArray();
             Debug.Log("[SHIFT//RUSH] Hero shots captured and catalog updated (" + tracks.Count + " circuits).");
         }

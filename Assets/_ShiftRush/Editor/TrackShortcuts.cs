@@ -364,7 +364,7 @@ namespace ShiftRush.EditorTools
 
         /// <summary>After the race line exists: where each shortcut leaves and rejoins along it, and no
         /// checkpoint left on a stretch a shortcut skips (it moves to just past the exit).</summary>
-        static void LinkShortcuts(RaceLine line)
+        internal static void LinkShortcuts(RaceLine line)
         {
             var cuts = Object.FindObjectsByType<ShortcutPath>(FindObjectsSortMode.None);
             if (cuts.Length == 0 || line == null) return;

@@ -367,49 +367,99 @@ namespace ShiftRush.EditorTools
             nosFill.rectTransform.anchorMin = Vector2.zero; nosFill.rectTransform.anchorMax = Vector2.one;
             nosFill.rectTransform.offsetMin = new Vector2(3, 3); nosFill.rectTransform.offsetMax = new Vector2(-3, -3);
 
-            // ================= results: the stream pays out
+            // ================= results: the stream pays out (as designed: a slanted pink slab with a cyan stripe)
+            // Smooth (anti-aliased) slanted edges, big enough not to step when stretched full height.
+            var slabSprite = SaveSprite("T_ResultsSlab", 1024, 1024, (x, y, w, h) => Mathf.Clamp01(w * 0.8f + (y / h) * w * 0.2f - x + 0.5f), Vector4.zero);
+            var stripeSprite = SaveSprite("T_ResultsStripe", 1024, 1024, (x, y, w, h) =>
+            {
+                float e = w * 0.8f + (y / h) * w * 0.2f;
+                return Mathf.Clamp01(x - e + 0.5f) * Mathf.Clamp01(e + w * 0.028f - x + 0.5f);
+            }, Vector4.zero);
             var fin = Rect(root.transform, "Results");
             Stretch(fin);
             var finGroup = fin.gameObject.AddComponent<CanvasGroup>();
-            var finShade = Img(fin, "Shade", null, new Color(Night.r, Night.g, Night.b, 0.86f)); Stretch(finShade.rectTransform);
-            var slab = Img(fin, "Slab", null, Pink);
-            Place(slab.rectTransform, new Vector2(0, 0), new Vector2(0.44f, 1), new Vector2(0, 0.5f), Vector2.zero, Vector2.zero);
-            var slabEdge = Img(fin, "Slab Edge", null, Signal);
-            Place(slabEdge.rectTransform, new Vector2(0.44f, 0), new Vector2(0.44f, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(14, 0));
-            var clip = Img(fin, "Clip Tag", null, Night);
-            Place(clip.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(80, -70), new Vector2(300, 32));
-            var clipText = Txt(clip.transform, "Text", "CLIP SAVED  //  CH 13", monoBold, 15, Paper, TextAlignmentOptions.Center); Stretch(clipText.rectTransform);
-            var finPos = Txt(fin, "Position", "1ST", bsBlack, 320, Night, TextAlignmentOptions.TopLeft);
-            Place(finPos.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(72, -120), new Vector2(760, 330));
-            var finTitle = Txt(fin, "Title", "YOU OUTRAN THE LEAGUE", bsBlack, 50, Night, TextAlignmentOptions.TopLeft);
-            Place(finTitle.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(80, -450), new Vector2(760, 60));
-            var tl = Txt(fin, "Total Label", "TOTAL", monoBold, 15, Night, TextAlignmentOptions.TopLeft);
-            Place(tl.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(84, -530), new Vector2(200, 22));
-            var finTotal = Txt(fin, "Total", "00:00.000", bsBlack, 46, Night, TextAlignmentOptions.TopLeft);
-            Place(finTotal.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(80, -552), new Vector2(300, 60));
-            var bl = Txt(fin, "Best Label", "BEST LAP EVER", monoBold, 15, Night, TextAlignmentOptions.TopLeft);
-            Place(bl.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(384, -530), new Vector2(260, 22));
-            var finBest = Txt(fin, "Best", "00:00.000", bsBlack, 46, Night, TextAlignmentOptions.TopLeft);
-            Place(finBest.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(380, -552), new Vector2(300, 60));
-            var finLaps = Txt(fin, "Laps", "", monoBold, 18, Night, TextAlignmentOptions.TopLeft);
-            finLaps.lineSpacing = 12;
-            Place(finLaps.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(84, -630), new Vector2(600, 260));
+            var finShade = Img(fin, "Shade", null, new Color(Night.r, Night.g, Night.b, 0.94f)); Stretch(finShade.rectTransform);
+            var slab = Img(fin, "Slab", slabSprite, Pink);
+            Place(slab.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(-96, 0), new Vector2(1060, 0));
+            var stripe = Img(fin, "Stripe", stripeSprite, Signal);
+            Place(stripe.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(-96, 0), new Vector2(1060, 0));
 
-            var payTag = Txt(fin, "Pay Tag", "THE STREAM PAYS OUT", monoBold, 16, Mist, TextAlignmentOptions.TopLeft);
-            payTag.characterSpacing = 8;
-            Place(payTag.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(90, -90), new Vector2(760, 26));
-            var payLines = Txt(fin, "Pay Lines", "", barlowBold, 30, Paper, TextAlignmentOptions.TopLeft);
-            payLines.lineSpacing = 22;
-            Place(payLines.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(90, -130), new Vector2(760, 420));
-            var payLabel = Txt(fin, "Pay Label", "TOTAL HYPE", bsBlack, 48, Paper, TextAlignmentOptions.BottomLeft);
-            Place(payLabel.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(90, -560), new Vector2(400, 70));
-            var payTotal = Txt(fin, "Pay Total", "+0", bsBlack, 110, Gold, TextAlignmentOptions.BottomRight);
-            Place(payTotal.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(390, -540), new Vector2(460, 120));
-            var payBal = Txt(fin, "Pay Balance", "", monoBold, 16, Mist, TextAlignmentOptions.TopRight);
-            Place(payBal.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(390, -668), new Vector2(460, 24));
-            var finHint = Txt(fin, "Hint", "<color=#FF2E9A>ENTER</color>  RACE AGAIN      <color=#FF2E9A>M</color>  MAIN MENU", monoBold, 18, Paper, TextAlignmentOptions.Left);
-            finHint.characterSpacing = 6;
-            Place(finHint.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 0), new Vector2(90, 70), new Vector2(900, 30));
+            // Left, on the slab: clip tag, the place, the line, stats and the top three.
+            var clip = Img(fin, "Clip Tag", null, Night);
+            Place(clip.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(86, -72), new Vector2(560, 34));
+            var clipText = Txt(clip.transform, "Text", "CLIP SAVED  //  ALPINE PASS", monoBold, 16, Paper, TextAlignmentOptions.Left);
+            clipText.characterSpacing = 6;
+            Place(clipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 0.5f), new Vector2(12, 0), new Vector2(-24, 0));
+            var finPos = Txt(fin, "Position", "1ST", bsBlack, 360, Night, TextAlignmentOptions.TopLeft);
+            finPos.lineSpacing = -30;
+            Place(finPos.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(78, -110), new Vector2(820, 330));
+            var finTitle = Txt(fin, "Title", "YOU OUTRAN THE LEAGUE", bsBlack, 58, Night, TextAlignmentOptions.TopLeft);
+            Place(finTitle.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(86, -486), new Vector2(820, 70));
+            TMP_Text Stat(string label, float x, string value)
+            {
+                var l = Txt(fin, label + " Label", label, monoBold, 14, Night, TextAlignmentOptions.TopLeft);
+                l.characterSpacing = 6;
+                Place(l.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(x, -580), new Vector2(260, 20));
+                var v = Txt(fin, label + " Value", value, monoBold, 31, Night, TextAlignmentOptions.TopLeft);
+                Place(v.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(x, -602), new Vector2(260, 40));
+                return v;
+            }
+            var finTotal = Stat("TOTAL", 86, "05:08.310");
+            var finBest = Stat("BEST LAP EVER", 316, "01:39.770");
+            var peak = Stat("PEAK VIEWERS", 566, "61.4K");
+            var stNames = new TMP_Text[3]; var stGaps = new TMP_Text[3]; var stRanks = new TMP_Text[3]; var stBacks = new Image[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var row = Img(fin, "Standing " + (i + 1), null, i == 0 ? Night : new Color(0, 0, 0, 0));
+                Place(row.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(86, -684 - i * 46), new Vector2(624, 42));
+                var rk = Txt(row.transform, "Rank", (i + 1).ToString(), barlowBold, 24, Night, TextAlignmentOptions.Left);
+                Place(rk.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(14, 0), new Vector2(30, 0));
+                var nm = Txt(row.transform, "Name", "YOU", barlowBold, 24, Night, TextAlignmentOptions.Left);
+                Place(nm.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 0.5f), new Vector2(54, 0), new Vector2(-260, 0));
+                var gp = Txt(row.transform, "Gap", "+2.04", monoBold, 18, Night, TextAlignmentOptions.Right);
+                Place(gp.rectTransform, new Vector2(1, 0), new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-14, 0), new Vector2(200, 0));
+                stNames[i] = nm; stGaps[i] = gp; stRanks[i] = rk; stBacks[i] = row;
+            }
+
+            // Right: the stream pays out.
+            const float RX0 = 1008f;
+            var liveChip = Img(fin, "Live", null, Live);
+            Place(liveChip.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0, -86), new Vector2(92, 32));
+            var liveTxt = Txt(liveChip.transform, "Text", "LIVE", monoBold, 15, Color.white, TextAlignmentOptions.Center); liveTxt.characterSpacing = 10; Stretch(liveTxt.rectTransform);
+            var payTag = Txt(fin, "Pay Tag", "THE STREAM PAYS OUT", monoMedium, 17, Mist, TextAlignmentOptions.Left);
+            payTag.characterSpacing = 4;
+            Place(payTag.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0 + 108, -91), new Vector2(500, 24));
+            var payLines = Txt(fin, "Pay Lines", "", barlowSemi, 31, Paper, TextAlignmentOptions.TopLeft);
+            payLines.lineSpacing = 34;
+            Place(payLines.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0, -146), new Vector2(828, 400));
+            var payLabel = Txt(fin, "Pay Label", "TOTAL HYPE", bsBlack, 53, Paper, TextAlignmentOptions.BottomLeft);
+            Place(payLabel.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0, -556), new Vector2(420, 70));
+            var payEcho = Txt(fin, "Pay Total Echo", "+0", bsBlack, 115, Pink, TextAlignmentOptions.BottomRight);
+            Place(payEcho.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0 + 333, -545), new Vector2(500, 130));
+            var payTotal = Txt(fin, "Pay Total", "+0", bsBlack, 115, Gold, TextAlignmentOptions.BottomRight);
+            Place(payTotal.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0 + 328, -540), new Vector2(500, 130));
+            payEcho.gameObject.AddComponent<ShiftRush.UI.TextEcho>().source = payTotal;
+            var payBal = Txt(fin, "Pay Balance", "", monoMedium, 17, Mist, TextAlignmentOptions.TopRight);
+            Place(payBal.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0 + 328, -682), new Vector2(500, 24));
+            var chats = new TMP_Text[2];
+            for (int i = 0; i < 2; i++)
+            {
+                var bubble = Img(fin, "Chat " + (i + 1), null, i == 0 ? Paper : new Color32(26, 22, 40, 255));
+                Place(bubble.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(RX0 + (i == 0 ? 0 : 4), -726 - i * 52), new Vector2(560, 42));
+                if (i == 0) bubble.rectTransform.localEulerAngles = new Vector3(0, 0, 1.5f);
+                var ct = Txt(bubble.transform, "Text", "", barlowSemi, 22, i == 0 ? Night : Mist, TextAlignmentOptions.Left);
+                Place(ct.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 0.5f), new Vector2(14, 0), new Vector2(-28, 0));
+                chats[i] = ct;
+            }
+            // Buttons: Enter runs it back, M goes to the menu.
+            var goShadowR = Img(fin, "Again Shadow", slant, Signal); goShadowR.type = Image.Type.Sliced;
+            Place(goShadowR.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(RX0 + 7, 66), new Vector2(330, 70));
+            var goR = Img(fin, "Again", slant, Pink); goR.type = Image.Type.Sliced;
+            Place(goR.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(RX0, 73), new Vector2(330, 70));
+            var goRT = Txt(goR.transform, "Text", "RACE AGAIN  <size=60%>ENTER</size>", bsBlack, 40, Night, TextAlignmentOptions.Center); Stretch(goRT.rectTransform);
+            var menuB = Img(fin, "Menu", outline, Paper); menuB.type = Image.Type.Sliced;
+            Place(menuB.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(RX0 + 352, 73), new Vector2(270, 70));
+            var menuT = Txt(menuB.transform, "Text", "MAIN MENU  <size=60%>M</size>", bsBold, 32, Paper, TextAlignmentOptions.Center); Stretch(menuT.rectTransform);
 
             // ================= wire up RaceHUD
             so.FindProperty("raceGroup").objectReferenceValue = raceGroup;
@@ -440,7 +490,7 @@ namespace ShiftRush.EditorTools
             so.FindProperty("finishPosition").objectReferenceValue = finPos;
             so.FindProperty("finishTotal").objectReferenceValue = finTotal;
             so.FindProperty("finishBest").objectReferenceValue = finBest;
-            so.FindProperty("finishLaps").objectReferenceValue = finLaps;
+            so.FindProperty("finishLaps").objectReferenceValue = null; // the design shows stats and the top three instead
             so.FindProperty("audioSource").objectReferenceValue = src;
             so.FindProperty("beep").objectReferenceValue = sounds.select;
             so.FindProperty("go").objectReferenceValue = sounds.confirm;
@@ -476,6 +526,10 @@ namespace ShiftRush.EditorTools
             ss.FindProperty("dareTimerFill").objectReferenceValue = dFill.rectTransform;
             ss.FindProperty("payoutLines").objectReferenceValue = payLines;
             ss.FindProperty("payoutHeadline").objectReferenceValue = finTitle;
+            ss.FindProperty("clipTag").objectReferenceValue = clipText;
+            ss.FindProperty("peakViewersText").objectReferenceValue = peak;
+            SetArray(ss, "standingNames", stNames); SetArray(ss, "standingGaps", stGaps); SetArray(ss, "standingRanks", stRanks); SetArray(ss, "standingBacks", stBacks);
+            SetArray(ss, "resultChat", chats);
             ss.FindProperty("liveLayer").objectReferenceValue = liveGroup;
             ss.FindProperty("payoutTotal").objectReferenceValue = payTotal;
             ss.FindProperty("payoutBalance").objectReferenceValue = payBal;

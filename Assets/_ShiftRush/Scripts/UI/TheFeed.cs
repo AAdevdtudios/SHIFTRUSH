@@ -75,7 +75,8 @@ namespace ShiftRush.UI
             RefreshHype();
         }
 
-        void OnEnable() { RefreshHype(); }
+        void OnEnable() { RefreshHype(); ShiftRush.Core.PlayerProfile.Changed += RefreshHype; }
+        void OnDisable() { ShiftRush.Core.PlayerProfile.Changed -= RefreshHype; }
 
         void Update()
         {
@@ -102,7 +103,7 @@ namespace ShiftRush.UI
 
         public void RefreshHype()
         {
-            if (hypeText != null) hypeText.text = PlayerPrefs.GetInt("GripPro.Hype", 0).ToString("N0") + " HYPE";
+            if (hypeText != null) hypeText.text = ShiftRush.Core.PlayerProfile.Hype.ToString("N0") + " HYPE";
         }
 
         /// <summary>A message from the channel itself, e.g. when a locked menu entry is picked.</summary>

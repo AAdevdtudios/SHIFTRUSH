@@ -66,6 +66,11 @@ namespace ShiftRush.UI
         [SerializeField] GameObject[] hideWhenPosed;
 
         GameObject current;
+        RaceCatalog.Car shownCar;
+
+        /// <summary>The car on the turntable and its model, for previewing parts in the garage.</summary>
+        public RaceCatalog.Car ShownCar { get { return shownCar; } }
+        public GameObject ShownModel { get { return current != null && current.transform.childCount > 0 ? current.transform.GetChild(0).gameObject : null; } }
         float baseFov, kick, baseYaw;
         Vector3 framing, framingTarget;
         enum MenuScreen { Home, Garage, Tracks }
@@ -203,6 +208,8 @@ namespace ShiftRush.UI
                 sizeScale = Mathf.Clamp(length / Mathf.Max(0.5f, referenceLength), 1f, 1.8f);
             }
             current = holder;
+            shownCar = car;
+            Vehicles.CarLoadout.ApplyFitted(model, car, false); // the parts fitted in the garage, looks only
             current.SetActive(!posed);
             Kick(1f);
         }

@@ -55,6 +55,14 @@ namespace ShiftRush.Race
         [SerializeField] TMP_Text payoutLines;
         [SerializeField] TMP_Text payoutTotal;
         [SerializeField] TMP_Text payoutBalance;
+        [SerializeField] TMP_Text clipTag;
+        [SerializeField] TMP_Text peakViewersText;
+        [Tooltip("Top three at the finish: name and gap, the player's row inverted.")]
+        [SerializeField] TMP_Text[] standingNames = new TMP_Text[3];
+        [SerializeField] TMP_Text[] standingGaps = new TMP_Text[3];
+        [SerializeField] TMP_Text[] standingRanks = new TMP_Text[3];
+        [SerializeField] Image[] standingBacks = new Image[3];
+        [SerializeField] TMP_Text[] resultChat = new TMP_Text[2];
 
         [Header("Colours")]
         [SerializeField] Color pink = new Color32(255, 46, 154, 255);
@@ -73,6 +81,8 @@ namespace ShiftRush.Race
         IVehicle vehicle;
 
         int sessionHype, driftHype, knockHype, rollHype, dareHype, streakHype, dares;
+        int driftCount, bestTier, knockCount, bestChain, landingCount, daresDone;
+        float peakViewers;
         float streak = 1f, streakPeak = 1f, coolOff, viewers = 48200f, viewersTarget = 48200f;
         float calloutUntil, calloutPunch;
         bool banked;
@@ -147,6 +157,7 @@ namespace ShiftRush.Race
         void OnDriftEnded(DriftMoves d, int tier, float held)
         {
             if (d != drift || tier <= 0) return;
+            driftCount++; bestTier = Mathf.Max(bestTier, tier);
             int h = Award(DriftTierHype[Mathf.Clamp(tier, 0, 3)], ref driftHype, 0.35f * tier);
             Callout(tier >= 3 ? "MONSTER DRIFT" : "DRIFT", "+" + h + " HYPE", true);
             if (tier >= 2) Chat(DriftLines);
@@ -155,6 +166,7 @@ namespace ShiftRush.Race
         void OnKnocked(GameObject attacker, GameObject victim, float damage, int chain)
         {
             if (grip == null || attacker != grip.gameObject) return;
+            knockCount++; bestChain = Mathf.Max(bestChain, chain);
             int h = Award(KnockHype * chain, ref knockHype, 0.4f * chain);
             Callout(chain > 1 ? "CHAIN KNOCK x" + chain : "KNOCK", "+" + h + " HYPE", true);
             Chat(KnockLines);
@@ -164,6 +176,7 @@ namespace ShiftRush.Race
         void OnLanded(GripMoves m, bool clean, float air)
         {
             if (m != grip || !clean) return;
+            landingCount++;
             int h = Award(LandingHype, ref rollHype, 0.2f);
             Callout("CLEAN LANDING", "+" + h + " HYPE", true);
             if (Random.value < 0.4f) Chat(RollLines);
@@ -252,6 +265,7 @@ namespace ShiftRush.Race
         {
             if (dare == DareKind.None) return;
             dare = DareKind.None;
+            daresDone++;
             dareHype += dareReward01;
             sessionHype += dareReward01;
             viewersTarget += 4000f;
@@ -305,27 +319,60 @@ namespace ShiftRush.Race
             int place = race.PositionOf(r);
             int placeHype = Mathf.RoundToInt(PlaceHype * Mathf.Clamp01(1f - (place - 1) / Mathf.Max(1f, race.Racers.Count)));
             sessionHype += placeHype;
-            int balance = PlayerPrefs.GetInt(HypeKey, 0) + sessionHype;
-            PlayerPrefs.SetInt(HypeKey, balance);
-            PlayerPrefs.Save();
+            ShiftRush.Core.PlayerProfile.AddHype(sessionHype);
+            int balance = ShiftRush.Core.PlayerProfile.Hype;
 
             if (payoutLines)
                 payoutLines.text =
-                    Line("FINISHED " + place + Suffix(place), placeHype) +
-                    Line("DRIFTS", driftHype) +
-                    Line("KNOCKS", knockHype) +
-                    Line("CLEAN LANDINGS", rollHype) +
-                    Line("FAN DARES", dareHype) +
-                    Line("STREAK  <color=#8C86A3>x" + streakPeak.ToString("0.0") + " PEAK</color>", streakHype);
+                    Line("FINISHED " + place + Suffix(place), null, placeHype) +
+                    Line("DRIFTS", driftCount > 0 ? driftCount + ", best tier " + bestTier : null, driftHype) +
+                    Line("KNOCKS", knockCount > 0 ? knockCount + (bestChain > 1 ? ", one chain of " + bestChain : "") : null, knockHype) +
+                    Line("ROLLS AND CLEAN LANDINGS", landingCount > 0 ? landingCount.ToString() : null, rollHype) +
+                    Line("FAN DARES", dares > 0 ? daresDone + " of " + dares : null, dareHype) +
+                    Line("VIEWER STREAK", "x" + streakPeak.ToString("0.0") + " peak", streakHype);
+
+            // The clip tag, peak viewers, the top three and two chat reactions.
+            // The track actually raced (by scene), not just the last one picked in the menu.
+            ShiftRush.Core.RaceCatalog.Track track = null;
+            var cat = ShiftRush.Core.RaceCatalog.Instance;
+            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (cat != null) foreach (var t in cat.tracks) if (t.scene == scene) { track = t; break; }
+            if (clipTag) clipTag.text = "CLIP SAVED  //  " + (track != null ? track.displayName.ToUpperInvariant() : UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.ToUpperInvariant()) + "  //  " + Difficulty.Label;
+            if (peakViewersText) peakViewersText.text = (peakViewers / 1000f).ToString("0.0") + "K";
+            var leader = race.Racers.Count > 0 ? race.Racers[0] : null;
+            for (int i = 0; i < 3; i++)
+            {
+                bool has = i < race.Racers.Count;
+                if (standingBacks[i]) standingBacks[i].gameObject.SetActive(has);
+                if (!has) continue;
+                var o = race.Racers[i];
+                if (standingRanks[i]) standingRanks[i].text = (i + 1).ToString();
+                if (standingNames[i]) standingNames[i].text = o.isPlayer ? "YOU" : o.name.ToUpperInvariant();
+                string gap = i == 0 ? RaceManager.FormatTime(o.finished ? o.finishTime : race.RaceTime)
+                    : o.finished && leader != null && leader.finished ? "+" + (o.finishTime - leader.finishTime).ToString("0.00") : "RACING";
+                if (standingGaps[i]) standingGaps[i].text = gap;
+                if (standingBacks[i]) standingBacks[i].color = o.isPlayer ? new Color32(11, 10, 18, 255) : new Color(0, 0, 0, 0);
+                var c = o.isPlayer ? new Color32(244, 241, 250, 255) : new Color32(11, 10, 18, 255);
+                if (standingNames[i]) standingNames[i].color = c;
+                if (standingGaps[i]) standingGaps[i].color = c;
+                if (standingRanks[i]) standingRanks[i].color = c;
+            }
+            string[] good = { "clip of the night. cops never had a chance", "that tier 3 into the tunnel", "the rookie is HIM", "running it back, chat?" };
+            string[] meh = { "the stream keeps rolling, next one", "tyres were cold, we move", "rookie mistakes, still entertaining", "run it back" };
+            var pool = place <= 3 ? good : meh;
+            string[] who = { "slim_m", "nitroqueen", "kaito", "gridghost" };
+            for (int i = 0; i < resultChat.Length; i++)
+                if (resultChat[i]) resultChat[i].text = "<b><color=" + (i == 0 ? "#C4157A" : "#2EF2FF") + ">" + who[(place + i) % who.Length] + "</color></b>  " + pool[(place * 3 + i) % pool.Length];
             if (payoutTotal) payoutTotal.text = "+" + sessionHype.ToString("N0");
             if (payoutHeadline)
                 payoutHeadline.text = place == 1 ? "YOU OUTRAN THE LEAGUE" : place <= 3 ? "ON THE PODIUM. CHAT IS LOUD." : "THE STREAM KEEPS ROLLING";
             if (payoutBalance) payoutBalance.text = "BALANCE  " + balance.ToString("N0") + " HYPE";
         }
 
-        static string Line(string label, int value)
+        static string Line(string label, string detail, int value)
         {
-            return label + "<pos=78%><color=#FFC53D>+" + value.ToString("N0") + "</color>\n";
+            return label + (string.IsNullOrEmpty(detail) ? "" : "  <size=70%><color=#8C86A3>" + detail + "</color></size>")
+                + "<pos=82%><color=#FFC53D>+" + value.ToString("N0") + "</color>\n";
         }
 
         static string Suffix(int n)
@@ -355,6 +402,7 @@ namespace ShiftRush.Race
 
             viewersTarget = Mathf.Max(20000f, viewersTarget - dt * 120f);
             viewers = Mathf.Lerp(viewers, viewersTarget, 1f - Mathf.Exp(-dt * 1.2f));
+            peakViewers = Mathf.Max(peakViewers, viewers);
             if (viewersText) viewersText.text = (viewers / 1000f).ToString("0.0") + "K";
 
             // Chat lines fade in, then out after five seconds.

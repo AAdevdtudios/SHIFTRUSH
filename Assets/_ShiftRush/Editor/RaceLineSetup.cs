@@ -114,7 +114,7 @@ namespace ShiftRush.EditorTools
         }
 
         /// <summary>White-on-clear track outline with a start tick; the HUD tints it.</summary>
-        static Sprite DrawMinimap(Vector3[] pts, string trackName, out Rect bounds)
+        internal static Sprite DrawMinimap(Vector3[] pts, string trackName, out Rect bounds)
         {
             const int size = 1024; const float pad = 0.08f, thick = 7f;
             float minX = float.MaxValue, maxX = float.MinValue, minZ = float.MaxValue, maxZ = float.MinValue;

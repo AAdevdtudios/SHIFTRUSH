@@ -221,6 +221,8 @@ namespace ShiftRush.Race
             r.started = true;
             r.suspended = false;
             r.nearest = i;
+            var reset = r.vehicle.Transform.GetComponent<ShiftRush.Vehicles.VehicleReset>();
+            if (reset != null) reset.SyncLine(i);
             r.progress = d;
             r.wrongWayTime = 0f;
             r.nextGate = 0;
@@ -238,7 +240,12 @@ namespace ShiftRush.Race
         {
             if (r.finished || r.suspended) return;
             Vector3 p = r.vehicle.Transform.position;
-            r.nearest = Line.Nearest(p, r.nearest);
+            // Follow the car along the lap, only near where it was. Off the road (flying off, run wide into the
+            // scenery) its progress holds where it left the track, so it can't jump to another part of the circuit.
+            int cand = Line.NearestLocal(p, r.nearest, 60f);
+            float offRoad = Vector3.ProjectOnPlane(Line.points[cand] - p, Vector3.up).magnitude;
+            bool onRoad = offRoad < Line.halfWidth + 30f || (ShortcutPath.All.Count > 0 && ShortcutPath.OnAny(p));
+            if (onRoad) r.nearest = cand;
             float d = Line.distances[r.nearest];
             r.progress = r.started ? d : d - Line.length; // still behind the line: negative
 

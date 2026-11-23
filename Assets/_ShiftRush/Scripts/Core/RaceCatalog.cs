@@ -11,6 +11,43 @@ namespace ShiftRush.Core
     public enum CarType { AllRounder, Supercar, RaceCar, Muscle, Tuner, Heavy }
 
     /// <summary>
+    /// How garage parts go on one car, set by hand in SHIFT RUSH → Cars → Parts Fitting because every car's wheels
+    /// and boot are shaped differently. The automatic fit (sized to the car's own wheels and wing) is the starting
+    /// point, and these numbers adjust it.
+    /// </summary>
+    [System.Serializable]
+    public class PartFit
+    {
+        [Tooltip("Off = this car never wears a spoiler (the slot shows NONE).")]
+        public bool takesSpoiler = true;
+        [Tooltip("Off = no tyre swaps on this car.")]
+        public bool takesTyres = true;
+        [Tooltip("Part ids this car allows. Empty = every part in the catalog.")]
+        public string[] allowedTyres = new string[0];
+        public string[] allowedSpoilers = new string[0];
+
+        [Header("Tyres (all four, mirrored left and right)")]
+        [Tooltip("X and Y = height of the wheel, Z = width. 1 = the automatic fit.")]
+        public Vector3 tyreScale = Vector3.one;
+        [Tooltip("Metres. X = forward, Y = up, Z = outwards from the car.")]
+        public Vector3 tyreOffset = Vector3.zero;
+
+        [Header("Spoiler")]
+        [Tooltip("Metres from the automatic seat. X = forward, Y = up, Z = sideways.")]
+        public Vector3 spoilerOffset = Vector3.zero;
+        [Tooltip("1 = the automatic size (the width of the car's own wing).")]
+        public float spoilerScale = 1f;
+        [Tooltip("Degrees. Positive tips the trailing edge up.")]
+        public float spoilerTilt = 0f;
+
+        public bool Allows(string[] list, string id)
+        {
+            if (id == "stock" || list == null || list.Length == 0) return true;
+            return System.Array.IndexOf(list, id) >= 0;
+        }
+    }
+
+    /// <summary>
     /// Every car and track the menu offers. Add a car or track here and it appears in the select screens.
     /// Lives at Resources/RaceCatalog so the race scenes can look up the player's choice too.
     /// </summary>
@@ -26,6 +63,10 @@ namespace ShiftRush.Core
             public string tagline = "";
             [Tooltip("What kind of car it is. Sets its drift character and shows on the car select card.")]
             public CarType type = CarType.AllRounder;
+            [Tooltip("Hype to buy it in the garage. 0 = owned from the start.")]
+            public int price = 0;
+            [Tooltip("Which garage parts this car takes and how they sit on it. Set with SHIFT RUSH → Cars → Parts Fitting.")]
+            public PartFit fit = new PartFit();
             [Tooltip("The drivable RCC prefab.")]
             public GameObject prefab;
             [Tooltip("Optional model-only prefab for the showroom. If empty, the drivable prefab is shown with its physics and scripts stripped.")]

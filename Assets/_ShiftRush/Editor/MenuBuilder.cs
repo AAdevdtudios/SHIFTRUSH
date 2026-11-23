@@ -52,6 +52,7 @@ namespace ShiftRush.EditorTools
             LoadBroadcastFonts(); // Heat's theme, the loading screen and every menu screen use the stream fonts
             StyleHeat(sounds);
             var catalog = MakeCatalog();
+            PartsBuilder.Build(); // tyres, spoilers and car prices for the garage
             MakeCarPictures(catalog);
             MakeTrackMaps(catalog);
             var credits = MakeCreditsPreset();
@@ -294,12 +295,15 @@ namespace ShiftRush.EditorTools
                 "\"Background Music\" by Andrii Poradovskyi (Pixabay)",
                 "\"Trap Dynamic Brass Thunder Power\" by alexzavesa (Pixabay)",
                 "\"Dance Funk\" by roybushband (Pixabay)",
+                "\"Bricks\" by Soundroll (Uppbeat, license HT0NEZRASPO4VVV7)",
+                "\"Dodgin' Bullets\" by Bosnow (Uppbeat, license H0XZQHXDFK9YUU62)",
+                "\"Furious\" by FASS (Uppbeat, license GQHZBDC576X1ZPK5)",
             });
             add("Controller graphics", new[] { "Zacksly (CC BY 3.0)" });
             preset.mentions.Add(new CreditsPreset.MentionSection
             {
                 ID = "thanks",
-                description = "Thanks for playing SHIFT//RUSH.",
+                description = "Thanks for playing GRIP PRO: CHANNEL 13.",
                 descriptionKey = "",
             });
             EditorUtility.SetDirty(preset);
@@ -1454,10 +1458,19 @@ namespace ShiftRush.EditorTools
             {
                 new EditorBuildSettingsScene(ScenePath, true),
             };
-            foreach (var t in new[] { "Track_AlpinePass", "Track_GlacierValley", "MovesLab" })
+            var names = new List<string> { "Track_AlpinePass", "Track_GlacierValley", "MovesLab" };
+            // Every track in the catalog too (including ones made with the Race Track Wizard).
+            var cat = AssetDatabase.LoadAssetAtPath<RaceCatalog>("Assets/_ShiftRush/Resources/RaceCatalog.asset");
+            if (cat != null) foreach (var tr in cat.tracks) if (!string.IsNullOrEmpty(tr.scene) && !names.Contains(tr.scene)) names.Add(tr.scene);
+            foreach (var t in names)
             {
-                string p = "Assets/_ShiftRush/Scenes/" + t + ".unity";
-                if (AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null) list.Add(new EditorBuildSettingsScene(p, true));
+                string p = null;
+                foreach (var guid in AssetDatabase.FindAssets(t + " t:Scene"))
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (System.IO.Path.GetFileNameWithoutExtension(path) == t) { p = path; break; }
+                }
+                if (p != null && !list.Exists(x => x.path == p)) list.Add(new EditorBuildSettingsScene(p, true));
             }
             EditorBuildSettings.scenes = list.ToArray();
         }

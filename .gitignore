@@ -158,6 +158,13 @@ Assets/_ShiftRush/Art/Track/T_MeadowGrass.png.meta
 /[Aa]ssets/GabrielAguiarProductions.meta
 /[Aa]ssets/PixPlays/
 /[Aa]ssets/PixPlays.meta
+/[Aa]ssets/Simple Drift Tyres/
+/[Aa]ssets/Simple Drift Tyres.meta
+# Spoiler models from CGTrader (free, royalty-free licence: fine in the game, not as public raw files)
+/[Aa]ssets/_ShiftRush/Prefabs/Spoilers/
+/[Aa]ssets/_ShiftRush/Prefabs/Spoilers.meta
+/[Aa]ssets/Lana Studio/
+/[Aa]ssets/Lana Studio.meta
 
 # Drop-in music and sounds (often Asset Store files): the folders and READMEs are committed, the audio isn't
 Assets/_ShiftRush/Resources/Audio/Music/*

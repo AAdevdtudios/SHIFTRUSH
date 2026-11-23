@@ -179,7 +179,7 @@ namespace ShiftRush.Race
             Play(go, 1f);
             if (r.vehicle != null) r.vehicle.SetControllable(false);
             finishShownAt = Time.unscaledTime + 1.6f;
-            if (finishPosition != null) finishPosition.text = Ordinal(race.PositionOf(r)) + "<size=40%><color=#6B1440>  /  " + race.Racers.Count + "</color></size>";
+            if (finishPosition != null) finishPosition.text = Ordinal(race.PositionOf(r));
             if (finishTotal != null) finishTotal.text = RaceManager.FormatTime(r.finishTime);
             if (finishBest != null) finishBest.text = RaceManager.FormatTime(race.BestLap);
             if (finishLaps != null)
@@ -408,7 +408,7 @@ namespace ShiftRush.Race
         static string Ordinal(int n)
         {
             string suffix = (n % 100 >= 11 && n % 100 <= 13) ? "TH" : (n % 10 == 1 ? "ST" : n % 10 == 2 ? "ND" : n % 10 == 3 ? "RD" : "TH");
-            return n + "<size=50%>" + suffix + "</size>";
+            return n + suffix;
         }
     }
 }

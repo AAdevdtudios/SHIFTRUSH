@@ -46,6 +46,9 @@ namespace ShiftRush.UI
         /// <summary>Straight into a race: the car and track picked last time.</summary>
         public void QuickRace()
         {
+            // Only a car you own goes on the grid.
+            if (!ShiftRush.Core.PlayerProfile.OwnsCar(ShiftRush.Core.RaceSession.Car))
+                ShiftRush.Core.RaceSession.CarIndex = ShiftRush.Core.PlayerProfile.FirstOwnedIndex();
             var track = ShiftRush.Core.RaceSession.Track;
             if (track == null) { OpenGarage(); return; }
             ShiftRush.Core.SceneLoader.LoadTrack(track);

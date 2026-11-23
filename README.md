@@ -70,9 +70,11 @@ These paid packs are git-ignored because their licences don't allow the files to
 | AMS UI Soft Mask | Unity Asset Store | Soft UI masks |
 | UI SFX Mega Pack | Unity Asset Store | Menu sounds |
 | PixPlays Elemental VFX | Unity Asset Store | Wind aura on rolls |
-| Hovl Studio, Gabriel Aguiar, LudoLoon | Unity Asset Store | Effects |
+| Hovl Studio, Gabriel Aguiar, LudoLoon, Lana Studio | Unity Asset Store | Effects |
+| Simple Drift Tyres | Unity Asset Store | Garage tyres |
+| Spoiler models by lahbibforce | CGTrader (free) | Garage spoilers |
 
-Without them, the game's own code in `Assets/_ShiftRush/` is still public and readable, but scenes show missing references. If the ARCADE pack is missing, the menu backdrop falls back to a plane built from simple shapes.
+Without them, the game's own code in `Assets/_ShiftRush/` is still public and readable, but scenes show missing references. If the ARCADE pack is missing, the menu backdrop falls back to a plane built from simple shapes. Without the tyre and spoiler models, those garage parts show the car's stock wheels and wing.
 
 ## Credits
 
@@ -80,11 +82,16 @@ Without them, the game's own code in `Assets/_ShiftRush/` is still public and re
 - **Concept & Inspiration:** Jennifer Ugwoke
 - **Code and UI:** written with Claude Code (Anthropic) from Razorbill Studio's direction
 - **Fonts** (SIL Open Font License, licence files in `Assets/_ShiftRush/Art/Fonts/`): Big Shoulders Display (Patric King), Barlow Condensed (Jeremy Tribby), JetBrains Mono (JetBrains)
+- **Spoiler models:** lahbibforce (CGTrader)
 - Third-party packs as listed above
 - **Music** (Pixabay Content License. The audio files themselves are not in this repo):
   - Music by [OctoSound](https://pixabay.com/users/octosound-39205072/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=178816) from [Pixabay](https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=178816)
   - Music by [Andrii Poradovskyi](https://pixabay.com/users/lnplusmusic-47631836/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=628850) from [Pixabay](https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=628850)
   - "Trap Dynamic Brass Thunder Power" by alexzavesa from Pixabay
   - "Dance Funk" by roybushband from Pixabay
+- **Music** (Uppbeat):
+  - Music: 'Bricks' by Soundroll on #Uppbeat https://uppbeat.io/c/soundroll (License code: HT0NEZRASPO4VVV7)
+  - Music: 'Dodgin' Bullets' by Bosnow on #Uppbeat https://uppbeat.io/c/bosnow (License code: H0XZQHXDFK9YUU62)
+  - Music: 'Furious' by FASS on #Uppbeat https://uppbeat.io/c/fass (License code: GQHZBDC576X1ZPK5)
 
 The game started life as **SHIFT//RUSH**, a GitHub Game Off 2026 entry (theme: SHIFT). That jam version's SHIFT ramps and challenge worlds are still in the code.
