@@ -270,3 +270,16 @@ MonoBehaviour:
     - The bridge kink is flat out if you're brave.
     - Hold Shift for nitro.
     - 'SHIFT ramp: press Shift as the diamonds meet.'
+  - id: stormbreak
+    displayName: Stormbreak Highlands
+    scene: Track_StormbreakHighlands
+    description: A flat-out dirt circuit across stormy moorland, river crossings
+      and forest switchbacks.
+    lengthKm: 3.3
+    thumbnail: {fileID: 21300000, guid: 0d6202c51eb00473b8fb86c16bddcd0d, type: 3}
+    map: {fileID: 21300000, guid: c5fde3e0b33454f50bc763aed86a9f73, type: 3}
+    loadingTips:
+    - Loose dirt rewards smooth steering and early throttle.
+    - Roadside crates, barrels and cones will give way at speed.
+    - The ridge descent is faster than it looks.
+    - 'SHIFT ramp: press Shift as the diamonds meet.'

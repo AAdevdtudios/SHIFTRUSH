@@ -154,7 +154,7 @@ namespace ShiftRush.EditorTools
 
             var entries = new List<(string label, string caption, float w, float h, bool small, bool locked, string lockedMsg, UnityAction call, bool web)>
             {
-                ("STORY", "ACT 1 · COMING SOON", 276, 128, false, true, "Act 1: The League is still being filmed. Story mode drops soon.", null, false),
+                ("STORY", "ACT 1 · THE CASE BOARD", 276, 128, false, false, null, router.OpenStory, false),
                 ("QUICK RACE", "LAST TRACK", 228, 112, false, false, null, router.QuickRace, false),
                 ("GARAGE", "YOUR CARS", 190, 112, false, false, null, router.OpenGarage, false),
                 ("FREE ROAM", "NO RULES", 200, 112, false, false, null, router.FreeRoam, false),
@@ -254,15 +254,19 @@ namespace ShiftRush.EditorTools
             var hype = Chip(chips, "Hype", new Color(Night.r, Night.g, Night.b, 0.8f), "0 HYPE", monoBold, 18, Gold, false);
             hype.gameObject.AddComponent<HypeLabel>();
 
+            // Car controls live in their own group so the Driver tab can swap them out.
+            var carRoot = Rect(content, "Car Mode");
+            Stretch(carRoot);
+
             // Your cars, down the left.
-            var listTitle = Txt(content, "List Title", "THE CREW'S CARS", monoBold, 16, Dim, TextAlignmentOptions.Left);
+            var listTitle = Txt(carRoot, "List Title", "THE CREW'S CARS", monoBold, 16, Dim, TextAlignmentOptions.Left);
             listTitle.characterSpacing = 8;
             Place(listTitle.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(66, -178), new Vector2(400, 24));
             var backs = new Image[count]; var names = new TMP_Text[count]; var subs = new TMP_Text[count]; var buttons = new Button[count];
             for (int i = 0; i < count; i++)
             {
                 var car = cat.cars[i];
-                var bg = Img(content, "Car " + (i + 1), null, new Color32(26, 22, 40, 255));
+                var bg = Img(carRoot, "Car " + (i + 1), null, new Color32(26, 22, 40, 255));
                 Place(bg.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(66, -212 - i * 92), new Vector2(330, 82));
                 var accent = Img(bg.transform, "Accent", null, car.accent); accent.raycastTarget = false;
                 Place(accent.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(6, 0));
@@ -281,7 +285,7 @@ namespace ShiftRush.EditorTools
             }
 
             // Tuning: Tyres and Spoiler live, Hood Inlet and Roof coming. Click a slot or press Tab to switch.
-            var slots = Rect(content, "Tuning Slots");
+            var slots = Rect(carRoot, "Tuning Slots");
             Place(slots, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-40, -176), new Vector2(680, 74));
             var sh = slots.gameObject.AddComponent<HorizontalLayoutGroup>();
             sh.spacing = 10; sh.childControlWidth = sh.childControlHeight = true; sh.childForceExpandWidth = true; sh.childForceExpandHeight = true;
@@ -305,7 +309,7 @@ namespace ShiftRush.EditorTools
             }
 
             // The parts for the chosen slot, along the bottom under the car.
-            var optRow = Rect(content, "Part Options");
+            var optRow = Rect(carRoot, "Part Options");
             Place(optRow, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-40, 120), new Vector2(680, 70));
             var oh = optRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             oh.spacing = 8; oh.childAlignment = TextAnchor.MiddleCenter;
@@ -324,16 +328,16 @@ namespace ShiftRush.EditorTools
                 var nv = bt.navigation; nv.mode = Navigation.Mode.None; bt.navigation = nv;
                 optButtons[i] = bt; optBacks[i] = ob; optNames[i] = on; optPrices[i] = op;
             }
-            var partLine = Txt(content, "Part Line", "", barlowSemi, 20, Mist, TextAlignmentOptions.Center);
+            var partLine = Txt(carRoot, "Part Line", "", barlowSemi, 20, Mist, TextAlignmentOptions.Center);
             Place(partLine.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-40, 82), new Vector2(680, 30));
 
             // Right column: name, line, stats, drift character, go button.
             const float RX = -60f, RW = 470f;
-            var nameText = Txt(content, "Car Name", "ZEPHYR", bsBlack, 104, Paper, TextAlignmentOptions.Right);
+            var nameText = Txt(carRoot, "Car Name", "ZEPHYR", bsBlack, 104, Paper, TextAlignmentOptions.Right);
             Place(nameText.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(RX, -166), new Vector2(700, 110));
-            var tag = Txt(content, "Tagline", "", barlowSemi, 22, Mist, TextAlignmentOptions.TopRight);
+            var tag = Txt(carRoot, "Tagline", "", barlowSemi, 22, Mist, TextAlignmentOptions.TopRight);
             Place(tag.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(RX, -276), new Vector2(RW, 64));
-            var counter = Txt(content, "Counter", "01 / 06", monoBold, 16, Dim, TextAlignmentOptions.Right);
+            var counter = Txt(carRoot, "Counter", "01 / 06", monoBold, 16, Dim, TextAlignmentOptions.Right);
             counter.characterSpacing = 8;
             Place(counter.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(RX, -150), new Vector2(300, 22));
 
@@ -342,7 +346,7 @@ namespace ShiftRush.EditorTools
             var bars = new StatBar[4];
             for (int s2 = 0; s2 < 4; s2++)
             {
-                var row = Rect(content, statNames[s2]);
+                var row = Rect(carRoot, statNames[s2]);
                 Place(row, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(RX, -364 - s2 * 54), new Vector2(RW, 46));
                 var l = Txt(row, "Label", statNames[s2], barlowBold, 22, Paper, TextAlignmentOptions.TopLeft);
                 if (s2 == 2) handlingLabel = l;
@@ -364,7 +368,7 @@ namespace ShiftRush.EditorTools
                 bso.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            var driftBox = Img(content, "Drift Character", null, new Color32(20, 17, 31, 235)); driftBox.raycastTarget = false;
+            var driftBox = Img(carRoot, "Drift Character", null, new Color32(20, 17, 31, 235)); driftBox.raycastTarget = false;
             Place(driftBox.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(RX, -592), new Vector2(RW, 150));
             var dTitle = Txt(driftBox.transform, "Title", "DRIFT CHARACTER", monoBold, 15, Dim, TextAlignmentOptions.TopLeft);
             dTitle.characterSpacing = 8;
@@ -384,9 +388,9 @@ namespace ShiftRush.EditorTools
             Place(note.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(16, -100), new Vector2(-30, 44));
 
             // Go button: pink slab with the cyan offset.
-            var goShadow = Img(content, "Go Shadow", null, Signal); goShadow.raycastTarget = false;
+            var goShadow = Img(carRoot, "Go Shadow", null, Signal); goShadow.raycastTarget = false;
             Place(goShadow.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(RX + 8, 142), new Vector2(RW, 74));
-            var go = Img(content, "Go", null, Pink);
+            var go = Img(carRoot, "Go", null, Pink);
             Place(go.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(RX, 150), new Vector2(RW, 74));
             var goText = Txt(go.transform, "Label", "PICK A TRACK", bsBlack, 40, Night, TextAlignmentOptions.Center);
             Stretch(goText.rectTransform);
@@ -394,7 +398,7 @@ namespace ShiftRush.EditorTools
             goButton.transition = Selectable.Transition.None;
             var gnav = goButton.navigation; gnav.mode = Navigation.Mode.None; goButton.navigation = gnav;
 
-            var hint = Txt(content, "Hint", "<color=#FF2E9A>W S</color>  CAR     <color=#FF2E9A>A D</color>  PART     <color=#FF2E9A>TAB</color>  SLOT     <color=#FF2E9A>ENTER</color>  BUY / FIT / GO     <color=#FF2E9A>DRAG</color>  LOOK", monoMedium, 15, Dim, TextAlignmentOptions.Left);
+            var hint = Txt(carRoot, "Hint", "<color=#FF2E9A>W S</color>  CAR     <color=#FF2E9A>A D</color>  PART     <color=#FF2E9A>TAB</color>  SLOT     <color=#FF2E9A>ENTER</color>  BUY / FIT / GO     <color=#FF2E9A>DRAG</color>  LOOK", monoMedium, 15, Dim, TextAlignmentOptions.Left);
             hint.characterSpacing = 6;
             Place(hint.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0), new Vector2(66, 40), new Vector2(900, 26));
 
@@ -419,6 +423,10 @@ namespace ShiftRush.EditorTools
             so.FindProperty("driftNote").objectReferenceValue = note;
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddVoidPersistentListener(csp.onConfirm, router.OpenTracks);
+
+            // CAR / DRIVER tabs under the title, and the Driver tab's own controls.
+            var driverPanel = BuildDriverMode(content, panel, showroom, out var driverRoot);
+            BuildGarageTabs(content, panel, showroom, carRoot.gameObject, driverRoot, csp, driverPanel);
 
             CloneHotkeys(canvas.Find("Main Content/Home Panel"), content, router, "Back", router.Back);
             return panel.GetComponent<Animator>();

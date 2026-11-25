@@ -48,9 +48,16 @@ namespace ShiftRush.Race
             }
             if (f.carPrefab == null) return;
 
-            int slot = 0;
-            foreach (var rival in f.rivals)
+            int slot = 0, n = 0;
+            foreach (var source in f.rivals)
             {
+                // A story episode can put its named rival (Vex, Kaito) in the first rival slot, a touch quicker.
+                var rival = source;
+                if (n++ == 0 && ShiftRush.Core.StoryProgress.RivalName != null)
+                {
+                    rival = Paced(source, ShiftRush.Core.StoryProgress.RivalPace);
+                    rival.name = ShiftRush.Core.StoryProgress.RivalName;
+                }
                 if (slot == playerSlot) slot++;
                 Quaternion rot; float lateral;
                 var pos = Slot(line, f, slot, out rot, out lateral);

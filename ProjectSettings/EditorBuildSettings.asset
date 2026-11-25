@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_ShiftRush/Scenes/MovesLab.unity
     guid: c824690939e1146fc8a68c17970414aa
+  - enabled: 1
+    path: Assets/_ShiftRush/Scenes/Track_StormbreakHighlands.unity
+    guid: 2122a98e2a3084bc09632e9ee1c4c83f
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -32,6 +32,8 @@ namespace ShiftRush.VFX
         public float rotorSpeed = 140f;
         [Tooltip("Lights that flicker very slightly, like big lamps on a generator.")]
         public Light[] breathers;
+        [Tooltip("Scales every animated light: set by the time of day (lamps dim in daylight).")]
+        public float lightScale = 1f;
 
         static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         static readonly int BaseId = Shader.PropertyToID("_BaseColor");
@@ -64,7 +66,7 @@ namespace ShiftRush.VFX
                         block.SetColor(BaseId, Color.Lerp(new Color(0.06f, 0.06f, 0.08f), b.color, on)); // unlit HDR bulbs
                         b.bulb.SetPropertyBlock(block);
                     }
-                    if (b.light != null) b.light.intensity = b.lightMax * on;
+                    if (b.light != null) b.light.intensity = b.lightMax * on * lightScale;
                 }
 
             if (props != null)
@@ -77,7 +79,7 @@ namespace ShiftRush.VFX
             if (breathers != null)
                 for (int i = 0; i < breathers.Length; i++)
                     if (breathers[i] != null)
-                        breathers[i].intensity = breatherBase[i] * (0.94f + 0.06f * Mathf.PerlinNoise(t * 3.1f, i * 7.3f));
+                        breathers[i].intensity = breatherBase[i] * lightScale * (0.94f + 0.06f * Mathf.PerlinNoise(t * 3.1f, i * 7.3f));
         }
     }
 }

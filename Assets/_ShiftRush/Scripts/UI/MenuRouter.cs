@@ -10,7 +10,7 @@ namespace ShiftRush.UI
     /// </summary>
     public class MenuRouter : MonoBehaviour
     {
-        public const string Home = "Home", Garage = "Garage", Tracks = "Tracks", Settings = "Settings";
+        public const string Home = "Home", Garage = "Garage", Tracks = "Tracks", Settings = "Settings", Story = "Story", Briefing = "Briefing";
 
         [SerializeField] PanelManager panels;
         [SerializeField] Showroom showroom;
@@ -18,6 +18,10 @@ namespace ShiftRush.UI
         [SerializeField] ModalWindowManager quitWindow;
 
         string current = Home;
+        string garageBackTo = Home;
+
+        /// <summary>The episode the briefing shows.</summary>
+        public string BriefingEpisode { get; private set; }
 
         void Awake()
         {
@@ -25,8 +29,25 @@ namespace ShiftRush.UI
             ShiftRush.Vehicles.ControlBindings.Apply();
         }
 
+        System.Collections.IEnumerator Start()
+        {
+            // Back from a story race: straight to the case board.
+            if (!ShiftRush.Core.StoryProgress.TakeReturnToBoard()) yield break;
+            yield return null;
+            OpenStory();
+        }
+
         public void OpenHome() { Open(Home); }
-        public void OpenGarage() { Open(Garage); }
+        public void OpenGarage() { garageBackTo = current == Briefing ? Briefing : Home; Open(Garage); }
+        public void OpenStory() { Open(Story); }
+
+        /// <summary>The briefing for one episode.</summary>
+        public void OpenBriefing(string episodeId)
+        {
+            BriefingEpisode = episodeId;
+            if (current == Briefing) { var b = FindFirstObjectByType<BriefingPanel>(); if (b != null) b.Show(); return; }
+            Open(Briefing);
+        }
         public void OpenTracks() { Open(Tracks); }
         public void OpenSettings() { Open(Settings); }
 
@@ -38,7 +59,7 @@ namespace ShiftRush.UI
             if (showroom != null)
             {
                 if (panel == Garage) showroom.FrameGarage();
-                else if (panel == Tracks) showroom.FrameTracks();
+                else if (panel == Tracks || panel == Story || panel == Briefing) showroom.FrameTracks(); // full-screen boards: the set rests
                 else showroom.FrameHome();
             }
         }
@@ -93,7 +114,9 @@ namespace ShiftRush.UI
             switch (current)
             {
                 case Tracks: Open(Garage); break;
-                case Garage:
+                case Garage: Open(garageBackTo); garageBackTo = Home; break;
+                case Briefing: Open(Story); break;
+                case Story:
                 case Settings: Open(Home); break;
                 default: AskQuit(); break;
             }

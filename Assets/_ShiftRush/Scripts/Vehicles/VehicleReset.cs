@@ -44,6 +44,9 @@ namespace ShiftRush.Vehicles
         /// <summary>The race put the car somewhere new on the line (after a SHIFT world): resets go from there.</summary>
         public void SyncLine(int index) { lineHint = index; offTimer = 0f; }
 
+        /// <summary>The race line point resets go back to (-1 before the car has been near the circuit).</summary>
+        public int LineIndex { get { return lineHint; } }
+
         public void SetRespawnPoint(Vector3 position, Quaternion rotation)
         {
             safePos = position; safeRot = rotation; hasOverride = true;
@@ -107,7 +110,10 @@ namespace ShiftRush.Vehicles
         {
             flippedTimer = 0f; offTimer = 0f; beachedTimer = 0f;
             Vector3 pos; Quaternion rot;
-            if (!OnRaceLine(out pos, out rot)) { pos = safePos; rot = safeRot; }
+            // Inside a SHIFT world: back into the world, not onto the circuit it jumped from.
+            var arena = Shift.ShiftArena.Active;
+            if (arena != null && arena.Holds(vehicle)) arena.RespawnPoint(out pos, out rot);
+            else if (!OnRaceLine(out pos, out rot)) { pos = safePos; rot = safeRot; }
             vehicle.Teleport(pos + Vector3.up * respawnLift, rot, 0f);
             vehicle.SetControllable(false);
             unlockAt = Time.time + controlLockSeconds;
@@ -125,9 +131,14 @@ namespace ShiftRush.Vehicles
             // (after flying off, that can be a different part of the circuit).
             int i = lineHint >= 0 ? lineHint : line.Nearest(transform.position);
             if (lineHint < 0 && (line.points[i] - transform.position).magnitude > 400f) return false;
-            float d = line.distances[i];
-            for (int tries = 0; tries < 6; tries++, d += 7f)
+            float d = line.distances[i], step = 7f;
+            var race = Race.RaceManager.Current;
+            for (int tries = 0; tries < 6; tries++, d += step)
             {
+                // Never over the finish line the car hasn't crossed for real: it goes back just before it instead,
+                // so the lap counts when it drives across.
+                bool held = false;
+                if (race != null && step > 0f) { d = race.RespawnDistance(vehicle, d, out held); if (held) step = -7f; }
                 int k = line.IndexAt(d);
                 pos = line.PointAt(d);
                 rot = Quaternion.LookRotation(line.Direction(k), Vector3.up);

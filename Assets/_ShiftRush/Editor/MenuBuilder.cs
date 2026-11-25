@@ -63,6 +63,7 @@ namespace ShiftRush.EditorTools
             MakeCoach();
             MakeRushHud();
 
+            ShowcaseSetBuilder.RememberScreen(ScenePath); // the stream screen stays where it was placed by hand
             AssetDatabase.SaveAssets(); // unsaved assets can be unloaded by the scene switch below
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             AssetDatabase.DeleteAsset(ScenePath);
@@ -84,8 +85,10 @@ namespace ShiftRush.EditorTools
             var home = BuildHomeBroadcast(canvas, router, showroom);
             var garage = BuildGarageBroadcast(canvas, router, showroom);
             var tracks = BuildTracksBroadcast(canvas, router, showroom);
+            var story = BuildStoryBoard(canvas, router);
+            var briefing = BuildBriefing(canvas, router);
             BuildSettings(canvas, router);
-            BuildPanelList(panels, home, garage, tracks, canvas.Find("Main Content/Settings").GetComponent<Animator>());
+            BuildPanelList(panels, home, garage, tracks, canvas.Find("Main Content/Settings").GetComponent<Animator>(), story, briefing);
             var creditsManager = BuildCredits(canvas, credits);
             var quit = BuildQuitWindow(canvas, router);
             BuildSplash(canvas);
@@ -599,7 +602,8 @@ namespace ShiftRush.EditorTools
         static void RemoveDemoContent(Transform canvas)
         {
             var main = canvas.Find("Main Content");
-            foreach (var n in new[] { "Chapters Panel", "Achievements", "Top Panel", "Bottom Panel" })
+            // (Chapters Panel and Achievements become story mode's case board and briefing.)
+            foreach (var n in new[] { "Top Panel", "Bottom Panel" })
             {
                 var t = main.Find(n);
                 if (t) Object.DestroyImmediate(t.gameObject);
@@ -1371,7 +1375,7 @@ namespace ShiftRush.EditorTools
 
         // ------------------------------------------------------------------ panel list, credits, quit, splash
 
-        static void BuildPanelList(PanelManager pm, Animator home, Animator garage, Animator tracks, Animator settings)
+        static void BuildPanelList(PanelManager pm, Animator home, Animator garage, Animator tracks, Animator settings, Animator story = null, Animator briefing = null)
         {
             pm.panels.Clear();
             System.Action<string, Animator> add = (n, a) =>
@@ -1383,6 +1387,8 @@ namespace ShiftRush.EditorTools
             add(MenuRouter.Garage, garage);
             add(MenuRouter.Tracks, tracks);
             add(MenuRouter.Settings, settings);
+            if (story != null) add(MenuRouter.Story, story);
+            if (briefing != null) add(MenuRouter.Briefing, briefing);
             pm.currentPanelIndex = 0;
             EditorUtility.SetDirty(pm);
         }

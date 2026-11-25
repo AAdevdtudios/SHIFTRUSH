@@ -11,18 +11,33 @@ namespace ShiftRush.EditorTools
     /// <summary>
     /// SHIFT RUSH → Tracks → Instance Scenery: turns each circuit's Trees, Bushes and Ground Cover (thousands of
     /// LODGroup prefabs) into one <see cref="InstancedScenery"/> that draws them with GPU instancing, plus one
-    /// trunk collider mesh per 64 m chunk. The originals are saved first as a prefab (Art/Track/Baked) and can be
+    /// trunk collider mesh per 128 m chunk. The originals are saved first as a prefab (Art/Track/Baked) and can be
     /// put back with Restore Scenery, e.g. before re-scattering a track. Runs on both circuits and saves them.
     /// </summary>
     public static class SceneryInstancer
     {
-        static readonly string[] Scenes = { "Assets/_ShiftRush/Scenes/Track_GlacierValley.unity", "Assets/_ShiftRush/Scenes/Track_AlpinePass.unity" };
+        static readonly string[] Scenes =
+        {
+            "Assets/_ShiftRush/Scenes/Track_GlacierValley.unity",
+            "Assets/_ShiftRush/Scenes/Track_AlpinePass.unity",
+            "Assets/_ShiftRush/Scenes/Track_StormbreakHighlands.unity",
+        };
         static readonly string[] Groups = { "Trees", "Bushes", "Ground Cover" };
         const string BakedDir = "Assets/_ShiftRush/Art/Track/Baked/";
-        const float ChunkSize = 64f;
+        const float ChunkSize = 128f;
 
         [MenuItem("SHIFT RUSH/Tracks/Instance Scenery")]
         static void InstanceAll() { RunOnTracks(Instance); }
+
+        [MenuItem("SHIFT RUSH/Tracks/This Scene: Instance Scenery")]
+        static void InstanceCurrent()
+        {
+            var scene = SceneManager.GetActiveScene();
+            Instance(scene);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.SaveAssets();
+        }
 
         /// <summary>
         /// Points every instanced plant at a saved, instancing-enabled copy of its material (Art/Track/Baked/Materials).
@@ -56,6 +71,16 @@ namespace ShiftRush.EditorTools
 
         [MenuItem("SHIFT RUSH/Tracks/Restore Scenery")]
         static void RestoreAll() { RunOnTracks(Restore); }
+
+        [MenuItem("SHIFT RUSH/Tracks/This Scene: Restore Scenery")]
+        static void RestoreCurrent()
+        {
+            var scene = SceneManager.GetActiveScene();
+            Restore(scene);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.SaveAssets();
+        }
 
         static void RunOnTracks(System.Action<Scene> work)
         {

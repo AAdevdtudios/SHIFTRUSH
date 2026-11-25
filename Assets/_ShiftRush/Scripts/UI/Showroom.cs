@@ -18,6 +18,8 @@ namespace ShiftRush.UI
         [Tooltip("The camera orbits this point.")]
         [SerializeField] Transform orbitPivot;
         [SerializeField] float turntableSpeed = 9f;
+        [Tooltip("With the driver on stage the turntable stops and holds them facing the camera, turned this far (degrees) for a three-quarter look.")]
+        [SerializeField] float driverFacing = -14f;
         [SerializeField] float orbitSway = 14f;
         [SerializeField] float orbitPeriod = 22f;
         [SerializeField] float kickFov = 5f;
@@ -64,9 +66,21 @@ namespace ShiftRush.UI
         [SerializeField] float tracksYaw = -90f;
         [Tooltip("Hidden on track select (the car too: that screen shows a picture of it instead).")]
         [SerializeField] GameObject[] hideWhenPosed;
+        [Header("Driver (garage Driver tab)")]
+        [Tooltip("Pivot offset for the driver. The camera sits 1.1 m above its pivot, so this frames the whole body above the garage's piece row.")]
+        [SerializeField] Vector3 driverOffset = new Vector3(0f, -0.3f, 0f);
+        [SerializeField] float driverDistance = 6.6f;
+        [SerializeField] float driverPitch = 5f;
+        [Tooltip("Brightness of the soft light in front of the driver.")]
+        [SerializeField] float driverFill = 2.2f;
 
         GameObject current;
         RaceCatalog.Car shownCar;
+        GameObject driverHolder;
+        bool driverMode;
+
+        /// <summary>The driver model on the stage (null unless the garage's Driver tab is open).</summary>
+        public GameObject ShownDriver { get; private set; }
 
         /// <summary>The car on the turntable and its model, for previewing parts in the garage.</summary>
         public RaceCatalog.Car ShownCar { get { return shownCar; } }
@@ -110,8 +124,9 @@ namespace ShiftRush.UI
         void SetScreen(MenuScreen s)
         {
             screen = s;
+            if (s != MenuScreen.Garage && driverMode) HideDriver();
             if (hideWhenPosed != null) foreach (var g in hideWhenPosed) if (g != null) g.SetActive(!posed);
-            if (current != null) current.SetActive(!posed); // track select shows a picture of the car instead
+            if (current != null) current.SetActive(!posed && !driverMode); // track select shows a picture of the car instead
         }
 
         /// <summary>
@@ -210,12 +225,63 @@ namespace ShiftRush.UI
             current = holder;
             shownCar = car;
             Vehicles.CarLoadout.ApplyFitted(model, car, false); // the parts fitted in the garage, looks only
-            current.SetActive(!posed);
+            current.SetActive(!posed && !driverMode);
             Kick(1f);
         }
 
+        /// <summary>Puts a driver body on the stage in place of the car and frames it at person height.</summary>
+        public GameObject ShowDriver(GameObject prefab)
+        {
+            if (driverHolder != null) Destroy(driverHolder);
+            ShownDriver = null;
+            if (prefab == null) return null;
+            driverHolder = new GameObject("Showroom Driver");
+            driverHolder.SetActive(false);
+            driverHolder.transform.SetParent(turntable, false);
+            var model = Instantiate(prefab, driverHolder.transform);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.identity;
+            // The pack's own customisation script would reset the outfit in its Start: strip every script first.
+            foreach (var mb in model.GetComponentsInChildren<MonoBehaviour>(true)) if (mb != null) DestroyImmediate(mb);
+            model.AddComponent<DriverIdle>();
+            // A soft front light that turns with the driver, so clothes read against the night set.
+            var fill = new GameObject("Driver Fill").AddComponent<Light>();
+            fill.transform.SetParent(driverHolder.transform, false);
+            fill.transform.localPosition = new Vector3(0.4f, 1.7f, 1.6f);
+            fill.type = LightType.Point;
+            fill.range = 4.5f;
+            fill.intensity = driverFill;
+            fill.color = new Color(1f, 0.94f, 0.9f);
+            fill.shadows = LightShadows.None;
+            driverHolder.SetActive(true);
+            var renderers = model.GetComponentsInChildren<Renderer>();
+            if (renderers.Length > 0)
+            {
+                var b = renderers[0].bounds;
+                foreach (var r in renderers) b.Encapsulate(r.bounds);
+                model.transform.position += new Vector3(turntable.position.x - b.center.x, turntable.position.y - b.min.y, turntable.position.z - b.center.z);
+            }
+            driverMode = true;
+            if (current != null) current.SetActive(false);
+            ShownDriver = model;
+            Kick(0.6f);
+            return model;
+        }
+
+        /// <summary>Back to the car.</summary>
+        public void HideDriver()
+        {
+            if (driverHolder != null) Destroy(driverHolder);
+            driverHolder = null;
+            ShownDriver = null;
+            if (!driverMode) return;
+            driverMode = false;
+            if (current != null) current.SetActive(!posed);
+            Kick(0.6f);
+        }
+
         /// <summary>Removes everything but visuals, scripts first (others may depend on what they require).</summary>
-        static void Strip(GameObject root)
+        public static void Strip(GameObject root)
         {
             // Newest first on each object: a script added later usually [RequireComponent]s an earlier one.
             for (int pass = 0; pass < 4; pass++)
@@ -252,10 +318,10 @@ namespace ShiftRush.UI
         {
             float dt = Time.unscaledDeltaTime;
             // Read every frame so Inspector edits in Play mode show straight away.
-            framingTarget = screen == MenuScreen.Tracks ? tracksOffset : screen == MenuScreen.Garage ? garageOffset : homeOffset;
-            float targetDistance = screen == MenuScreen.Tracks ? tracksDistance : screen == MenuScreen.Garage ? garageDistance : homeDistance;
-            distance = Mathf.Lerp(distance, targetDistance * sizeScale, 1f - Mathf.Exp(-dt * 3f));
-            float targetPitch = screen == MenuScreen.Garage ? garagePitch : homePitch;
+            framingTarget = driverMode ? driverOffset : screen == MenuScreen.Tracks ? tracksOffset : screen == MenuScreen.Garage ? garageOffset : homeOffset;
+            float targetDistance = driverMode ? driverDistance : (screen == MenuScreen.Tracks ? tracksDistance : screen == MenuScreen.Garage ? garageDistance : homeDistance) * sizeScale;
+            distance = Mathf.Lerp(distance, targetDistance, 1f - Mathf.Exp(-dt * 3f));
+            float targetPitch = driverMode ? driverPitch : screen == MenuScreen.Garage ? garagePitch : homePitch;
             pitch = Mathf.Lerp(pitch, targetPitch, 1f - Mathf.Exp(-dt * 3f));
             LookAround(dt);
             pose = Mathf.MoveTowards(pose, posed ? 1f : 0f, dt * 1.6f);
@@ -267,6 +333,12 @@ namespace ShiftRush.UI
                     // Glide to the pose and hold it.
                     var target = Quaternion.Euler(0f, baseYaw + tracksYaw, 0f);
                     turntable.rotation = Quaternion.Slerp(turntable.rotation, target, 1f - Mathf.Exp(-dt * 4f));
+                }
+                else if (driverMode)
+                {
+                    // The driver doesn't spin: the stage turns them to face the camera and holds while they idle.
+                    var target = Quaternion.Euler(0f, baseYaw + 180f + driverFacing, 0f);
+                    turntable.rotation = Quaternion.Slerp(turntable.rotation, target, 1f - Mathf.Exp(-dt * 3f));
                 }
                 else if (!dragging) turntable.Rotate(0f, turntableSpeed * (1f - ease) * dt, 0f, Space.World);
             }

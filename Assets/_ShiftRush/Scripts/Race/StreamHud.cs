@@ -319,6 +319,9 @@ namespace ShiftRush.Race
             int place = race.PositionOf(r);
             int placeHype = Mathf.RoundToInt(PlaceHype * Mathf.Clamp01(1f - (place - 1) / Mathf.Max(1f, race.Racers.Count)));
             sessionHype += placeHype;
+            // Story mode: close the episode if the place is good enough (drifts tilt the Feed GLOSS, knocks GRIT).
+            var story = ShiftRush.Core.StoryProgress.Report(place, driftHype, knockHype);
+            sessionHype += story.payout;
             ShiftRush.Core.PlayerProfile.AddHype(sessionHype);
             int balance = ShiftRush.Core.PlayerProfile.Hype;
 
@@ -329,7 +332,9 @@ namespace ShiftRush.Race
                     Line("KNOCKS", knockCount > 0 ? knockCount + (bestChain > 1 ? ", one chain of " + bestChain : "") : null, knockHype) +
                     Line("ROLLS AND CLEAN LANDINGS", landingCount > 0 ? landingCount.ToString() : null, rollHype) +
                     Line("FAN DARES", dares > 0 ? daresDone + " of " + dares : null, dareHype) +
-                    Line("VIEWER STREAK", "x" + streakPeak.ToString("0.0") + " peak", streakHype);
+                    Line("VIEWER STREAK", "x" + streakPeak.ToString("0.0") + " peak", streakHype) +
+                    (story.story ? Line(story.closed ? "EPISODE " + story.episode.number.ToString("00") + " CLOSED" : "EPISODE " + story.episode.number.ToString("00") + " STILL OPEN",
+                        story.closed ? (story.alreadyClosed ? "replay" : story.episode.title) : "needed " + ShiftRush.UI.CaseBoardPanel.Goal(story.episode).ToLowerInvariant(), story.payout) : "");
 
             // The clip tag, peak viewers, the top three and two chat reactions.
             // The track actually raced (by scene), not just the last one picked in the menu.
@@ -365,7 +370,8 @@ namespace ShiftRush.Race
                 if (resultChat[i]) resultChat[i].text = "<b><color=" + (i == 0 ? "#C4157A" : "#2EF2FF") + ">" + who[(place + i) % who.Length] + "</color></b>  " + pool[(place * 3 + i) % pool.Length];
             if (payoutTotal) payoutTotal.text = "+" + sessionHype.ToString("N0");
             if (payoutHeadline)
-                payoutHeadline.text = place == 1 ? "YOU OUTRAN THE LEAGUE" : place <= 3 ? "ON THE PODIUM. CHAT IS LOUD." : "THE STREAM KEEPS ROLLING";
+                payoutHeadline.text = story.story ? (story.closed ? "EP " + story.episode.number.ToString("00") + " CLOSED. KOWAL ADDS A PHOTO." : "EP " + story.episode.number.ToString("00") + " STILL OPEN. RUN IT BACK.")
+                    : place == 1 ? "YOU OUTRAN THE LEAGUE" : place <= 3 ? "ON THE PODIUM. CHAT IS LOUD." : "THE STREAM KEEPS ROLLING";
             if (payoutBalance) payoutBalance.text = "BALANCE  " + balance.ToString("N0") + " HYPE";
         }
 

@@ -33,12 +33,14 @@ namespace ShiftRush.Shift
         public float Progress { get; private set; }
         public int RingsPassed { get; private set; }
         public int Hits { get; private set; }
+        /// <summary>The world the player is driving right now (null back in the race). A reset goes back into it.</summary>
+        public static ShiftArena Active { get; private set; }
         public event System.Action Pulse; // ring passed or trap hit, for HUD feedback
         /// <summary>Any arena: a ring passed (true) or a trap hit (false), for sound.</summary>
         public static event System.Action<ShiftArena, bool> Feedback;
 
         IVehicle vehicle;
-        float time, prevZ, lastHit;
+        float time, prevZ, lastHit, furthestZ;
         bool[] passed;
         MaterialPropertyBlock block;
 
@@ -47,6 +49,8 @@ namespace ShiftRush.Shift
             vehicle = v;
             Done = false; Won = false; Score = 0f; time = 0f; Progress = 0f; RingsPassed = 0; Hits = 0; lastHit = -9f;
             prevZ = -1f;
+            furthestZ = 0f;
+            Active = this;
             passed = new bool[rings != null ? rings.Length : 0];
             for (int i = 0; i < passed.Length; i++) Tint(i, ringColor);
         }
@@ -98,8 +102,28 @@ namespace ShiftRush.Shift
                 }
             }
             prevZ = local.z;
+            if (vehicle.AllWheelsGrounded) furthestZ = Mathf.Max(furthestZ, local.z);
 
             if (local.z >= finishZ || time >= timeLimit) Finish(local.z >= finishZ);
+        }
+
+        void OnDisable() { if (Active == this) Active = null; }
+
+        /// <summary>True when this world is running for that car.</summary>
+        public bool Holds(IVehicle v) { return !Done && v != null && vehicle == v; }
+
+        /// <summary>Where a reset puts the car in this world: back on the middle of the run a little behind the
+        /// furthest point it reached with its wheels down, facing the finish. The clock keeps running.</summary>
+        public void RespawnPoint(out Vector3 pos, out Quaternion rot)
+        {
+            Vector3 s = transform.InverseTransformPoint(start.position);
+            float z = Mathf.Clamp(furthestZ - 8f, s.z, finishZ - 10f);
+            pos = transform.TransformPoint(new Vector3(s.x, s.y, z));
+            rot = start.rotation;
+            float best = float.MinValue;
+            foreach (var hit in Physics.RaycastAll(pos + Vector3.up * 6f, Vector3.down, 20f, ~0, QueryTriggerInteraction.Ignore))
+                if (hit.rigidbody == null && hit.point.y > best) best = hit.point.y;
+            if (best > float.MinValue) pos.y = best;
         }
 
         void Finish(bool reachedEnd)

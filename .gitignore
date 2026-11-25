@@ -173,3 +173,28 @@ Assets/_ShiftRush/Resources/Audio/Music/*
 Assets/_ShiftRush/Resources/Audio/SFX/*
 !Assets/_ShiftRush/Resources/Audio/SFX/README.txt
 !Assets/_ShiftRush/Resources/Audio/SFX/README.txt.meta
+
+# Paid packs added 2026-11-23 (not redistributable)
+/Assets/Customizable 3D City Characters Vol 1/
+/Assets/Customizable 3D City Characters Vol 1.meta
+/Assets/Customizable 3D Characters Mega Bundle/
+/Assets/Customizable 3D Characters Mega Bundle.meta
+/Assets/BK/
+/Assets/BK.meta
+/Assets/Toon Series/
+/Assets/Toon Series.meta
+/Assets/MicroVerse-Presets-3/
+/Assets/MicroVerse-Presets-3.meta
+/Assets/Customizable 3D Sci-Fi Characters Vol 1/
+/Assets/Customizable 3D Sci-Fi Characters Vol 1.meta
+
+# Third-party animation packs (not redistributable)
+/Assets/KAWAII_ANIMATIOMS_CoolAction/
+/Assets/KAWAII_ANIMATIOMS_CoolAction.meta
+/Assets/MoCapCentral/
+/Assets/MoCapCentral.meta
+# Wardrobe Wizard output made from the paid character packs: rigged mesh copies and rendered icons (rebuild with the wizard)
+/Assets/_ShiftRush/Art/Driver/Rigged/
+/Assets/_ShiftRush/Art/Driver/Rigged.meta
+/Assets/_ShiftRush/Art/Driver/Icons/
+/Assets/_ShiftRush/Art/Driver/Icons.meta

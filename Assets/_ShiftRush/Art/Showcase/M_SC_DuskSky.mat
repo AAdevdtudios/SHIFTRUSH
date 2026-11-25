@@ -1,0 +1,343 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_SC_DuskSky
+  m_Shader: {fileID: 4800000, guid: 867e83a9dddd0ce47943993ccc375936, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _CELESTIAL_ON
+  - _CLOUDS2_ON
+  - _CLOUDS_ON
+  - _TWO_COLOR_MODE
+  m_InvalidKeywords:
+  - _ATMOSPHERE_ON
+  - _C1_ATMOSPHERE_PHASE_ON
+  - _C1_INNER_GLOW_ON
+  - _C2_GLOW_ON
+  - _C2_INNER_GLOW_ON
+  - _CLOUD_FOG_ON
+  - _INNER_GLOW_ON
+  - _SUNSHAFTS_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: _C1_GlowFresnel
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _C1_Texture:
+        m_Texture: {fileID: 2800000, guid: 6c120eef683d05c41a0ab4da5c87877e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _C2_Texture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Cloud2_Detail_Texture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Cloud2_Texture:
+        m_Texture: {fileID: 2800000, guid: 1b6d1e8de91b7dc4c8689969a7ca340c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Cloud_Detail_Texture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Cloud_Texture:
+        m_Texture: {fileID: 2800000, guid: 7681016dfdb764b48a18bfb59fc48325, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StarCubeMap:
+        m_Texture: {fileID: 8900000, guid: b81ab103da55b4441ae77e454cee2f3b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StarTexture:
+        m_Texture: {fileID: 2800000, guid: 4738e3d819ef67046b6dc7cbf215817a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Texture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Atmosphere2Blur: 4.7
+    - _Atmosphere2Enabled: 0
+    - _Atmosphere2GlowPosition: 0
+    - _Atmosphere2Opacity: 0.304
+    - _Atmosphere2Size: 1.25
+    - _Atmosphere2Smoothness: 2
+    - _AtmosphereBlur: 10
+    - _AtmosphereEnabled: 1
+    - _AtmosphereGlowPosition: 0
+    - _AtmosphereOpacity: 0.749
+    - _AtmospherePhaseEnabled: 0
+    - _AtmosphereSize: 5
+    - _AtmosphereSmoothness: 1
+    - _C1_Altitude: -11
+    - _C1_Atmosphere2Blur: 1.5
+    - _C1_Atmosphere2Enabled: 1
+    - _C1_Atmosphere2GlowPosition: 0
+    - _C1_Atmosphere2Opacity: 1
+    - _C1_Atmosphere2Size: 1
+    - _C1_Atmosphere2Smoothness: 2
+    - _C1_AtmosphereBlur: 0.3
+    - _C1_AtmosphereEnabled: 1
+    - _C1_AtmosphereGlowPosition: 0
+    - _C1_AtmosphereOpacity: 0.206
+    - _C1_AtmospherePhaseEnabled: 1
+    - _C1_AtmosphereSize: 1.01
+    - _C1_AtmosphereSmoothness: 1
+    - _C1_Azimuth: 56
+    - _C1_DarkSideOcclusion: 0
+    - _C1_EdgeSoftness: 0
+    - _C1_Enabled: 0
+    - _C1_Fade: 1
+    - _C1_GlowEnabled: 1
+    - _C1_GlowFresnel: 5.8
+    - _C1_GlowIntensity: 2
+    - _C1_GlowOuterRadius: 1
+    - _C1_GlowPower: 5
+    - _C1_GlowSmoothness: 1.08
+    - _C1_InnerGlowEnabled: 0
+    - _C1_InvertPhase: 0
+    - _C1_OuterGlowEnabled: 1
+    - _C1_OuterGlowSize: 0.022
+    - _C1_Phase: -0
+    - _C1_PhaseSize: 0.68
+    - _C1_PhaseSmoothness: 0
+    - _C1_RotateWithCamera: 0
+    - _C1_Rotation: 300
+    - _C1_Size: 0.469
+    - _C1_SunshaftsCount: 5
+    - _C1_SunshaftsEnabled: 0
+    - _C1_SunshaftsIntensity: 1
+    - _C1_SunshaftsRadius: 0.5
+    - _C1_SunshaftsSpeed: 0.5
+    - _C2_Altitude: 60
+    - _C2_Atmosphere2Blur: 1.5
+    - _C2_Atmosphere2Enabled: 0
+    - _C2_Atmosphere2GlowPosition: 0
+    - _C2_Atmosphere2Opacity: 1
+    - _C2_Atmosphere2Size: 1
+    - _C2_Atmosphere2Smoothness: 2
+    - _C2_AtmosphereBlur: 0.3
+    - _C2_AtmosphereEnabled: 0
+    - _C2_AtmosphereGlowPosition: 0
+    - _C2_AtmosphereOpacity: 1
+    - _C2_AtmospherePhaseEnabled: 0
+    - _C2_AtmosphereSize: 0.6
+    - _C2_AtmosphereSmoothness: 0.1
+    - _C2_Azimuth: 135
+    - _C2_DarkSideOcclusion: 0
+    - _C2_EdgeSoftness: 0.331
+    - _C2_Enabled: 0
+    - _C2_Fade: 1
+    - _C2_GlowEnabled: 1
+    - _C2_GlowFresnel: 2
+    - _C2_GlowIntensity: 2
+    - _C2_GlowOuterRadius: 1
+    - _C2_GlowPower: 5
+    - _C2_GlowSmoothness: 0.5
+    - _C2_InnerGlowEnabled: 1
+    - _C2_InvertPhase: 0
+    - _C2_OuterGlowEnabled: 0
+    - _C2_OuterGlowSize: 0
+    - _C2_Phase: 0
+    - _C2_PhaseSize: 0.5
+    - _C2_PhaseSmoothness: 0.415
+    - _C2_RotateWithCamera: 0
+    - _C2_Rotation: 0
+    - _C2_Size: 0.2
+    - _C2_SunshaftsCount: 5
+    - _C2_SunshaftsEnabled: 0
+    - _C2_SunshaftsIntensity: 1
+    - _C2_SunshaftsRadius: 0.5
+    - _C2_SunshaftsSpeed: 0.5
+    - _CelestialEdgeSoftness: 0.056
+    - _CelestialToggle: 1
+    - _Cloud2DetailTexToggle: 0
+    - _Cloud2HighlightsToggle: 1
+    - _Cloud2_AlphaEdge: 0.732
+    - _Cloud2_BaseEpsilon: 0.0463
+    - _Cloud2_BaseSpeedMultiplier: 0.224
+    - _Cloud2_Density: 0.979
+    - _Cloud2_DetailEpsilon: 0
+    - _Cloud2_DetailScale: 3.3
+    - _Cloud2_DetailSpeedMultiplier: 1.59
+    - _Cloud2_Erosion: 0.089
+    - _Cloud2_ErosionMultiplier: 0.39
+    - _Cloud2_HeightBias: 0.183
+    - _Cloud2_HeightScale: 5.52
+    - _Cloud2_HighlightContrast: 2.7
+    - _Cloud2_HighlightControl: 0.18
+    - _Cloud2_HighlightSmoothness: 1.99
+    - _Cloud2_Horizon_Fade: 0.566
+    - _Cloud2_Horizon_Level: -0.03
+    - _Cloud2_Intensity: 2
+    - _Cloud2_LightingWrap: 0.434
+    - _Cloud2_Scale: 0.406
+    - _Cloud2_ScatterMax: 0.1
+    - _Cloud2_ScatterMin: 3
+    - _Cloud2_SunBoost: 3.75
+    - _Cloud2_Top_Fade: 0
+    - _CloudAlphaEdge: 0.732
+    - _CloudBaseEpsilon: 0.0463
+    - _CloudBaseSpeedMultiplier: 0.224
+    - _CloudDetailEpsilon: 0
+    - _CloudDetailScale: 3.3
+    - _CloudDetailSpeedMultiplier: 1.59
+    - _CloudDetailTexToggle: 0
+    - _CloudErosion: 0.734
+    - _CloudErosionMultiplier: 0.39
+    - _CloudFogToggle: 1
+    - _CloudHeightBias: 0.078
+    - _CloudHeightScale: 5.52
+    - _CloudHighlightContrast: 2.42
+    - _CloudHighlightControl: 0.048
+    - _CloudHighlightSmoothness: 2.49
+    - _CloudHighlightsToggle: 1
+    - _CloudLightingContrast: 5
+    - _CloudLightingSmoothness: 1.34
+    - _CloudLightingWrap: 0.434
+    - _CloudScatterMax: 0.1
+    - _CloudScatterMin: 3
+    - _CloudSunBoost: 3.75
+    - _Clouds2Toggle: 0
+    - _CloudsToggle: 1
+    - _DarkSideOcclusion: 0
+    - _Density: 0.751
+    - _Fade: 1
+    - _GlobalRotation: 150
+    - _GlowEnabled: 1
+    - _GlowFresnel: 0.1
+    - _GlowIntensity: 6.45
+    - _GlowOuterRadius: 1
+    - _GlowPower: 2.57
+    - _GlowSmoothness: 1
+    - _GodRaysBeamBlur: 5
+    - _GodRaysBeamSweep: 0.075
+    - _GodRaysContrast: 1
+    - _GodRaysDensity: 12
+    - _GodRaysFalloff: 3.92
+    - _GodRaysHoleNoise: 0
+    - _GodRaysHoleSize: -0.24
+    - _GodRaysHoleSoftness: 0.01
+    - _GodRaysHorizonCruft: 0
+    - _GodRaysHorizonFade: -0.328
+    - _GodRaysHorizonMaskPower: 0.8
+    - _GodRaysLength: 0.17
+    - _GodRaysMaxPackWidth: 1
+    - _GodRaysMinPackWidth: 0.49803144
+    - _GodRaysPackCount: 4.18
+    - _GodRaysRotateWithCamera: 1
+    - _GodRaysSpeed: 0.2
+    - _GodRaysToggle: 0
+    - _Ground_Blend: 0.01
+    - _Ground_Horizon_Smoothness: 0.2
+    - _Horizon_Fade: 0.566
+    - _Horizon_Level: -0.03
+    - _Horizon_Offset: 0
+    - _Horizon_Softness: 0.6
+    - _InnerGlowEnabled: 1
+    - _Intensity: 0.77
+    - _InvertPhase: 0
+    - _Mid_Sky_Height: 0.17
+    - _Mid_Sky_Softness: 0.7
+    - _OuterGlowEnabled: 0
+    - _OuterGlowSize: 0
+    - _Phase: 0
+    - _PhaseSize: 0.95
+    - _PhaseSmoothness: 0
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _RotateWithCamera: 0
+    - _Rotation: 294
+    - _Scale: 0.57
+    - _Scatter: 0.312
+    - _ScatterDebug: 0
+    - _Scatter_Contrast: 0.166
+    - _Scatter_size: 1.88
+    - _SimulateGround: 0
+    - _Size: 0.04
+    - _StarColorTempMax: 40000
+    - _StarColorTempMin: 1000
+    - _StarDensity: 0.033
+    - _StarExposure: 4
+    - _StarHeight: 1654
+    - _StarHorizonFade: 0.5
+    - _StarLatitude: 54
+    - _StarPower: 42.2
+    - _StarRotation: 0.469
+    - _StarSaturation: 2
+    - _StarSize: 0.39
+    - _StarSizeMax: 1.3112634
+    - _StarSizeMin: 0.21822841
+    - _StarSoftness: 1
+    - _StarSpeed: 0
+    - _StarTiling: 1
+    - _StarTwinkleAmount: 0
+    - _StarTwinkleSpeed: 0
+    - _Star_Blend: 1.68
+    - _Star_Blend_Contrast: 1.64
+    - _Star_Scatter: 1
+    - _StarsToggle: 0
+    - _Stars_Scatter_Size: 13.14
+    - _SunshaftsCount: 16.3
+    - _SunshaftsEnabled: 1
+    - _SunshaftsIntensity: 1.48
+    - _SunshaftsRadius: 1.36
+    - _SunshaftsSpeed: 1.35
+    - _Top_Fade: 0
+    - _Top_Softness: 0.899
+    - _TwinkleAmount: 0.5
+    - _TwinkleSpeed: 1
+    - _UseTwoColorMode: 0
+    m_Colors:
+    - _Atmosphere2Color: {r: 0, g: 1.628982, b: 2.996078, a: 0}
+    - _AtmosphereColor: {r: 5.992157, g: 0.51360613, b: 0, a: 1}
+    - _C1_Atmosphere2Color: {r: 2, g: 1.0914494, b: 0.5409957, a: 1}
+    - _C1_AtmosphereColor: {r: 0.84313726, g: 0.654902, b: 0.4862745, a: 1}
+    - _C1_GlowColor: {r: 0.60784316, g: 0.6156863, b: 0.6313726, a: 1}
+    - _C1_OuterGlowColor: {r: 1.9999999, g: 1.7244011, b: 0, a: 0}
+    - _C1_SunshaftsColor: {r: 1, g: 0.9, b: 0.7, a: 1}
+    - _C1_Tiling: {r: 0.85, g: 0.85, b: 0, a: 0}
+    - _C1_Tint: {r: 0.60784316, g: 0.6156863, b: 0.6313726, a: 1}
+    - _C2_Atmosphere2Color: {r: 0, g: 0, b: 0, a: 0}
+    - _C2_AtmosphereColor: {r: 0, g: 0, b: 0, a: 0}
+    - _C2_GlowColor: {r: 0, g: 0, b: 0, a: 0}
+    - _C2_OuterGlowColor: {r: 0, g: 0, b: 0, a: 0}
+    - _C2_SunshaftsColor: {r: 1, g: 0.9, b: 0.7, a: 1}
+    - _C2_Tiling: {r: 0.4, g: 0.4, b: 0, a: 0}
+    - _C2_Tint: {r: 1, g: 1, b: 1, a: 1}
+    - _Cloud2_Color: {r: 2.465831, g: 0.7155988, b: 0.4905841, a: 1}
+    - _Cloud2_HighlightColor: {r: 1.4980392, g: 1.1907377, b: 0.69803923, a: 1}
+    - _Cloud2_Speed: {r: 0.05, g: 0.0035, b: 0, a: 0}
+    - _CloudHighlightColor: {r: 2.1185472, g: 0.9308333, b: 0.19320063, a: 1}
+    - _Color_1: {r: 0.41034758, g: 0.41034758, b: 0.47798735, a: 1}
+    - _GlowColor: {r: 2.2829475, g: 0.4183412, b: 0, a: 1}
+    - _GodRaysColor: {r: 2.7954402, g: 1.1191194, b: 0, a: 1}
+    - _Ground_Color: {r: 0.09999991, g: 0.049999952, b: 0.049999952, a: 1}
+    - _HorizonColor: {r: 1, g: 0.49019608, b: 0.15686275, a: 1}
+    - _MidColor: {r: 0.827451, g: 0.32941177, b: 0.3764706, a: 1}
+    - _OuterGlowColor: {r: 0, g: 0, b: 0, a: 0}
+    - _Speed: {r: 0.02, g: 0.003, b: 0, a: 0}
+    - _StarTint: {r: 20.18759, g: 20.18759, b: 20.18759, a: 1}
+    - _SunshaftsColor: {r: 13.928808, g: 6.854713, b: 0, a: 1}
+    - _Tiling: {r: 0.95, g: 0.9, b: 0, a: 0}
+    - _Tint: {r: 32.706635, g: 16.121227, b: 4.422589, a: 1}
+    - _TopColor: {r: 0.028717184, g: 0.03283848, b: 0.27672952, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

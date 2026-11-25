@@ -41,6 +41,13 @@ namespace ShiftRush.EditorTools
             blinkers.Clear(); props.Clear(); rotors.Clear(); breathers.Clear();
 
             var old = showroom.transform.Find("Showcase Set");
+            // Keep the stream screen where it was placed by hand in the scene (or where a full menu rebuild found it).
+            var oldScreen = old != null ? old.Find("Stream Screen") : null;
+            bool keepScreen = oldScreen != null || remembered;
+            Vector3 screenPos = oldScreen != null ? oldScreen.localPosition : rememberedPos;
+            Quaternion screenRot = oldScreen != null ? oldScreen.localRotation : rememberedRot;
+            Vector3 screenScale = oldScreen != null ? oldScreen.localScale : rememberedScale;
+            remembered = false;
             if (old != null) Object.DestroyImmediate(old.gameObject);
             root = new GameObject("Showcase Set").transform;
             root.SetParent(showroom.transform, false);
@@ -60,6 +67,12 @@ namespace ShiftRush.EditorTools
             Police();
             Skyline();
             Pad(showroom);
+            Screen(showroom);
+            if (keepScreen)
+            {
+                var screen = root.Find("Stream Screen");
+                screen.localPosition = screenPos; screen.localRotation = screenRot; screen.localScale = screenScale;
+            }
             Atmosphere();
             Sky();
             Look(showroom);
@@ -89,6 +102,7 @@ namespace ShiftRush.EditorTools
             AssetDatabase.SaveAssets();
             FixEmission();
             Probe(); // after the lights glow, so the wet ground reflects them
+            TimeOfDay(lights);
             AssetDatabase.SaveAssets();
             AssetDatabase.SaveAssets();
             Debug.Log("[Showcase] Built the night airstrip.");
@@ -205,11 +219,6 @@ namespace ShiftRush.EditorTools
             Prim(PrimitiveType.Cube, "Frame Top", t, new Vector3(0, 5.7f, -10.9f), new Vector3(6.2f, 0.3f, 0.2f), dark);
             Prim(PrimitiveType.Cube, "Frame L", t, new Vector3(-2.95f, 3.0f, -10.9f), new Vector3(0.3f, 5.4f, 0.2f), dark);
             Prim(PrimitiveType.Cube, "Frame R", t, new Vector3(2.95f, 3.0f, -10.9f), new Vector3(0.3f, 5.4f, 0.2f), dark);
-            var ramp = Lit("M_SC_Ramp", new Color(0.16f, 0.16f, 0.18f), 0.55f, 0.6f);
-            Prim(PrimitiveType.Cube, "Ramp", t, new Vector3(0, 0.22f, -7.6f), new Vector3(4.6f, 0.16f, 6.9f), ramp, new Vector3(3.6f, 0, 0));
-            var amber = Emissive("M_SC_RampStrip", new Color(1f, 0.62f, 0.15f) * 3.5f);
-            Prim(PrimitiveType.Cube, "Strip L", t, new Vector3(-2.22f, 0.33f, -7.6f), new Vector3(0.08f, 0.05f, 6.8f), amber, new Vector3(3.6f, 0, 0));
-            Prim(PrimitiveType.Cube, "Strip R", t, new Vector3(2.22f, 0.33f, -7.6f), new Vector3(0.08f, 0.05f, 6.8f), amber, new Vector3(3.6f, 0, 0));
 
             // Light pouring out of the bay onto the ramp and the car.
             var spill = AddLight(t, "Bay Spill", LightType.Spot, new Vector3(0, 3.6f, -12.5f), new Vector3(14, 0, 0), Warm, 38f, 40f, 80f);
@@ -286,23 +295,6 @@ namespace ShiftRush.EditorTools
             wash.renderMode = LightRenderMode.ForcePixel; // never dropped by the per-object light limit
             var rim = AddLight(t, "Hull Rim", LightType.Spot, centre + new Vector3(-4f, 9f, -18f), Quaternion.LookRotation(centre - (centre + new Vector3(-4f, 9f, -18f))).eulerAngles, Warm, 90f, 50f, 50f);
             rim.renderMode = LightRenderMode.ForcePixel;
-
-            // A lowered ramp under the tail with amber edge strips.
-            var ramp = Lit("M_SC_Ramp", new Color(0.16f, 0.16f, 0.18f), 0.55f, 0.6f);
-            var amber = Emissive("M_SC_RampStrip", new Color(1f, 0.62f, 0.15f) * 3.5f);
-            Vector3 rampTop = h.TransformPoint(new Vector3(0f, -1.15f, -5.5f));
-            Vector3 back = Vector3.ProjectOnPlane(h.TransformDirection(Vector3.back), Vector3.up).normalized;
-            Vector3 rampFoot = new Vector3(rampTop.x, 0.02f, rampTop.z) + back * 3.2f;
-            Vector3 mid = (rampTop + rampFoot) * 0.5f;
-            float len = Vector3.Distance(rampTop, rampFoot);
-            var rampRot = Quaternion.LookRotation(rampFoot - rampTop);
-            var rampGo = Prim(PrimitiveType.Cube, "Ramp", t, mid, new Vector3(3.6f, 0.14f, len), ramp);
-            rampGo.transform.rotation = rampRot;
-            foreach (float side in new[] { -1.74f, 1.74f })
-            {
-                var strip = Prim(PrimitiveType.Cube, side < 0 ? "Strip L" : "Strip R", t, mid + rampRot * new Vector3(side, 0.09f, 0f), new Vector3(0.08f, 0.05f, len), amber);
-                strip.transform.rotation = rampRot;
-            }
 
             // Beacons and strobes.
             Blink(t, h.TransformPoint(new Vector3(0f, 2.15f, 0.3f)), new Color(1f, 0.08f, 0.05f) * 14f, 1.1f, 1f, 0f, true, 0.35f, 10f);
@@ -656,6 +648,172 @@ namespace ShiftRush.EditorTools
             Get<SplitToning>(p, s => { s.shadows.Override(new Color(0.32f, 0.38f, 0.62f)); s.highlights.Override(new Color(0.72f, 0.56f, 0.42f)); s.balance.Override(-15f); });
             Get<WhiteBalance>(p, w => w.temperature.Override(-6f));
             EditorUtility.SetDirty(p);
+        }
+
+        static bool remembered;
+        static Vector3 rememberedPos, rememberedScale = Vector3.one;
+        static Quaternion rememberedRot = Quaternion.identity;
+
+        /// <summary>
+        /// Before Build Main Menu replaces the scene: note where the stream screen stands in the saved menu scene, so
+        /// the rebuilt set puts it back in the same place.
+        /// </summary>
+        public static void RememberScreen(string scenePath)
+        {
+            remembered = false;
+            var active = EditorSceneManager.GetActiveScene();
+            UnityEngine.SceneManagement.Scene scene = active;
+            bool opened = false;
+            if (active.path != scenePath)
+            {
+                if (!System.IO.File.Exists(scenePath)) return;
+                scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+                opened = true;
+            }
+            foreach (var go in scene.GetRootGameObjects())
+            {
+                var t = go.GetComponentInChildren<Showroom>(true);
+                var screen = t != null ? t.transform.Find("Showcase Set/Stream Screen") : null;
+                if (screen == null) continue;
+                rememberedPos = screen.localPosition; rememberedRot = screen.localRotation; rememberedScale = screen.localScale;
+                remembered = true;
+                break;
+            }
+            if (opened) EditorSceneManager.CloseScene(scene, true);
+        }
+
+        // ---------------------------------------------------------------- time of day and the stream screen
+
+        /// <summary>Night (as built), Dusk and Day looks the garage can switch between (ShowroomTime).</summary>
+        static void TimeOfDay(ShowcaseLights animated)
+        {
+            var time = root.gameObject.AddComponent<ShowroomTime>();
+            var night = RenderSettings.skybox;
+            var dusk = KromaSky("M_SC_DuskSky", "Master/04_Sunrise", "Skybox Colors/04_Sunset");
+            var day = KromaSky("M_SC_DaySky", "Master/01_Daylight", "Skybox Colors/01_Day");
+            time.looks = new[]
+            {
+                new ShowroomTime.Look { name = "NIGHT", sky = night, sun = Moon, sunIntensity = 0.45f, sunAngles = new Vector3(24f, 18f, 0f),
+                    ambient = new Color(0.07f, 0.08f, 0.12f), fog = new Color(0.045f, 0.055f, 0.105f), fogDensity = 0.014f, lamps = 1f, nightPieces = true, bakedReflections = true, groundLift = 1f, exposure = 0.15f },
+                new ShowroomTime.Look { name = "DUSK", sky = dusk != null ? dusk : night, sun = new Color(1f, 0.6f, 0.38f), sunIntensity = 1.2f, sunAngles = new Vector3(9f, 225f, 0f),
+                    ambient = new Color(0.3f, 0.22f, 0.27f), fog = new Color(0.42f, 0.29f, 0.3f), fogDensity = 0.007f, lamps = 0.55f, nightPieces = false, bakedReflections = false, groundLift = 2.6f, exposure = 0.35f },
+                new ShowroomTime.Look { name = "DAY", sky = day != null ? day : night, sun = new Color(1f, 0.96f, 0.9f), sunIntensity = 1.5f, sunAngles = new Vector3(48f, 150f, 0f),
+                    ambient = new Color(0.5f, 0.56f, 0.64f), fog = new Color(0.63f, 0.72f, 0.82f), fogDensity = 0.0035f, lamps = 0.12f, nightPieces = false, bakedReflections = false, groundLift = 5f, exposure = 0.55f },
+            };
+            foreach (var l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None)) if (l.type == LightType.Directional) { time.sun = l; break; }
+            if (time.sun == null)
+            {
+                // The menu scene has no sun of its own: moonlight at night, the sun by day.
+                time.sun = AddLight(root, "Sun", LightType.Directional, Vector3.zero, new Vector3(24f, 18f, 0f), Moon, 0.45f, 10f, 0f);
+                time.sun.shadows = LightShadows.Soft;
+            }
+
+            // Lamps the time dims: every set light except the sun and the ones ShowcaseLights animates.
+            var animatedLights = new HashSet<Light>();
+            foreach (var b in animated.blinkers) if (b.light != null) animatedLights.Add(b.light);
+            foreach (var l in animated.breathers) if (l != null) animatedLights.Add(l);
+            var lamps = new List<Light>();
+            foreach (var l in root.GetComponentsInChildren<Light>(true)) if (l != time.sun && !animatedLights.Contains(l)) lamps.Add(l);
+            time.lamps = lamps.ToArray();
+            time.animated = animated;
+
+            // Night-only pieces: rain, the floodlight beams.
+            var nightOnly = new List<GameObject>();
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+                if (r.sharedMaterial != null && r.sharedMaterial.name.StartsWith("M_SC_Beam")) nightOnly.Add(r.gameObject);
+            var atmo = root.Find("Atmosphere");
+            if (atmo != null) foreach (Transform c in atmo) if (c.name.Contains("Rain")) nightOnly.Add(c.gameObject);
+            time.nightPieces = nightOnly.ToArray();
+            time.probe = root.GetComponentInChildren<ReflectionProbe>(true);
+            var tarmac = root.Find("Wet Tarmac");
+            if (tarmac != null) time.ground = tarmac.GetComponent<Renderer>();
+            time.volume = root.parent.GetComponentInChildren<Volume>(true);
+        }
+
+        static Material KromaSky(string name, string master, string colours)
+        {
+            string path = Dir + name + ".mat";
+            AssetDatabase.DeleteAsset(path);
+            if (!AssetDatabase.CopyAsset("Assets/FayLabs/Kroma/Content/Skybox/Kroma_Skybox_Day.mat", path)) return null;
+            var sky = AssetDatabase.LoadAssetAtPath<Material>(path);
+            foreach (var preset in new[] { master, colours }) ApplyKromaPreset(sky, "Assets/FayLabs/Kroma/Content/Shaders/Presets/" + preset + ".asset");
+            EditorUtility.SetDirty(sky);
+            return sky;
+        }
+
+        /// <summary>A big Channel 13 screen on legs behind the car, where the ramp used to glow, running its own broadcast.</summary>
+        static void Screen(Showroom showroom)
+        {
+            var t = Group("Stream Screen");
+            t.localPosition = new Vector3(-6.2f, 0f, -8.6f);
+            t.localRotation = Quaternion.Euler(0f, 214f, 0f); // its face (-Z) turned back toward the garage camera
+            var steel = Lit("M_SC_Steel", new Color(0.1f, 0.1f, 0.12f), 0.4f, 0.6f);
+            Prim(PrimitiveType.Cube, "Leg L", t, new Vector3(-2.2f, 1.1f, 0.12f), new Vector3(0.18f, 2.2f, 0.18f), steel);
+            Prim(PrimitiveType.Cube, "Leg R", t, new Vector3(2.2f, 1.1f, 0.12f), new Vector3(0.18f, 2.2f, 0.18f), steel);
+            Prim(PrimitiveType.Cube, "Frame", t, new Vector3(0f, 3.75f, 0.1f), new Vector3(6.1f, 3.5f, 0.16f), steel);
+            var glass = Emissive("M_SC_ScreenGlass", new Color(0.03f, 0.02f, 0.06f));
+            Prim(PrimitiveType.Quad, "Screen", t, new Vector3(0f, 3.75f, -0.002f), new Vector3(5.8f, 3.26f, 1f), glass, new Vector3(0f, 0f, 0f));
+            AddLight(t, "Screen Glow", LightType.Point, new Vector3(0f, 3.4f, -1.6f), Vector3.zero, new Color(0.9f, 0.4f, 1f), 3f, 7f, 0f);
+
+            // World-space canvas on the glass (faces the same way as the quad's visible side).
+            var cgo = new GameObject("Broadcast", typeof(RectTransform), typeof(Canvas));
+            cgo.transform.SetParent(t, false);
+            var rt = (RectTransform)cgo.transform;
+            rt.sizeDelta = new Vector2(1600, 900);
+            rt.localPosition = new Vector3(0f, 3.75f, -0.01f);
+            rt.localScale = Vector3.one * (5.8f / 1600f);
+            cgo.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            var fBlack = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/_ShiftRush/Art/Fonts/BigShouldersDisplay-Black SDF.asset");
+            var fBarlow = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/_ShiftRush/Art/Fonts/BarlowCondensed-SemiBold SDF.asset");
+            var fMono = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/_ShiftRush/Art/Fonts/JetBrainsMono-Bold SDF.asset");
+
+            var accent = UiImage(rt, "Accent Bar", new Color32(255, 46, 154, 255), new Vector2(0, 0), new Vector2(0, 1), new Vector2(70, 0), new Vector2(24, -120));
+            var live = UiImage(rt, "Live", new Color32(232, 35, 58, 255), new Vector2(0, 1), new Vector2(0, 1), new Vector2(150, -70), new Vector2(170, 56));
+            UiText(live.rectTransform, "Label", "LIVE", fMono, 34, Color.white, TextAlignmentOptions.Center, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var tagT = UiText(rt, "Tag", "CHANNEL 13", fMono, 40, new Color32(189, 183, 209, 255), TextAlignmentOptions.Left, new Vector2(0, 1), new Vector2(1, 1), new Vector2(150, -200), new Vector2(-220, 60));
+            tagT.characterSpacing = 10;
+            var titleT = UiText(rt, "Title", "GRIP PRO", fBlack, 230, Color.white, TextAlignmentOptions.Left, new Vector2(0, 1), new Vector2(1, 1), new Vector2(150, -460), new Vector2(-220, 260));
+            titleT.enableAutoSizing = true; titleT.fontSizeMin = 90; titleT.fontSizeMax = 230; titleT.textWrappingMode = TextWrappingModes.NoWrap;
+            var lineT = UiText(rt, "Line", "", fBarlow, 54, new Color32(220, 214, 236, 255), TextAlignmentOptions.TopLeft, new Vector2(0, 1), new Vector2(1, 1), new Vector2(150, -560), new Vector2(-220, 140));
+            var band = UiImage(rt, "Ticker Band", new Color32(11, 10, 18, 230), new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 50), new Vector2(0, 100));
+            var tick = UiText(band.rectTransform, "Ticker", "", fMono, 32, new Color32(46, 242, 255, 255), TextAlignmentOptions.Left, Vector2.zero, Vector2.one, new Vector2(40, 0), new Vector2(-60, 0));
+            tick.textWrappingMode = TextWrappingModes.NoWrap; tick.overflowMode = TextOverflowModes.Ellipsis;
+            var flash = UiImage(rt, "Cut Flash", new Color(1f, 1f, 1f, 0f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            var screen = t.gameObject.AddComponent<StreamScreen>();
+            var so = new SerializedObject(screen);
+            so.FindProperty("showroom").objectReferenceValue = showroom;
+            so.FindProperty("tag").objectReferenceValue = tagT;
+            so.FindProperty("title").objectReferenceValue = titleT;
+            so.FindProperty("line").objectReferenceValue = lineT;
+            so.FindProperty("ticker").objectReferenceValue = tick;
+            so.FindProperty("flash").objectReferenceValue = flash;
+            so.FindProperty("accent").objectReferenceValue = accent;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static UnityEngine.UI.Image UiImage(RectTransform parent, string name, Color c, Vector2 min, Vector2 max, Vector2 pos, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = min; rt.anchorMax = max; rt.pivot = new Vector2(min.x == max.x ? min.x : 0.5f, min.y == max.y ? min.y : 0.5f);
+            rt.anchoredPosition = pos; rt.sizeDelta = size;
+            var img = go.GetComponent<UnityEngine.UI.Image>();
+            img.color = c; img.raycastTarget = false;
+            return img;
+        }
+
+        static TextMeshProUGUI UiText(RectTransform parent, string name, string text, TMP_FontAsset font, float size, Color c, TextAlignmentOptions align, Vector2 min, Vector2 max, Vector2 pos, Vector2 sizeDelta)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.text = text; if (font != null) t.font = font; t.fontSize = size; t.color = c; t.alignment = align; t.raycastTarget = false;
+            var rt = t.rectTransform;
+            rt.anchorMin = min; rt.anchorMax = max; rt.pivot = new Vector2(0f, min.y == max.y ? min.y : 0.5f);
+            rt.anchoredPosition = pos; rt.sizeDelta = sizeDelta;
+            return t;
         }
 
         static void Get<T>(VolumeProfile p, System.Action<T> set) where T : VolumeComponent

@@ -1,0 +1,262 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6385af9118115475cb04b7010b642866, type: 3}
+  m_Name: SR_Story
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Core.StoryCatalog
+  actTitle: "ACT 1 \xB7 THE LEAGUE"
+  chapters:
+  - THE DROP
+  - GOING LIVE
+  - HEAT
+  episodes:
+  - id: ep01
+    number: 1
+    chapter: 0
+    title: FIRST DROP
+    eventType: RACE
+    trackId: alpine
+    synopsis: The crew's plane drops you over Alpine Pass on night one. Land it,
+      find the line, finish the run.
+    slimLine: Night one. Nobody expects anything. Finish the lap and they'll remember
+      the name.
+    kowalNote: Unregistered aircraft over the pass again.
+    finishWithin: 5
+    payout: 600
+    glossBonus: Hold one long drift
+    gritBonus: Land one clean knock
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 1
+    redacted: 0
+    teaser: Hex wants to see what you do with a car you didn't build.
+  - id: ep02
+    number: 2
+    chapter: 0
+    title: SHOP TEST
+    eventType: RACE
+    trackId: valley
+    synopsis: Hex wants to see what you do with a car you didn't build. Glacier Valley,
+      the whole crew on the pit wall.
+    slimLine: Hex is watching from the wall. Don't scratch her paint. Actually, do.
+      Chat loves it.
+    kowalNote: Same black car on three feeds.
+    finishWithin: 4
+    payout: 800
+    glossBonus: Two drifts past tier 1
+    gritBonus: Knock a rival into the snow
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 1
+    redacted: 0
+    teaser: Slim puts the rookie on the stream. Vex is waiting.
+  - id: ep03
+    number: 3
+    chapter: 0
+    title: ON AIR
+    eventType: RACE
+    trackId: alpine
+    synopsis: Slim puts the rookie on the stream for the first time. Alpine Pass,
+      six cars, the league watching.
+    slimLine: Forty thousand people are about to watch a test driver race the league
+      champ. No pressure, rookie. Actually, all of the pressure.
+    kowalNote: Who is driving that car?
+    finishWithin: 3
+    payout: 1200
+    glossBonus: Hold two tier 2 drifts
+    gritBonus: Knock Vex twice
+    rival: VEX
+    rivalLine: Champion. Grips, never drifts.
+    rivalPace: 1.04
+    playable: 1
+    redacted: 0
+    teaser: A second rookie shows up on Glacier Valley. Nobody invited him.
+  - id: ep04
+    number: 4
+    chapter: 0
+    title: KAITO
+    eventType: DUEL
+    trackId: valley
+    synopsis: A second rookie shows up on Glacier Valley. Nobody invited him, and
+      he drives like he has nothing to lose.
+    slimLine: Kaito says he's the real rookie. Chat is split. Settle it.
+    kowalNote: Second driver. Same plane. Who's paying them?
+    finishWithin: 2
+    payout: 1500
+    glossBonus: Out-drift Kaito
+    gritBonus: Put Kaito in a wall
+    rival: KAITO
+    rivalLine: Cyan hoodie. Drives everything sideways.
+    rivalPace: 1.06
+    playable: 1
+    redacted: 0
+    teaser: Highland roads, real ones. The feed goes public.
+  - id: ep05
+    number: 5
+    chapter: 1
+    title: OPEN ROAD
+    eventType: RACE
+    trackId: stormbreak
+    synopsis: Stormbreak Highlands, a real road with a real view. The Feed wants
+      speed and a little chaos.
+    slimLine: We're on a public road now. Smile for the traffic cameras. Kidding.
+      Don't.
+    kowalNote: Feed is public now. Clips everywhere.
+    finishWithin: 3
+    payout: 1600
+    glossBonus: Clean lap, no knocks
+    gritBonus: Five knocks in one race
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 1
+    redacted: 0
+    teaser: 'Faction night: the Feed picks the event.'
+  - id: ep06
+    number: 6
+    chapter: 1
+    title: FACTION NIGHT
+    eventType: VOTE
+    trackId: alpine
+    synopsis: 'The Feed votes on tonight''s event: a drift showcase for GLOSS or
+      a wreck run for GRIT.'
+    slimLine: Chat is choosing tonight. I'm just the guy with the camera.
+    kowalNote: Two fan camps. Both love the rookie.
+    finishWithin: 3
+    payout: 1800
+    glossBonus: Win the drift showcase
+    gritBonus: Win the wreck run
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 0
+    redacted: 0
+    teaser: 
+  - id: ep07
+    number: 7
+    chapter: 1
+    title: PORTAL RUN
+    eventType: PORTAL
+    trackId: alpine
+    synopsis: SHIFT through the portals into the challenge worlds and come back with
+      the lead.
+    slimLine: Hex calls it spell casting. I call it great television.
+    kowalNote: Cars vanish off the road and come back ahead.
+    finishWithin: 3
+    payout: 2000
+    glossBonus: Clear a world without a scratch
+    gritBonus: Wreck your way through
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 0
+    redacted: 0
+    teaser: 
+  - id: ep08
+    number: 8
+    chapter: 1
+    title: CALLED OUT
+    eventType: RACE
+    trackId: alpine
+    synopsis: Vex calls the rookie out on stream. Back to Alpine Pass, and this time
+      only first place counts.
+    slimLine: Vex called you out live. You know what happens now.
+    kowalNote: Vex left Grip Pro. Why?
+    finishWithin: 1
+    payout: 2500
+    glossBonus: Win it clean
+    gritBonus: Knock Vex three times
+    rival: VEX
+    rivalLine: Wants the crew back. Wants you gone.
+    rivalPace: 1.08
+    playable: 1
+    redacted: 0
+    teaser: The police find the airstrip.
+  - id: ep09
+    number: 9
+    chapter: 2
+    title: INTERCEPT
+    eventType: INTERCEPT
+    trackId: stormbreak
+    synopsis: 
+    slimLine: 
+    kowalNote: 
+    finishWithin: 3
+    payout: 2800
+    glossBonus: Shake units with drifts
+    gritBonus: Spin out the police
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 0
+    redacted: 1
+    teaser: 
+  - id: ep10
+    number: 10
+    chapter: 2
+    title: THE RAID
+    eventType: RACE
+    trackId: valley
+    synopsis: 
+    slimLine: 
+    kowalNote: 
+    finishWithin: 3
+    payout: 3000
+    glossBonus: 
+    gritBonus: 
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 0
+    redacted: 1
+    teaser: 
+  - id: ep11
+    number: 11
+    chapter: 2
+    title: SIGNAL LOST
+    eventType: RACE
+    trackId: stormbreak
+    synopsis: 
+    slimLine: 
+    kowalNote: 
+    finishWithin: 3
+    payout: 3200
+    glossBonus: 
+    gritBonus: 
+    rival: 
+    rivalLine: 
+    rivalPace: 1
+    playable: 0
+    redacted: 1
+    teaser: 
+  - id: ep12
+    number: 12
+    chapter: 2
+    title: THE CATCH
+    eventType: FINALE
+    trackId: alpine
+    synopsis: 'The finale: beat Vex, outrun Kowal''s roadblock and make the plane''s
+      catch.'
+    slimLine: 
+    kowalNote: 
+    finishWithin: 1
+    payout: 5000
+    glossBonus: Win it clean
+    gritBonus: Win it loud
+    rival: VEX
+    rivalLine: 
+    rivalPace: 1.1
+    playable: 0
+    redacted: 0
+    teaser: 
+  liftChopper: {fileID: 5034078741687785970, guid: 854db7b0d7d899e4cbb730dbd0694be7, type: 3}

@@ -80,6 +80,47 @@ namespace ShiftRush.Race
 
         void OnDestroy() { if (Current == this) Current = null; }
 
+        void OnEnable() { ShiftRush.Vehicles.VehicleReset.Respawned += OnRespawned; }
+        void OnDisable() { ShiftRush.Vehicles.VehicleReset.Respawned -= OnRespawned; }
+
+        Racer Find(IVehicle v) { return Racers.Find(o => o.vehicle == v); }
+
+        /// <summary>Metres along the lap where the line starts the next lap's checkpoints (the first gate after the finish).</summary>
+        float LapStartWindow { get { return gateDistance != null && gateDistance.Length > 1 ? gateDistance[1] : Line.length * 0.5f; } }
+
+        /// <summary>
+        /// Where a reset may put this car (metres along the lap). A car still heading for the finish line can't be
+        /// dropped past it, which would skip the lap and rank it a lap down: it goes just behind the line instead.
+        /// </summary>
+        public float RespawnDistance(IVehicle v, float d, out bool held)
+        {
+            held = false;
+            var r = Find(v);
+            if (r == null || r.finished || r.suspended || Line == null || r.nextGate != 0) return d;
+            if (Mathf.Repeat(d, Line.length) >= LapStartWindow) return d;
+            held = true;
+            return Line.length - 12f;
+        }
+
+        /// <summary>A car was put back on the circuit: follow it from the new spot without counting or missing a gate.</summary>
+        void OnRespawned(ShiftRush.Vehicles.VehicleReset reset)
+        {
+            if (Line == null || Line.gates == null) return;
+            Racer r = null;
+            foreach (var o in Racers) if (o.vehicle != null && o.vehicle.Transform == reset.transform) { r = o; break; }
+            if (r == null || r.finished || r.suspended) return;
+            Vector3 p = r.vehicle.Transform.position;
+            r.nearest = reset.LineIndex >= 0 ? reset.LineIndex : Line.Nearest(p);
+            float d = Line.distances[r.nearest];
+            // Checkpoints between where it left the road and where it came back count (like a SHIFT return);
+            // the finish line never does, RespawnDistance keeps the car behind it.
+            if (r.started && gateDistance != null)
+                for (int guard = 0; guard < gateDistance.Length && r.nextGate != 0 && gateDistance[r.nextGate] <= d; guard++)
+                    r.nextGate = (r.nextGate + 1) % gateDistance.Length;
+            for (int g = 0; g < r.sides.Length; g++) r.sides[g] = Side(Line.gates[g], p);
+            r.wrongWayTime = 0f;
+        }
+
         void Start()
         {
             foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
@@ -247,6 +288,14 @@ namespace ShiftRush.Race
             bool onRoad = offRoad < Line.halfWidth + 30f || (ShortcutPath.All.Count > 0 && ShortcutPath.OnAny(p));
             if (onRoad) r.nearest = cand;
             float d = Line.distances[r.nearest];
+            // Around the finish line the lap count and the spot can disagree for a moment: past the line before
+            // the lap has counted (crossed wide of the gate), or rolled back over it after it counted. Rank by
+            // where the car really is.
+            if (r.started && gateDistance != null && gateDistance.Length > 1)
+            {
+                if (r.nextGate == 0 && d < LapStartWindow) d += Line.length;
+                else if (r.nextGate == 1 && d > Mathf.Max(gateDistance[gateDistance.Length - 1], Line.length - 80f)) d -= Line.length;
+            }
             r.progress = r.started ? d : d - Line.length; // still behind the line: negative
 
             // Wrong way: moving against the line's direction at speed.
