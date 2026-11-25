@@ -71,6 +71,111 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!1 &751189790130068302
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8560466002853741743}
+  - component: {fileID: 576019996354479288}
+  m_Layer: 0
+  m_Name: RCCP_Damage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8560466002853741743
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751189790130068302}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3724746812276982910}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &576019996354479288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751189790130068302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f95c4c42b9de13642bad92adfddf7432, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCP_Damage
+  completeSetup: 0
+  checkedSetup: 0
+  saveName: Car_Phobos
+  meshFilters: []
+  lights: []
+  parts: []
+  wheels: []
+  automaticInstallation: 1
+  damageFilter:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maximumDamage: 0.6
+  processInactiveGameobjects: 0
+  meshDeformation: 1
+  softBodyDeformation: 0
+  deformationRadius: 0.8
+  deformationMultiplier: 1
+  deformationDirectionMode: 0
+  originalMeshData: []
+  damagedMeshData: []
+  originalWheelData: []
+  damagedWheelData: []
+  damageData:
+    originalMeshData: []
+    damagedMeshData: []
+    originalWheelData: []
+    damagedWheelData: []
+    lightData: 
+    dataVersion: 0
+    zoneHealth: []
+    partData: []
+    wheelDeflated: 
+  repairNow: 0
+  repaired: 1
+  deformingNow: 0
+  deformed: 0
+  recalculateNormals: 1
+  preserveAuthoredNormals: 1
+  normalDeformBlendRange: 0.1
+  weldSeamNormals: 1
+  recalculateBounds: 1
+  wheelDamage: 1
+  wheelDamageRadius: 2
+  wheelDamageMultiplier: 1
+  wheelDetachment: 0
+  spawnDetachGrace: 1
+  lightDamage: 1
+  lightDamageRadius: 0.75
+  lightDamageMultiplier: 1
+  partDamage: 1
+  partDamageRadius: 1
+  partDamageMultiplier: 1
+  trackZoneHealth: 1
+  mechanicalDamage: 0
+  zoneDamageMultiplier: 3
+  zoneHealth:
+  - 100
+  - 100
+  - 100
+  - 100
+  octrees: []
 --- !u!1 &1235040784942335437
 GameObject:
   m_ObjectHideFlags: 0
@@ -714,6 +819,7 @@ MonoBehaviour:
   boostJolt: 0.7
   chargeRate: 0.8
   boostScale: 1.4
+  partAngleScale: 1
 --- !u!114 &8450504539201533514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1861,6 +1967,7 @@ Transform:
   - {fileID: 8297586120055555950}
   - {fileID: 5216843685143274887}
   - {fileID: 9220836343779592213}
+  - {fileID: 8560466002853741743}
   m_Father: {fileID: 3586095923487815549}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3677460549047050909

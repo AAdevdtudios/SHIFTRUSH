@@ -72,6 +72,7 @@ namespace ShiftRush.UI
                 ShiftRush.Core.RaceSession.CarIndex = ShiftRush.Core.PlayerProfile.FirstOwnedIndex();
             var track = ShiftRush.Core.RaceSession.Track;
             if (track == null) { OpenGarage(); return; }
+            ShiftRush.Core.StoryProgress.Active = ""; // a quick race: no story drop, no episode result
             ShiftRush.Core.SceneLoader.LoadTrack(track);
         }
 

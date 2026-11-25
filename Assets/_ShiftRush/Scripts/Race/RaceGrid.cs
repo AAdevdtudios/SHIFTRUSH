@@ -40,6 +40,15 @@ namespace ShiftRush.Race
             raceField.pushFromBehind = level.push;
             raceField.easeOutFront = level.ease;
             raceField.nitroPerSecond = level.rivalNitro;
+
+            // A story episode with a named cast: only those people, in their own cars, driving their own way.
+            var ep = ShiftRush.Core.StoryProgress.ActiveEpisode;
+            var cast = ShiftRush.Core.RivalCast.Instance;
+            if (ep != null && ep.opponents != null && ep.opponents.Length > 0 && cast != null)
+            {
+                FillStory(race, player, line, f, raceField, level, ep, cast);
+                return;
+            }
             if (player != null)
             {
                 Quaternion pr; float pl;
@@ -73,6 +82,55 @@ namespace ShiftRush.Race
                 var racer = race.AddRacer(v, rival.name, false);
                 racer.color = rival.color;
                 go.AddComponent<RivalDriver>().Init(race, racer, Paced(rival, level.pace), raceField, lateral);
+            }
+        }
+
+        /// <summary>
+        /// The episode's opponents on the grid ahead of the player (who starts last: in a 1v1 that's alongside).
+        /// Their pace is the difficulty's, times the episode's rival pace and heat; heat also sets how hard they
+        /// push from behind and how little they ease off out front.
+        /// </summary>
+        static void FillStory(RaceManager race, RaceManager.Racer player, RaceLine line, RivalField f, RivalField raceField,
+            Difficulty.Tuning level, ShiftRush.Core.StoryCatalog.Episode ep, ShiftRush.Core.RivalCast cast)
+        {
+            float heat = Mathf.Max(0.5f, ep.heat);
+            raceField.pushFromBehind = level.push * heat;
+            raceField.easeOutFront = level.ease / heat;
+            raceField.nitroPerSecond = level.rivalNitro * heat;
+            int total = ep.opponents.Length + 1;
+            if (player != null)
+            {
+                Quaternion pr; float pl;
+                var pp = Slot(line, f, total - 1, out pr, out pl);
+                player.vehicle.Teleport(pp, pr, 0f);
+            }
+            var catalog = ShiftRush.Core.RaceCatalog.Instance;
+            float pace = level.pace * ep.rivalPace * heat;
+            for (int i = 0; i < ep.opponents.Length; i++)
+            {
+                var who = cast.Find(ep.opponents[i]);
+                if (who == null) continue;
+                GameObject prefab = null;
+                if (catalog != null) foreach (var c in catalog.cars) if (c.id == who.carId) { prefab = c.prefab; break; }
+                if (prefab == null) prefab = f.carPrefab;
+                if (prefab == null) continue;
+                Quaternion rot; float lateral;
+                var pos = Slot(line, f, i, out rot, out lateral);
+                var v = VehicleSpawn.Rival(prefab, pos, rot);
+                if (v == null) continue;
+                var go = v.Transform.gameObject;
+                go.name = "Rival - " + who.name;
+                var reset = go.GetComponent<VehicleReset>();
+                if (reset != null) reset.listenForInput = false;
+                if (level.carBoost != 1f) VehicleSpawn.Boost(go, level.carBoost);
+                var racer = race.AddRacer(v, who.name, false);
+                racer.color = who.color;
+                var profile = new RivalField.Rival
+                {
+                    name = who.name, color = who.color, grip = who.grip * pace, topSpeedKmh = who.topSpeedKmh * pace,
+                    aggression = who.aggression, driftSkill = who.driftSkill, shortcutChance = who.shortcutChance,
+                };
+                go.AddComponent<RivalDriver>().Init(race, racer, profile, raceField, lateral);
             }
         }
 

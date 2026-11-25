@@ -45,7 +45,7 @@ namespace ShiftRush.UI
             if (garageButton) garageButton.onClick.AddListener(() => { if (Accepting && router) { MenuSounds.Select(); router.OpenGarage(); } });
         }
 
-        bool Accepting { get { return visibleGroup == null || (visibleGroup.alpha > 0.95f && visibleGroup.interactable); } }
+        bool Accepting { get { return !PreRaceTalk.Running && !StoryLiftOff.Running && (visibleGroup == null || (visibleGroup.alpha > 0.95f && visibleGroup.interactable)); } }
 
         void OnEnable() { Show(); }
 
@@ -78,12 +78,33 @@ namespace ShiftRush.UI
             if (goalPays) goalPays.text = StoryProgress.IsClosed(e.id) ? "PAID" : "+" + e.payout.ToString("N0");
             if (glossText) glossText.text = e.glossBonus;
             if (gritText) gritText.text = e.gritBonus;
-            bool rival = !string.IsNullOrEmpty(e.rival);
+            // Who's on the grid: "1v1 // VS KAITO" (or the field), and why, with their cars.
+            var cast = RivalCast.Instance;
+            bool named = e.opponents != null && e.opponents.Length > 0 && cast != null;
+            bool rival = named || !string.IsNullOrEmpty(e.rival);
             if (rivalCard) rivalCard.SetActive(rival);
-            if (rivalName) rivalName.text = e.rival;
-            if (rivalLine) rivalLine.text = e.rivalLine;
+            if (named)
+            {
+                var names = new System.Collections.Generic.List<string>();
+                var rides = new System.Collections.Generic.List<string>();
+                foreach (var id in e.opponents)
+                {
+                    var c = cast.Find(id); if (c == null) continue;
+                    names.Add(c.name);
+                    var rc = race != null ? race.cars.Find(x => x.id == c.carId) : null;
+                    rides.Add(c.name + " " + (rc != null ? rc.displayName.ToUpperInvariant() : c.carId.ToUpperInvariant()));
+                }
+                if (rivalName) rivalName.text = e.Matchup + "  //  VS " + (names.Count <= 2 ? string.Join(" & ", names) : names.Count + " RIVALS");
+                if (rivalLine) rivalLine.text = e.rivalLine + "\n" + string.Join("  ·  ", rides);
+            }
+            else
+            {
+                if (rivalName) rivalName.text = e.rival;
+                if (rivalLine) rivalLine.text = e.rivalLine;
+            }
             if (trackName) trackName.text = track != null ? track.displayName.ToUpperInvariant() : e.trackId.ToUpperInvariant();
-            if (trackInfo) trackInfo.text = track != null ? "3 LAPS  ·  " + track.LengthLabel + "  ·  6 CARS" : "";
+            int gridSize = named ? e.opponents.Length + 1 : 6;
+            if (trackInfo) trackInfo.text = track != null ? e.eventType + "  ·  " + track.LengthLabel + "  ·  " + gridSize + " CARS" + (e.police ? "  ·  POLICE" : "") : "";
             if (carName) carName.text = car != null ? car.displayName.ToUpperInvariant() : "";
             if (carInfo) carInfo.text = car != null ? Vehicles.CarTypes.Name(car.type) : "";
             if (photo) { photo.sprite = track != null ? track.thumbnail : null; photo.color = photo.sprite != null ? Color.white : new Color32(30, 25, 48, 255); }
@@ -98,7 +119,9 @@ namespace ShiftRush.UI
             MenuSounds.Confirm();
             // The ride to the race first (the Heavy Lifter snatches the car off the runway), then the race loads.
             var e = episode;
-            if (!StoryLiftOff.Run(e, () => StoryProgress.Play(e))) StoryProgress.Play(e);
+            // The talk first (who you're racing and why), then the ride to the race, then the race.
+            System.Action ride = () => { if (!StoryLiftOff.Run(e, () => StoryProgress.Play(e))) StoryProgress.Play(e); };
+            if (!PreRaceTalk.Run(e, ride)) ride();
         }
     }
 }

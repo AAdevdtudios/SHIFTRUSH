@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using ShiftRush.Core;
 using TMPro;
 using UnityEngine;
@@ -96,6 +97,13 @@ namespace ShiftRush.UI
             chopperHome = new Pose(chopper.position, chopper.rotation);
             parkedWasOn = parked.gameObject.activeSelf;
             parked.gameObject.SetActive(false);
+            // The briefing screen hides the set (runway, floodlights, skyline, stage lights) behind its own
+            // backdrop. The lift-off is shot on that set, so switch it back on; Restore puts it back as it was.
+            foreach (var part in SetParts)
+            {
+                var t = showroom.transform.Find(part);
+                if (t != null && !t.gameObject.activeSelf) { t.gameObject.SetActive(true); revealed.Add(t.gameObject); }
+            }
             frontRotor = FindDeep(chopper, "FrontPropeller");
             rearRotor = FindDeep(chopper, "RearPropeller");
             frontHub = frontRotor != null ? chopper.InverseTransformPoint(frontRotor.GetComponent<Renderer>().bounds.center) : Vector3.zero;
@@ -118,6 +126,9 @@ namespace ShiftRush.UI
             StartCoroutine(Play());
             return true;
         }
+
+        static readonly string[] SetParts = { "Showcase Set", "Floor", "Key", "Rim Magenta", "Rim Cyan", "Glow Ring" };
+        readonly List<GameObject> revealed = new List<GameObject>();
 
         void Pause(Behaviour b) { if (b != null && b.enabled) { b.enabled = false; paused.Add(b); } }
 
@@ -396,7 +407,9 @@ namespace ShiftRush.UI
                 // Slow motion round the hook.
                 float speed = t > HookAt - 0.15f && t < HookAt + 0.55f ? 0.28f : 1f;
                 t += dt * speed;
-                if (SkipPressed()) skipping = true;
+                // Ignore keys for the first moment: the press that started this (Go Live, or the last line of the
+                // call before it) would otherwise skip the whole thing on frame one.
+                if (t > 0.6f && SkipPressed()) skipping = true;
                 Step(dt * speed, dt);
                 yield return null;
             }
@@ -437,6 +450,8 @@ namespace ShiftRush.UI
         void Restore()
         {
             if (parked != null) parked.gameObject.SetActive(parkedWasOn);
+            foreach (var g in revealed) if (g != null) g.SetActive(false);
+            revealed.Clear();
             if (chopper != null) Destroy(chopper.gameObject);
             cam.transform.SetParent(camParentHome, true);
             cam.transform.SetPositionAndRotation(camHome.position, camHome.rotation);

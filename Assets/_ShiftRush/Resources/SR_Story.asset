@@ -22,10 +22,10 @@ MonoBehaviour:
     number: 1
     chapter: 0
     title: FIRST DROP
-    eventType: RACE
+    eventType: LEAGUE NIGHT
     trackId: alpine
-    synopsis: The crew's plane drops you over Alpine Pass on night one. Land it,
-      find the line, finish the run.
+    synopsis: Night one on Alpine Pass. Five names already on the Channel 13 board,
+      and you're the sixth.
     slimLine: Night one. Nobody expects anything. Finish the lap and they'll remember
       the name.
     kowalNote: Unregistered aircraft over the pass again.
@@ -34,142 +34,243 @@ MonoBehaviour:
     glossBonus: Hold one long drift
     gritBonus: Land one clean knock
     rival: 
-    rivalLine: 
-    rivalPace: 1
+    rivalLine: The whole board. Finish anywhere and you're on it.
+    rivalPace: 0.92
     playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - kaito
+    - hex
+    - mamba
+    - diesel
+    - nova
+    heat: 0.85
+    talk:
+    - speaker: SLIM
+      text: Night one. Five drivers already on the board. You're the sixth name.
+    - speaker: DEE
+      text: Nobody expects anything from you. Use that.
+    - speaker: YOU
+      text: Then I'll give them something to expect.
     redacted: 0
     teaser: Hex wants to see what you do with a car you didn't build.
   - id: ep02
     number: 2
     chapter: 0
     title: SHOP TEST
-    eventType: RACE
+    eventType: TEST DRIVE
     trackId: valley
-    synopsis: Hex wants to see what you do with a car you didn't build. Glacier Valley,
-      the whole crew on the pit wall.
+    synopsis: 'Hex built half the car you''re driving. Glacier Valley, one on one:
+      beat her and you keep the keys.'
     slimLine: Hex is watching from the wall. Don't scratch her paint. Actually, do.
       Chat loves it.
     kowalNote: Same black car on three feeds.
-    finishWithin: 4
+    finishWithin: 1
     payout: 800
     glossBonus: Two drifts past tier 1
-    gritBonus: Knock a rival into the snow
-    rival: 
-    rivalLine: 
-    rivalPace: 1
+    gritBonus: Knock Hex into the snow
+    rival: HEX
+    rivalLine: Builds the cars. Wants to see if you deserve one.
+    rivalPace: 0.95
     playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - hex
+    heat: 0.9
+    talk:
+    - speaker: hex
+      text: That car you're in? Half of it came out of my shop.
+    - speaker: hex
+      text: Finish ahead of me and it's yours to keep driving.
+    - speaker: YOU
+      text: And if I'm behind?
+    - speaker: hex
+      text: Then it comes back to the shop. With you walking.
     redacted: 0
     teaser: Slim puts the rookie on the stream. Vex is waiting.
   - id: ep03
     number: 3
     chapter: 0
     title: ON AIR
-    eventType: RACE
+    eventType: LEAGUE NIGHT
     trackId: alpine
-    synopsis: Slim puts the rookie on the stream for the first time. Alpine Pass,
-      six cars, the league watching.
+    synopsis: Slim puts you on the stream for the first time. Alpine Pass, the league
+      champion on the grid.
     slimLine: Forty thousand people are about to watch a test driver race the league
-      champ. No pressure, rookie. Actually, all of the pressure.
+      champ. No pressure, rookie.
     kowalNote: Who is driving that car?
     finishWithin: 3
     payout: 1200
     glossBonus: Hold two tier 2 drifts
     gritBonus: Knock Vex twice
-    rival: VEX
-    rivalLine: Champion. Grips, never drifts.
-    rivalPace: 1.04
+    rival: 
+    rivalLine: Vex leads the board. Grips, never drifts.
+    rivalPace: 1
     playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - vex
+    - kaito
+    - hex
+    - mamba
+    - nova
+    heat: 0.95
+    talk:
+    - speaker: SLIM
+      text: Forty thousand watching. Vex is on the grid tonight.
+    - speaker: vex
+      text: Rookie. Stay out of my mirrors.
+    - speaker: YOU
+      text: Check them anyway.
     redacted: 0
     teaser: A second rookie shows up on Glacier Valley. Nobody invited him.
   - id: ep04
     number: 4
     chapter: 0
     title: KAITO
-    eventType: DUEL
+    eventType: BEEF
     trackId: valley
-    synopsis: A second rookie shows up on Glacier Valley. Nobody invited him, and
-      he drives like he has nothing to lose.
+    synopsis: A second rookie says the spot is his. Glacier Valley, one on one, loser
+      stops calling themselves the rookie.
     slimLine: Kaito says he's the real rookie. Chat is split. Settle it.
     kowalNote: Second driver. Same plane. Who's paying them?
-    finishWithin: 2
+    finishWithin: 1
     payout: 1500
     glossBonus: Out-drift Kaito
     gritBonus: Put Kaito in a wall
     rival: KAITO
-    rivalLine: Cyan hoodie. Drives everything sideways.
-    rivalPace: 1.06
+    rivalLine: Says he's the real rookie. Chat is split.
+    rivalPace: 1.02
     playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - kaito
+    heat: 1
+    talk:
+    - speaker: kaito
+      text: Two rookies is one too many.
+    - speaker: kaito
+      text: Glacier Valley. Loser stops calling themselves the rookie.
+    - speaker: YOU
+      text: Bring a coat. It's a long walk home from second.
     redacted: 0
-    teaser: Highland roads, real ones. The feed goes public.
+    teaser: Kaito brought friends to the city.
   - id: ep05
     number: 5
     chapter: 1
     title: OPEN ROAD
-    eventType: RACE
-    trackId: stormbreak
-    synopsis: Stormbreak Highlands, a real road with a real view. The Feed wants
-      speed and a little chaos.
+    eventType: CREW BATTLE
+    trackId: downtown
+    synopsis: Kaito didn't take losing well. Downtown Neon, him and his crew against
+      you, and the police are on the radio.
     slimLine: We're on a public road now. Smile for the traffic cameras. Kidding.
       Don't.
     kowalNote: Feed is public now. Clips everywhere.
-    finishWithin: 3
+    finishWithin: 1
     payout: 1600
     glossBonus: Clean lap, no knocks
     gritBonus: Five knocks in one race
     rival: 
-    rivalLine: 
-    rivalPace: 1
+    rivalLine: Kaito brought his crew. Mamba blocks, Diesel rams.
+    rivalPace: 1.03
     playable: 1
+    police: 1
+    policeCars: 2
+    opponents:
+    - kaito
+    - mamba
+    - diesel
+    heat: 1
+    talk:
+    - speaker: mamba
+      text: Kaito sent us.
+    - speaker: diesel
+      text: Nothing personal. Somebody paid for your bumper.
+    - speaker: DEE
+      text: Three of them, one of you, and the cops are already listening. Go.
     redacted: 0
-    teaser: 'Faction night: the Feed picks the event.'
+    teaser: 'Faction night: the Feed picks sides.'
   - id: ep06
     number: 6
     chapter: 1
     title: FACTION NIGHT
-    eventType: VOTE
-    trackId: alpine
-    synopsis: 'The Feed votes on tonight''s event: a drift showcase for GLOSS or
-      a wreck run for GRIT.'
+    eventType: SHOWCASE
+    trackId: stormbreak
+    synopsis: 'The Feed split in two: GLOSS wants drifts, GRIT wants wrecks. Stormbreak
+      Highlands, and Nova tops the board.'
     slimLine: Chat is choosing tonight. I'm just the guy with the camera.
     kowalNote: Two fan camps. Both love the rookie.
     finishWithin: 3
     payout: 1800
-    glossBonus: Win the drift showcase
-    gritBonus: Win the wreck run
+    glossBonus: Drift the switchbacks
+    gritBonus: Wreck the crates
     rival: 
-    rivalLine: 
-    rivalPace: 1
-    playable: 0
+    rivalLine: Nova is top of the board. Thinks you're beneath her.
+    rivalPace: 1.03
+    playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - nova
+    - hex
+    - kaito
+    - mamba
+    - diesel
+    heat: 1.03
+    talk:
+    - speaker: SLIM
+      text: GLOSS wants drifts. GRIT wants wrecks. Give them both.
+    - speaker: nova
+      text: Top of the board, rookie. Look up.
+    - speaker: YOU
+      text: Looking. Coming.
     redacted: 0
-    teaser: 
+    teaser: Nova wants it one on one.
   - id: ep07
     number: 7
     chapter: 1
-    title: PORTAL RUN
-    eventType: PORTAL
-    trackId: alpine
-    synopsis: SHIFT through the portals into the challenge worlds and come back with
-      the lead.
-    slimLine: Hex calls it spell casting. I call it great television.
-    kowalNote: Cars vanish off the road and come back ahead.
-    finishWithin: 3
+    title: TOP OF THE BOARD
+    eventType: SPRINT
+    trackId: valley
+    synopsis: Nova calls you out for the top spot. Glacier Valley, one on one, against
+      the fastest car in the league.
+    slimLine: Fastest car in the league against the rookie. I'd bet on the car. Prove
+      me wrong.
+    kowalNote: Two cars, one spot.
+    finishWithin: 1
     payout: 2000
-    glossBonus: Clear a world without a scratch
-    gritBonus: Wreck your way through
-    rival: 
-    rivalLine: 
-    rivalPace: 1
-    playable: 0
+    glossBonus: Out-drift Nova
+    gritBonus: Make Nova spin
+    rival: NOVA
+    rivalLine: Fastest car in the league. Makes mistakes when pushed.
+    rivalPace: 1.04
+    playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - nova
+    heat: 1.05
+    talk:
+    - speaker: nova
+      text: Fastest car in the league. You've got a turn signal and hope.
+    - speaker: YOU
+      text: I've got the line. You've got to brake sometime.
+    - speaker: nova
+      text: We'll see who brakes first.
     redacted: 0
-    teaser: 
+    teaser: Vex calls you out live.
   - id: ep08
     number: 8
     chapter: 1
     title: CALLED OUT
-    eventType: RACE
+    eventType: BEEF
     trackId: alpine
-    synopsis: Vex calls the rookie out on stream. Back to Alpine Pass, and this time
-      only first place counts.
+    synopsis: Vex calls you out on stream. Back to Alpine Pass, one on one, and the
+      winner keeps the crew.
     slimLine: Vex called you out live. You know what happens now.
     kowalNote: Vex left Grip Pro. Why?
     finishWithin: 1
@@ -178,85 +279,157 @@ MonoBehaviour:
     gritBonus: Knock Vex three times
     rival: VEX
     rivalLine: Wants the crew back. Wants you gone.
-    rivalPace: 1.08
+    rivalPace: 1.06
     playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - vex
+    heat: 1.07
+    talk:
+    - speaker: vex
+      text: I put Grip Pro on the map before you had a licence.
+    - speaker: vex
+      text: Alpine Pass. Winner keeps the crew.
+    - speaker: DEE
+      text: She's not bluffing.
+    - speaker: YOU
+      text: Neither am I.
     redacted: 0
-    teaser: The police find the airstrip.
+    teaser: The police find the highland road.
   - id: ep09
     number: 9
     chapter: 2
     title: INTERCEPT
-    eventType: INTERCEPT
+    eventType: HEAT
     trackId: stormbreak
-    synopsis: 
-    slimLine: 
-    kowalNote: 
-    finishWithin: 3
+    synopsis: The police found the highland route. Nova and Kaito on the grid, units
+      on your tail the whole way.
+    slimLine: They're on the highland road. Don't stop for anything.
+    kowalNote: Units deployed to Stormbreak.
+    finishWithin: 2
     payout: 2800
     glossBonus: Shake units with drifts
     gritBonus: Spin out the police
     rival: 
-    rivalLine: 
-    rivalPace: 1
-    playable: 0
-    redacted: 1
-    teaser: 
+    rivalLine: Nova and Kaito, and the police are on the highland road.
+    rivalPace: 1.05
+    playable: 1
+    police: 1
+    policeCars: 2
+    opponents:
+    - nova
+    - kaito
+    heat: 1.07
+    talk:
+    - speaker: SLIM
+      text: Units on the highland road. Don't stop for anything.
+    - speaker: kaito
+      text: Truce till the cops are gone?
+    - speaker: nova
+      text: No truce. Race.
+    redacted: 0
+    teaser: Diesel's back. So are the police.
   - id: ep10
     number: 10
     chapter: 2
     title: THE RAID
-    eventType: RACE
-    trackId: valley
-    synopsis: 
-    slimLine: 
-    kowalNote: 
-    finishWithin: 3
+    eventType: WRECK RUN
+    trackId: downtown
+    synopsis: The police raid the harbour mid race. Diesel's been paid again, and
+      he brought company.
+    slimLine: They found the warehouse. Doesn't matter. Drive.
+    kowalNote: Raid on the harbour. Units on every corner.
+    finishWithin: 2
     payout: 3000
-    glossBonus: 
-    gritBonus: 
+    glossBonus: Shake them with a drift
+    gritBonus: Knock a cop car
     rival: 
-    rivalLine: 
-    rivalPace: 1
-    playable: 0
-    redacted: 1
-    teaser: 
+    rivalLine: Diesel's paid to wreck you. The harbour's crawling with cops.
+    rivalPace: 1.06
+    playable: 1
+    police: 1
+    policeCars: 3
+    opponents:
+    - diesel
+    - mamba
+    - hex
+    heat: 1.09
+    talk:
+    - speaker: diesel
+      text: Same job as last time. Better pay.
+    - speaker: hex
+      text: I'm only here to see my car survive.
+    - speaker: SLIM
+      text: Raid on the harbour. Make it loud.
+    redacted: 0
+    teaser: Out past the city, the signal drops.
   - id: ep11
     number: 11
     chapter: 2
     title: SIGNAL LOST
-    eventType: RACE
-    trackId: stormbreak
-    synopsis: 
-    slimLine: 
-    kowalNote: 
-    finishWithin: 3
+    eventType: ENDURANCE
+    trackId: countyline
+    synopsis: Out past the city the stream drops to one bar. County Line, six kilometres
+      a lap, everyone left on the board.
+    slimLine: Signal's bad out here. If I go quiet, keep driving.
+    kowalNote: Lost the feed somewhere past the river.
+    finishWithin: 2
     payout: 3200
-    glossBonus: 
-    gritBonus: 
+    glossBonus: Drift the woods descent
+    gritBonus: Knock a rival off the ridge
     rival: 
-    rivalLine: 
-    rivalPace: 1
-    playable: 0
-    redacted: 1
-    teaser: 
+    rivalLine: Six kilometres a lap. Everyone left on the board.
+    rivalPace: 1.07
+    playable: 1
+    police: 0
+    policeCars: 2
+    opponents:
+    - vex
+    - nova
+    - kaito
+    - hex
+    - mamba
+    heat: 1.1
+    talk:
+    - speaker: SLIM
+      text: Signal's bad out here. If I go quiet, keep driving.
+    - speaker: vex
+      text: Nowhere to hide on the ridge.
+    - speaker: YOU
+      text: Good. I want them to see.
+    redacted: 0
+    teaser: Last one.
   - id: ep12
     number: 12
     chapter: 2
     title: THE CATCH
-    eventType: FINALE
+    eventType: FINAL
     trackId: alpine
-    synopsis: 'The finale: beat Vex, outrun Kowal''s roadblock and make the plane''s
-      catch.'
-    slimLine: 
-    kowalNote: 
+    synopsis: 'The final: Vex, one on one, on Alpine Pass with the police closing
+      in. Only first place makes the catch.'
+    slimLine: Last one. Win it and the chopper's waiting.
+    kowalNote: Roadblock planned on the pass.
     finishWithin: 1
     payout: 5000
     glossBonus: Win it clean
     gritBonus: Win it loud
     rival: VEX
-    rivalLine: 
+    rivalLine: One last race. Winner takes the board.
     rivalPace: 1.1
-    playable: 0
+    playable: 1
+    police: 1
+    policeCars: 3
+    opponents:
+    - vex
+    heat: 1.15
+    talk:
+    - speaker: SLIM
+      text: Last one. Win it and the chopper's waiting.
+    - speaker: vex
+      text: Just you and me. And them.
+    - speaker: YOU
+      text: Then let's give them a show.
     redacted: 0
     teaser: 
   liftChopper: {fileID: 5034078741687785970, guid: 854db7b0d7d899e4cbb730dbd0694be7, type: 3}

@@ -256,9 +256,31 @@ namespace ShiftRush.Race
             }
         }
 
+        // The time the race first reached each 10 m of distance (that's the leader's timeline).
+        readonly System.Collections.Generic.Dictionary<int, float> splits = new System.Collections.Generic.Dictionary<int, float>();
+        int furthest = -1;
+
+        int Bucket(RaceManager.Racer r)
+        {
+            // Behind the start line on the grid the lap position reads as nearly a full lap: count it as zero.
+            float d = r.finished ? race.TotalLaps * race.Line.length : !r.started ? 0f : (r.lap - 1) * race.Line.length + r.progress;
+            return Mathf.FloorToInt(d / 10f);
+        }
+
+        void RecordSplits()
+        {
+            if (race.CurrentState != RaceManager.State.Racing) return;
+            foreach (var r in race.Racers)
+            {
+                int b = Bucket(r);
+                while (furthest < b) { furthest++; splits[furthest] = Time.time; }
+            }
+        }
+
         void UpdateRows()
         {
             if (rows == null) return;
+            RecordSplits();
             var leader = race.Racers.Count > 0 ? race.Racers[0] : null;
             for (int i = 0; i < rows.Length; i++)
             {
@@ -270,11 +292,13 @@ namespace ShiftRush.Race
                 row.rank.text = (i + 1).ToString();
                 row.name.text = r.name;
                 if (i == 0) row.gap.text = "LEADER";
+                else if (r.finished && leader.finished) row.gap.text = "+" + (r.finishTime - leader.finishTime).ToString("0.0");
                 else
                 {
-                    float metres = leader.Score(race.Line.length) - r.Score(race.Line.length);
-                    float mps = Mathf.Max(10f, Mathf.Abs(r.vehicle.SpeedKmh) / 3.6f);
-                    row.gap.text = "+" + (metres / mps).ToString("0.0");
+                    // Real time behind: how long ago the leader was where this car is now (not distance over this
+                    // car's speed, which jumps about when it slows for a corner or crashes).
+                    float t;
+                    row.gap.text = splits.TryGetValue(Bucket(r), out t) ? "+" + Mathf.Max(0f, Time.time - t).ToString("0.0") : "";
                 }
                 if (row.highlight != null) row.highlight.enabled = r.isPlayer;
                 row.name.color = r.isPlayer ? Color.white : steel;
@@ -392,7 +416,7 @@ namespace ShiftRush.Race
             bool again = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) || (pad != null && pad.buttonSouth.wasPressedThisFrame);
             bool menu = (kb != null && kb.mKey.wasPressedThisFrame) || (pad != null && pad.buttonNorth.wasPressedThisFrame);
             if (again) RaceAgain();
-            else if (menu) SceneLoader.Load(MenuScene, "MAIN MENU", "SHIFT//RUSH", "");
+            else if (menu) SceneLoader.Load(MenuScene, "MAIN MENU", "GRIP PRO", "");
         }
 
         static void RaceAgain()

@@ -31,6 +31,8 @@ namespace ShiftRush.EditorTools
             var cuts = Object.FindObjectsByType<ShortcutPath>(FindObjectsSortMode.None);
 
             var root = new GameObject("Track Walls");
+            int propLayer = LayerMask.NameToLayer("RCCP_Prop");
+            if (propLayer >= 0) root.layer = propLayer; // the chase camera ignores this layer (see RaceManager)
             var mat = WallMaterial();
             var mesh = new Mesh { name = "Mesh_TrackWalls_" + UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name, indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
             var verts = new List<Vector3>(); var tris = new List<int>();

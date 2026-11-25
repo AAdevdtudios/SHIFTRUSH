@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7d70090ecb72490ea96a93faf9dd512, type: 3}
+  m_Name: SR_Cast
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Core.RivalCast
+  characters:
+  - id: kaito
+    name: KAITO
+    carId: tetsuo
+    color: {r: 0.18, g: 0.95, b: 1, a: 1}
+    style: Drifts everything
+    bio: The other rookie. Cyan hoodie, no fear, no plan. Says the rookie spot was
+      his first.
+    grip: 1.12
+    topSpeedKmh: 235
+    aggression: 0.5
+    driftSkill: 0.95
+    shortcutChance: 0.6
+  - id: hex
+    name: HEX
+    carId: fireburst
+    color: {r: 1, g: 0.55, b: 0.1, a: 1}
+    style: Clean and technical
+    bio: Grip Pro's builder. Half the cars on the grid went through her shop. Races
+      to see who deserves them.
+    grip: 1.3
+    topSpeedKmh: 230
+    aggression: 0.15
+    driftSkill: 0.4
+    shortcutChance: 0.2
+  - id: vex
+    name: VEX
+    carId: blackout
+    color: {r: 0.95, g: 0.15, b: 0.25, a: 1}
+    style: Grips, never drifts
+    bio: League champion. Left the Grip Pro crew and wants it back, without you in
+      it.
+    grip: 1.4
+    topSpeedKmh: 245
+    aggression: 0.45
+    driftSkill: 0.1
+    shortcutChance: 0.3
+  - id: diesel
+    name: DIESEL
+    carId: phobos
+    color: {r: 1, g: 0.85, b: 0.1, a: 1}
+    style: Rams. Paid to.
+    bio: Heavy car, heavy hands. Takes money to put people in walls and doesn't ask
+      who's paying.
+    grip: 0.9
+    topSpeedKmh: 215
+    aggression: 0.85
+    driftSkill: 0.2
+    shortcutChance: 0.5
+  - id: nova
+    name: NOVA
+    carId: predator
+    color: {r: 0.65, g: 0.35, b: 1, a: 1}
+    style: Fastest car, makes mistakes
+    bio: Top of the Channel 13 board. Fastest thing in the league, and she knows
+      it.
+    grip: 1.2
+    topSpeedKmh: 262
+    aggression: 0.3
+    driftSkill: 0.55
+    shortcutChance: 0.4
+  - id: mamba
+    name: MAMBA
+    carId: zephyr
+    color: {r: 0.3, g: 0.95, b: 0.4, a: 1}
+    style: Blocks, dirty lines
+    bio: 'Kaito''s crew. Does the dirty work: blocks the inside, shuts doors, never
+      says sorry.'
+    grip: 1.22
+    topSpeedKmh: 232
+    aggression: 0.8
+    driftSkill: 0.45
+    shortcutChance: 0.7

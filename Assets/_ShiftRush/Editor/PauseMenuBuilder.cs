@@ -70,7 +70,7 @@ namespace ShiftRush.EditorTools
             var stripe = Img(root.transform, "Title Stripe", slant, Magenta);
             stripe.type = Image.Type.Sliced;
             Place(stripe.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(126, -96), new Vector2(140, 14));
-            var trackName = Txt(root.transform, "Subtitle", "SHIFT//RUSH", fontBold, 22, Steel, TextAlignmentOptions.Left);
+            var trackName = Txt(root.transform, "Subtitle", "GRIP PRO", fontBold, 22, Steel, TextAlignmentOptions.Left);
             trackName.characterSpacing = 14;
             Place(trackName.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(128, -262), new Vector2(900, 40));
 

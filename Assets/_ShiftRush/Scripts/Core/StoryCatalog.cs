@@ -41,10 +41,32 @@ namespace ShiftRush.Core
             public float rivalPace = 1f;
             [Tooltip("Off = not filmed yet: shows as coming soon.")]
             public bool playable = true;
+            [Tooltip("Police join this race and chase the player (bust meter).")]
+            public bool police;
+            [Range(1, 5)] public int policeCars = 2;
+
+            [Header("Who you race")]
+            [Tooltip("Cast ids (SR_Cast) on the grid with you. Empty = the generic field.")]
+            public string[] opponents = new string[0];
+            [Tooltip("How hard tonight is: rivals' pace and how much they push from behind. 1 = normal.")]
+            [Range(0.8f, 1.3f)] public float heat = 1f;
+            [Tooltip("Before Go Live: a short call or talk, line by line.")]
+            public List<TalkLine> talk = new List<TalkLine>();
+
+            /// <summary>"1v1", "1v3", "1v5".</summary>
+            public string Matchup { get { return opponents != null && opponents.Length > 0 ? "1v" + opponents.Length : "1v5"; } }
             [Tooltip("Shown instead of the title until the episode is reached.")]
             public bool redacted;
             [Tooltip("Next episode's teaser after this one closes.")]
             public string teaser = "";
+        }
+
+        [System.Serializable]
+        public class TalkLine
+        {
+            [Tooltip("Who's talking: a cast id, SLIM, DEE, YOU, MASK ONE...")]
+            public string speaker = "SLIM";
+            [TextArea] public string text = "";
         }
 
         public string actTitle = "ACT 1 · THE LEAGUE";

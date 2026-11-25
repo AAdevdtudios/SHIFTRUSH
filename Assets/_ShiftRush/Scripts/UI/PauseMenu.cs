@@ -115,7 +115,7 @@ namespace ShiftRush.UI
         public void BackToMenu()
         {
             Unfreeze();
-            SceneLoader.Load(MenuScene, "SHIFT//RUSH", "BACK TO THE GARAGE", "");
+            SceneLoader.Load(MenuScene, "GRIP PRO", "BACK TO THE GARAGE", "");
         }
 
         public void OpenOptions() { inOptions = true; }

@@ -51,6 +51,12 @@ namespace ShiftRush.Race
         public int TotalLaps { get { return Line != null ? Line.laps : 3; } }
         public float RaceTime { get { return CurrentState == State.Countdown ? 0f : (Player != null && Player.finished ? Player.finishTime : Time.time - startTime); } }
         public int CountdownNumber { get; private set; }  // 3, 2, 1, then 0 = GO
+
+        /// <summary>
+        /// While true the countdown waits (a story race's chopper drop is running). The drop ends it with
+        /// <see cref="StartNow"/>: landing goes straight into the race, no 3-2-1.
+        /// </summary>
+        public bool HoldStart { get; set; }
         public bool ShowGo { get { return CurrentState == State.Racing && Time.time - startTime < goHold; } }
         public Racer Player { get; private set; }
         public readonly List<Racer> Racers = new List<Racer>();
@@ -68,6 +74,11 @@ namespace ShiftRush.Race
         void Awake()
         {
             Current = this;
+            // The invisible track walls live on RCC's prop layer: cars bounce off them, but the chase camera
+            // doesn't take them for an obstacle and jump in close when you scrape along one.
+            var walls = GameObject.Find("Track Walls");
+            int propLayer = LayerMask.NameToLayer("RCCP_Prop");
+            if (walls != null && propLayer >= 0) foreach (var t in walls.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = propLayer;
             Line = GetComponent<RaceLine>();
             if (Line == null) Line = FindFirstObjectByType<RaceLine>();
             BestLap = PlayerPrefs.GetFloat(BestKey, 0f);
@@ -126,6 +137,11 @@ namespace ShiftRush.Race
             foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
                 if (mb is IVehicle v) { AddRacer(v, "YOU", true); break; }
             RaceGrid.Fill(this, Player); // grid slots and the rivals
+            // With a full field there are more car sounds than voices: when Unity has to drop some, never the
+            // player's engine. Lower number = higher priority.
+            foreach (var r in Racers)
+                foreach (var src in r.vehicle.Transform.GetComponentsInChildren<AudioSource>(true))
+                    src.priority = r.isPlayer ? 16 : 200;
             CurrentState = State.Countdown;
             countdownStart = Time.time;
             CountdownNumber = -1;
@@ -154,6 +170,7 @@ namespace ShiftRush.Race
 
             if (CurrentState == State.Countdown)
             {
+                if (HoldStart) { countdownStart = Time.time; return; }
                 foreach (var r in Racers) r.vehicle.SetControllable(false);
                 int n = 3 - Mathf.FloorToInt((Time.time - countdownStart - 0.6f) / countdownStep);
                 if (Time.time - countdownStart < 0.6f) n = 4; // a breath before "3"
@@ -171,6 +188,18 @@ namespace ShiftRush.Race
 
             foreach (var r in Racers.ToArray()) Track(r); // a finish re-sorts the list mid-loop
             Racers.Sort((a, b) => b.Score(Line.length).CompareTo(a.Score(Line.length)));
+        }
+
+        /// <summary>Skips the countdown and starts the race now. Cars the caller still holds stay held: it frees them itself.</summary>
+        public void StartNow(System.Func<Racer, bool> freeNow = null)
+        {
+            if (CurrentState != State.Countdown) return;
+            HoldStart = false;
+            CountdownNumber = 0;
+            CurrentState = State.Racing;
+            startTime = Time.time;
+            foreach (var r in Racers) { r.lapStartTime = startTime; if (freeNow == null || freeNow(r)) r.vehicle.SetControllable(true); }
+            CountdownTick?.Invoke(0);
         }
 
         /// <summary>Stop tracking a racer while it is away (SHIFT world); on return, pick up where it reappears,

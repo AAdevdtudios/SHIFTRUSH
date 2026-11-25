@@ -29,6 +29,10 @@ namespace ShiftRush.Race
             body.mass = mass;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             foreach (var propCollider in propColliders) propCollider.isTrigger = true;
+            // RCC's prop layer: cars still hit it, but the chase camera doesn't treat it (or the debris once it's
+            // smashed) as a wall to dodge, so it stops snapping in close every time you plough through something.
+            int propLayer = LayerMask.NameToLayer("RCCP_Prop");
+            if (propLayer >= 0) foreach (var t in GetComponentsInChildren<Transform>(true)) t.gameObject.layer = propLayer;
         }
 
         void OnTriggerEnter(Collider other)

@@ -283,3 +283,29 @@ MonoBehaviour:
     - Roadside crates, barrels and cones will give way at speed.
     - The ridge descent is faster than it looks.
     - 'SHIFT ramp: press Shift as the diamonds meet.'
+  - id: downtown
+    displayName: Downtown Neon
+    scene: Track_DowntownNeon
+    description: 'Our city at full width: the neon boulevard, the harbour, the overpass,
+      the market chicane and the metro tunnel.'
+    lengthKm: 4.3
+    thumbnail: {fileID: 21300000, guid: 9c1c293c260aa4e45ba5d73171f3b8f9, type: 3}
+    map: {fileID: 21300000, guid: d0fe74982968b4c2b8408bcfe2974324, type: 3}
+    loadingTips:
+    - The boulevard is the drop zone. Land straight and floor it.
+    - The container hairpin at the end of the harbour is the hardest stop on the
+      lap.
+    - The chicane is narrow. That's where the cops box you in.
+    - The tunnel hides you from the cops for a few seconds.
+  - id: countyline
+    displayName: County Line
+    scene: Track_CountyLine
+    description: 'Six kilometres of countryside: farm straights, the river bridge,
+      the lake climb and a ridge-top run.'
+    lengthKm: 5.8
+    thumbnail: {fileID: 21300000, guid: 3633d4596002c41beb43c9fa5dcffb36, type: 3}
+    map: {fileID: 21300000, guid: b4fc0c21103034cd7bbf76a5b83cf8c6, type: 3}
+    loadingTips:
+    - The valley straight is the longest in the game. Save nitro for it.
+    - The ridge road narrows past the lake. Brake before the crest.
+    - The woods descent tightens near the bottom.

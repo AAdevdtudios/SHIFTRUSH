@@ -43,7 +43,8 @@ namespace ShiftRush.Race
         int dodgeDir, driftCornerAt = -1000, driftDir;
         bool driftThisCorner;
         float driftSince;
-        const float RollGap = 2.5f; // seconds between a rival's own rolls
+        const float RollGap = 4f; // seconds between a rival's own rolls
+        float raceStartedAt;
 
         public void Init(RaceManager race, RaceManager.Racer me, RivalField.Rival profile, RivalField field, float startLane)
         {
@@ -87,14 +88,15 @@ namespace ShiftRush.Race
             if (race == null || line == null || input == null) return;
             float dt = Time.fixedDeltaTime;
 
-            if (race.CurrentState == RaceManager.State.Countdown) { input.SetDriverInput(0f, 0f, 1f, 1f, false); return; }
+            if (race.CurrentState == RaceManager.State.Countdown) { input.SetDriverInput(0f, 0f, 1f, 1f, false); raceStartedAt = Time.time; return; }
 
             Vector3 p = transform.position;
             Vector3 vel = vehicle.Body != null ? vehicle.Body.linearVelocity : Vector3.zero;
             float speed = new Vector3(vel.x, 0f, vel.z).magnitude;
             nearest = line.Nearest(p, nearest);
             float d = line.distances[nearest];
-            float sqrtGrip = Mathf.Sqrt(profile.grip);
+            // Corner speeds come from the line's curvature at 1 g; real cars hold a bit less, so keep a margin.
+            float sqrtGrip = Mathf.Sqrt(profile.grip * 0.82f);
             float look = Mathf.Clamp(6f + speed * 0.5f, 9f, 42f);
 
             // ---- where to aim, and how fast that part of the road can be taken
@@ -118,7 +120,11 @@ namespace ShiftRush.Race
                 float td = d + look;
                 int ti = line.IndexAt(td);
                 target = line.PointAt(td) + line.Right(ti) * lane;
-                for (int k = 0; k < 4; k++) vLimit = Mathf.Min(vLimit, line.CornerSpeed(nearest + k) * sqrtGrip);
+                // Anticipate: everything within reaction distance (about half a second) ahead, not just the next
+                // few points. The line's speeds already carry the braking needed for what comes after.
+                float reach = Mathf.Max(12f, speed * 0.55f);
+                for (float ahead = 0f; ahead <= reach; ahead += 4f)
+                    vLimit = Mathf.Min(vLimit, line.CornerSpeed(line.IndexAt(d + ahead)) * sqrtGrip);
             }
 
             // ---- rubber band: a little help from behind, a little drag out front
@@ -139,14 +145,23 @@ namespace ShiftRush.Race
             if (drift != null && drift.Drifting && speed > 3f)
                 ang = Vector3.SignedAngle(new Vector3(vel.x, 0f, vel.z), Vector3.ProjectOnPlane(target - p, Vector3.up), Vector3.up);
             float steer = Mathf.Clamp(ang / MaxSteerAngle, -1f, 1f);
-            steerSmooth = Mathf.MoveTowards(steerSmooth, steer, dt * 6f);
+            // Yaw damping: if the car is already rotating towards the target, ease off, so it doesn't weave.
+            float yawRate = vehicle.Body != null ? vehicle.Body.angularVelocity.y : 0f;
+            if (drift == null || !drift.Drifting) steer -= yawRate * Mathf.Lerp(0.05f, 0.22f, Mathf.InverseLerp(10f, 50f, speed));
+            // Less lock at speed: small corrections on the straights, full lock only in slow corners.
+            steer *= Mathf.Lerp(1f, 0.55f, Mathf.InverseLerp(25f, 65f, speed));
+            steer = Mathf.Clamp(steer, -1f, 1f);
+            steerSmooth = Mathf.MoveTowards(steerSmooth, steer, dt * 5f);
 
             // ---- throttle and brake
             float err = vLimit - speed, throttle, brake = 0f;
             if (err > 1.5f) throttle = 1f;
             else if (err > -1f) throttle = Mathf.Lerp(0.3f, 0.9f, (err + 1f) / 2.5f);
-            else { throttle = 0f; brake = Mathf.Clamp01(-err * 0.12f); }
+            else { throttle = 0f; brake = Mathf.Clamp01(-err * 0.35f); } // firm: a few m/s over is a real stop
             if (Mathf.Abs(steerSmooth) > 0.8f && speed > 25f) throttle *= 0.6f;
+            // Traction: sliding sideways without meaning to drift, ease off until the tyres bite again.
+            float slide = Mathf.Abs(Vector3.Dot(vel, transform.right));
+            if ((drift == null || !drift.Drifting) && slide > 4f) throttle *= Mathf.Clamp01(1.4f - slide * 0.1f);
 
             // ---- nitro: earned on SHIFT ramps, fired on straights
             CheckRamps(p);
@@ -205,6 +220,10 @@ namespace ShiftRush.Race
                 return;
             }
             if (Time.time < nextMoveCheck || Time.time - lastRollAt < RollGap || speed < 12f) return;
+            // Never mid-corner: a roll there throws the car off the road and looks like a crash.
+            if (Mathf.Abs(steerSmooth) > 0.25f) return;
+            // Not while the pack is still bunched up from the start: rolls there tangle two cars and both stop.
+            if (Time.time - raceStartedAt < 8f) return;
             nextMoveCheck = Time.time + 0.25f;
             if (drift != null && drift.Drifting) return;
 
@@ -216,13 +235,13 @@ namespace ShiftRush.Race
                 if (Mathf.Abs(rel.z) < 2.5f && Mathf.Abs(rel.x) > 1.8f && Mathf.Abs(rel.x) < 5.5f)
                 {
                     int dir = rel.x > 0f ? 1 : -1;
-                    if (Random.value < profile.aggression * 0.25f && RoomToRoll(p, dir) && moves.TryLeap(dir)) { lastRollAt = Time.time; return; }
+                    if (Random.value < profile.aggression * 0.08f && RoomToRoll(p, dir) && moves.TryLeap(dir)) { lastRollAt = Time.time; return; }
                 }
                 // Just ahead and slower: forward roll into them.
                 else if (rel.z > 3f && rel.z < 9f && Mathf.Abs(rel.x) < 1.6f)
                 {
                     float theirs = r.vehicle.Body != null ? Vector3.Dot(r.vehicle.Body.linearVelocity, transform.forward) : speed;
-                    if (speed - theirs > 3f && Random.value < profile.aggression * 0.2f && moves.TryLeap(0)) { lastRollAt = Time.time; return; }
+                    if (speed - theirs > 3f && speed > 18f && Random.value < profile.aggression * 0.06f && moves.TryLeap(0)) { lastRollAt = Time.time; return; }
                 }
             }
         }

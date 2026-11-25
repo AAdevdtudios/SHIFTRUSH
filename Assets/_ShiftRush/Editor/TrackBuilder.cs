@@ -222,7 +222,7 @@ namespace ShiftRush.EditorTools
         }
 
         /// <summary>Applies a KROMA sky/lighting profile through KROMA's own editor logic (reflection: optional pack).</summary>
-        static void ApplyKroma(string profileName)
+        internal static void ApplyKroma(string profileName)
         {
             if (string.IsNullOrEmpty(profileName)) return;
             var guids = AssetDatabase.FindAssets(profileName);

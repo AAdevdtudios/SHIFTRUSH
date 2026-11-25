@@ -202,3 +202,7 @@ docs/save-backups/
 
 # Raw intro panel captures (the game uses the JPGs in Art/Comic/Intro). The contact sheet stays.
 docs/comic/intro_[0-9]*.png
+
+# Mega City (paid, Asset Store)
+/[Aa]ssets/JC_LP_MegaCity/
+/[Aa]ssets/JC_LP_MegaCity.meta

@@ -111,6 +111,7 @@ namespace ShiftRush.UI
             index = i;
             RaceSession.TrackIndex = i;
             MenuSounds.Confirm();
+            StoryProgress.Active = ""; // a quick race: no story drop, no episode result
             SceneLoader.LoadTrack(cat.tracks[i]);
         }
 
