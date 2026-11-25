@@ -15,6 +15,27 @@ namespace ShiftRush.UI
     {
         bool dirty;
 
+        // Heat's VSync switch fires its saved value when the menu loads, even with the Visuals tab closed, and its
+        // handler syncs every second refresh (30 fps on a 60 Hz screen). Mute it in every scene as it loads and
+        // put our settings back.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        static void Boot()
+        {
+            MuteHeatVSync();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += (_, __) => MuteHeatVSync();
+        }
+
+        static void MuteHeatVSync()
+        {
+            foreach (var sw in Object.FindObjectsByType<SwitchManager>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (sw.saveKey != "VSync") continue;
+                for (int i = 0; i < sw.onValueChanged.GetPersistentEventCount(); i++)
+                    sw.onValueChanged.SetPersistentListenerState(i, UnityEventCallState.Off);
+            }
+            DisplaySettings.Apply();
+        }
+
         void Awake()
         {
             foreach (var sw in GetComponentsInChildren<SwitchManager>(true))

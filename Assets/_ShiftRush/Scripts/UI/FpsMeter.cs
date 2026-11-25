@@ -69,7 +69,17 @@ namespace ShiftRush.UI
             var col = avg >= 50f ? Cyan : avg >= 30f ? Amber : Magenta;
             fps.text = Mathf.RoundToInt(avg).ToString();
             fps.color = col; bar.color = col;
-            detail.text = (1000f / avg).ToString("0.0") + " MS    1% LOW " + Mathf.RoundToInt(low) + "    " + Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value) + "HZ";
+            detail.text = (1000f / avg).ToString("0.0") + " MS    1% LOW " + Mathf.RoundToInt(low) + "    " + Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value) + "HZ" + RenderTag();
+        }
+
+        /// <summary>The height the game actually renders at, when the resolution cap is lowering it.</summary>
+        static string RenderTag()
+        {
+            var urp = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;
+            if (urp == null || urp.renderScale >= 0.999f) return "";
+            // The display's own height: on a Retina Mac Screen.height can report double the drawable.
+            int h = Screen.fullScreenMode == FullScreenMode.Windowed ? Screen.height : Screen.currentResolution.height;
+            return "  " + Mathf.RoundToInt(h * urp.renderScale) + "P";
         }
 
         void Build()
@@ -87,7 +97,7 @@ namespace ShiftRush.UI
             p.transform.SetParent(transform, false);
             var r = (RectTransform)p.transform;
             r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0f);
-            r.anchoredPosition = new Vector2(0, 4); r.sizeDelta = new Vector2(330, 26);
+            r.anchoredPosition = new Vector2(0, 4); r.sizeDelta = new Vector2(400, 26);
             p.AddComponent<Image>().color = new Color(0.03f, 0.02f, 0.06f, 0.72f);
             panel = p;
 
@@ -101,7 +111,7 @@ namespace ShiftRush.UI
             fps.fontStyle = FontStyles.Bold; fps.text = "--";
             var tag = Label(r, mono, 13, TextAlignmentOptions.MidlineLeft, new Vector2(60, 0), new Vector2(32, 26));
             tag.text = "FPS"; tag.color = new Color(1, 1, 1, 0.55f);
-            detail = Label(r, mono, 15, TextAlignmentOptions.MidlineLeft, new Vector2(96, 0), new Vector2(228, 26));
+            detail = Label(r, mono, 15, TextAlignmentOptions.MidlineLeft, new Vector2(96, 0), new Vector2(298, 26));
             detail.color = new Color(1, 1, 1, 0.85f);
         }
 

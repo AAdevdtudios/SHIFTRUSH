@@ -42,7 +42,25 @@ namespace ShiftRush.Core
                 default: mode = FullScreenMode.FullScreenWindow; break;
             }
             if (Screen.fullScreenMode != mode) Screen.fullScreenMode = mode;
+            CapRenderHeight(mode == FullScreenMode.Windowed ? Screen.height : Screen.currentResolution.height);
 #endif
+        }
+
+        /// <summary>
+        /// The look is mostly full-screen passes (ambient occlusion, outlines, post), so cost grows with pixel count.
+        /// On screens taller than this, render at this height and let FSR sharpen it up to full size: a 1440p screen
+        /// draws about 30% fewer pixels and looks nearly the same. 1080p and below render at full resolution.
+        /// Build only: changing it in the editor would save into the pipeline asset.
+        /// </summary>
+        const int MaxRenderHeight = 1200;
+
+        static void CapRenderHeight(int screenHeight)
+        {
+            var urp = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;
+            if (urp == null || screenHeight <= 0) return;
+            float scale = Mathf.Clamp(MaxRenderHeight / (float)screenHeight, 0.5f, 1f);
+            urp.renderScale = scale;
+            urp.upscalingFilter = scale < 1f ? UnityEngine.Rendering.Universal.UpscalingFilterSelection.FSR : UnityEngine.Rendering.Universal.UpscalingFilterSelection.Auto;
         }
     }
 }
