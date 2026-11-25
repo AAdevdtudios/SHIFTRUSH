@@ -91,7 +91,99 @@ namespace ShiftRush.EditorTools
             return index;
         }
 
-        const string LetteringRenderer = "Assets/Settings/Comic_Lettering_Renderer.asset";
+        const string IntroArt = "Assets/_ShiftRush/Art/Comic/Intro/";
+        const string IntroData = "Assets/_ShiftRush/Resources/SR_ComicIntro.asset";
+
+        /// <summary>
+        /// SHIFT RUSH → Comic → Capture Intro Panels: captures every panel camera in the open scene whose name starts with
+        /// "intro_", in name order, into Art/Comic/Intro, and lists them in Resources/SR_ComicIntro for the intro player.
+        /// </summary>
+        [MenuItem("SHIFT RUSH/Comic/Capture Intro Panels")]
+        public static int CaptureIntro()
+        {
+            var cams = new System.Collections.Generic.List<Comic.ComicPanelCamera>();
+            foreach (var c in Object.FindObjectsByType<Comic.ComicPanelCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (c.panelName.StartsWith("intro_")) cams.Add(c);
+            cams.Sort((a, b) => string.CompareOrdinal(a.panelName, b.panelName));
+            System.IO.Directory.CreateDirectory(IntroArt);
+
+            var data = AssetDatabase.LoadAssetAtPath<Comic.ComicIntroData>(IntroData);
+            if (data == null) { data = ScriptableObject.CreateInstance<Comic.ComicIntroData>(); AssetDatabase.CreateAsset(data, IntroData); }
+            data.mono = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>(Fonts + "JetBrainsMono-Bold SDF.asset");
+            data.pages.Clear();
+
+            // Cameras named intro_05a, intro_05b... are slices of one page: captured on their own, then set side by side.
+            var pages = new System.Collections.Generic.List<string>();
+            var slices = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
+            foreach (var c in cams)
+            {
+                bool wasOn = c.gameObject.activeSelf;
+                c.gameObject.SetActive(true);
+                string shot = c.Capture();
+                c.gameObject.SetActive(wasOn);
+                string page = c.panelName.Length > 8 ? c.panelName.Substring(0, 8) : c.panelName;
+                if (page == c.panelName) { pages.Add(page); continue; }
+                if (!slices.ContainsKey(page)) { slices[page] = new System.Collections.Generic.List<string>(); pages.Add(page); }
+                slices[page].Add(shot);
+            }
+            string docs = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../docs/comic"));
+            foreach (var kv in slices) JoinSlices(kv.Value, System.IO.Path.Combine(docs, kv.Key + ".png"));
+
+            foreach (var name in pages)
+            {
+                string src = System.IO.Path.Combine(docs, name + ".png");
+                // The game's copy is a high quality JPG: a fraction of the PNG's size in the repo, same look once imported.
+                string dst = IntroArt + name + ".jpg";
+                var tex = new Texture2D(2, 2);
+                tex.LoadImage(System.IO.File.ReadAllBytes(src));
+                System.IO.File.WriteAllBytes(dst, tex.EncodeToJPG(92));
+                Object.DestroyImmediate(tex);
+                AssetDatabase.ImportAsset(dst, ImportAssetOptions.ForceUpdate);
+                var imp = (TextureImporter)AssetImporter.GetAtPath(dst);
+                imp.textureType = TextureImporterType.Default;
+                imp.npotScale = TextureImporterNPOTScale.None;
+                imp.mipmapEnabled = false;
+                imp.maxTextureSize = 2048;
+                imp.textureCompression = TextureImporterCompression.CompressedHQ;
+                imp.wrapMode = TextureWrapMode.Clamp;
+                imp.SaveAndReimport();
+                data.pages.Add(AssetDatabase.LoadAssetAtPath<Texture2D>(dst));
+            }
+            EditorUtility.SetDirty(data);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[COMIC] Intro: " + data.pages.Count + " panels captured");
+            return data.pages.Count;
+        }
+
+        /// <summary>Lays slice PNGs side by side on paper, with a gutter between them, at their own height.</summary>
+        static void JoinSlices(System.Collections.Generic.List<string> files, string outPath)
+        {
+            const int gutter = 21;
+            var texs = new System.Collections.Generic.List<Texture2D>();
+            foreach (var f in files) { var t = new Texture2D(2, 2); t.LoadImage(System.IO.File.ReadAllBytes(f)); texs.Add(t); }
+            int h = 0, w = gutter * (texs.Count - 1);
+            foreach (var t in texs) { w += t.width; h = Mathf.Max(h, t.height); }
+            var outTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            var paper = new Color32(250, 247, 240, 255);
+            var px = new Color32[w * h];
+            for (int i = 0; i < px.Length; i++) px[i] = paper;
+            outTex.SetPixels32(px);
+            int x = 0;
+            foreach (var t in texs) { outTex.SetPixels(x, h - t.height, t.width, t.height, t.GetPixels()); x += t.width + gutter; Object.DestroyImmediate(t); }
+            outTex.Apply();
+            System.IO.File.WriteAllBytes(outPath, outTex.EncodeToPNG());
+            Object.DestroyImmediate(outTex);
+        }
+
+        [MenuItem("SHIFT RUSH/Comic/Replay Intro On Next Play")]
+        public static void ReplayIntro()
+        {
+            PlayerPrefs.DeleteKey(Comic.ComicIntro.SeenKey);
+            PlayerPrefs.Save();
+            Debug.Log("[COMIC] The intro plays next time the main menu starts.");
+        }
+
+        const string LetteringRenderer ="Assets/Settings/Comic_Lettering_Renderer.asset";
         const string Fonts = "Assets/_ShiftRush/Art/Fonts/";
         const int UiLayer = 5;
 

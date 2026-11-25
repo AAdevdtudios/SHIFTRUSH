@@ -287,6 +287,9 @@ namespace ShiftRush.Comic
 
         static Vector3 HeadOf(Transform actor)
         {
+            // The speaker can be the actor or any marker inside it.
+            var who = actor.GetComponentInParent<ComicActor>();
+            if (who != null) actor = who.transform;
             var anim = actor.GetComponentInChildren<Animator>();
             if (anim != null && anim.isHuman)
             {

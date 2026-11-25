@@ -198,3 +198,7 @@ Assets/_ShiftRush/Resources/Audio/SFX/*
 /Assets/_ShiftRush/Art/Driver/Rigged.meta
 /Assets/_ShiftRush/Art/Driver/Icons/
 /Assets/_ShiftRush/Art/Driver/Icons.meta
+docs/save-backups/
+
+# Raw intro panel captures (the game uses the JPGs in Art/Comic/Intro). The contact sheet stays.
+docs/comic/intro_[0-9]*.png

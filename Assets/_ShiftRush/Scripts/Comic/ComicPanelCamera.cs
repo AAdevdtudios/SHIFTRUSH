@@ -42,6 +42,14 @@ namespace ShiftRush.Comic
             foreach (var a in FindObjectsByType<ComicActor>(FindObjectsSortMode.None)) a.Refresh();
 
             var letters = GetComponentsInChildren<ComicLettering>();
+            // Other panels' lettering nearby would show up in this one's lettering render, so hide it for the capture.
+            var hidden = new System.Collections.Generic.List<Canvas>();
+            foreach (var other in FindObjectsByType<ComicLettering>(FindObjectsSortMode.None))
+            {
+                if (System.Array.IndexOf(letters, other) >= 0 || other.canvas == null || !other.canvas.gameObject.activeSelf) continue;
+                other.canvas.gameObject.SetActive(false);
+                hidden.Add(other.canvas);
+            }
             var data = GetComponent<UniversalAdditionalCameraData>();
             var stack = data.cameraStack;
             var keptStack = stack != null ? new System.Collections.Generic.List<Camera>(stack) : null;
@@ -82,6 +90,7 @@ namespace ShiftRush.Comic
                 }
             }
             if (stack != null) stack.AddRange(keptStack);
+            foreach (var c in hidden) c.gameObject.SetActive(true);
 
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
             tex.SetPixels32(panel);

@@ -12,7 +12,7 @@ namespace ShiftRush.Comic
     /// redresses when they change), <see cref="Outfit.Fixed"/> wears a set outfit (story characters like Slim).
     /// The pose comes from any humanoid clip (Kawaii Cool Action, MoCap Central) frozen at one moment, so the same
     /// pose works on both bodies and every outfit, because the clothes are rigged to the same skeleton. On top of the clip:
-    /// head and spine sliders, and a hand shape per hand (fist, point, thumbs up and the rest) set through the
+    /// head, spine and arm sliders, and a hand shape per hand (fist, point, thumbs up and the rest) set through the
     /// humanoid finger muscles, so no posing asset is needed. Works in the editor, so panels are staged in the Scene view.
     /// </summary>
     [ExecuteAlways]
@@ -63,9 +63,54 @@ namespace ShiftRush.Comic
         [Range(-1, 1)] public float spineLean;
         [Range(-1, 1)] public float spineTwist;
 
+        [System.Serializable]
+        public class Arm
+        {
+            [Tooltip("Lifts the whole arm up (positive) or presses it down.")]
+            [Range(-1, 1)] public float raise;
+            [Tooltip("Swings the arm forward (positive) or back.")]
+            [Range(-1, 1)] public float forward;
+            [Tooltip("Straightens the elbow (positive) or bends it (negative).")]
+            [Range(-1, 1)] public float elbow;
+            [Range(-1, 1)] public float twist;
+            [Tooltip("Bends the wrist up (positive) or down.")]
+            [Range(-1, 1)] public float wrist;
+            public bool Any { get { return raise != 0 || forward != 0 || elbow != 0 || twist != 0 || wrist != 0; } }
+        }
+
+        [Header("Arms (added to the clip)")]
+        public Arm leftArm = new Arm();
+        public Arm rightArm = new Arm();
+
         [Header("Hands")]
         public Hand leftHand = new Hand();
         public Hand rightHand = new Hand();
+
+        [System.Serializable]
+        public class Reach
+        {
+            [Tooltip("Puts the hand on a point, bending the elbow to get there (after the clip and sliders).")]
+            public bool on;
+            [Tooltip("Where the hand goes. Empty = the point below, measured from the head.")]
+            public Transform target;
+            [Tooltip("Without a target: offset from the head, in the actor's own axes (x right, y up, z forward).")]
+            public Vector3 fromHead = new Vector3(0.12f, -0.02f, 0.02f);
+            [Tooltip("Which way the elbow points, in the actor's axes, from the shoulder.")]
+            public Vector3 elbowHint = new Vector3(0.6f, -0.6f, -0.3f);
+        }
+
+        [Header("Reach (hand IK)")]
+        public Reach rightReach = new Reach();
+        public Reach leftReach = new Reach { fromHead = new Vector3(-0.12f, -0.02f, 0.02f), elbowHint = new Vector3(-0.6f, -0.6f, -0.3f) };
+
+        [Header("Held props")]
+        [Tooltip("A scene object kept in the right hand (a phone, a part). It follows the hand bone with the offset below.")]
+        public Transform rightProp;
+        public Vector3 rightPropOffset = new Vector3(0f, 0.08f, 0.03f);
+        public Vector3 rightPropEuler;
+        public Transform leftProp;
+        public Vector3 leftPropOffset = new Vector3(0f, 0.08f, 0.03f);
+        public Vector3 leftPropEuler;
 
         GameObject model;
         Animator animator;
@@ -197,6 +242,42 @@ namespace ShiftRush.Comic
             if (animator == null) return;
             SamplePose();
             ApplyMuscles();
+            DoReach(rightReach, HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand);
+            DoReach(leftReach, HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand);
+            Hold(rightProp, HumanBodyBones.RightHand, rightPropOffset, rightPropEuler);
+            Hold(leftProp, HumanBodyBones.LeftHand, leftPropOffset, leftPropEuler);
+        }
+
+        /// <summary>Two-bone IK: swings the upper arm so the elbow lands on the side of the hint, then aims the forearm at the target.</summary>
+        void DoReach(Reach r, HumanBodyBones upperBone, HumanBodyBones lowerBone, HumanBodyBones endBone)
+        {
+            if (r == null || !r.on || !animator.isHuman) return;
+            var upper = animator.GetBoneTransform(upperBone);
+            var lower = animator.GetBoneTransform(lowerBone);
+            var end = animator.GetBoneTransform(endBone);
+            var head = animator.GetBoneTransform(HumanBodyBones.Head);
+            if (upper == null || lower == null || end == null || head == null) return;
+            Vector3 target = r.target != null ? r.target.position : head.position + transform.rotation * r.fromHead;
+            float a = Vector3.Distance(upper.position, lower.position), b = Vector3.Distance(lower.position, end.position);
+            Vector3 toTarget = target - upper.position;
+            float c = Mathf.Clamp(toTarget.magnitude, Mathf.Abs(a - b) + 0.001f, a + b - 0.001f);
+            Vector3 dir = toTarget.normalized;
+            Vector3 hint = transform.rotation * r.elbowHint;
+            Vector3 n = Vector3.Cross(dir, hint);
+            if (n.sqrMagnitude < 1e-6f) n = Vector3.Cross(dir, transform.up);
+            n.Normalize();
+            float alpha = Mathf.Acos(Mathf.Clamp((a * a + c * c - b * b) / (2f * a * c), -1f, 1f)) * Mathf.Rad2Deg;
+            Vector3 elbow = upper.position + Quaternion.AngleAxis(alpha, n) * dir * a;
+            upper.rotation = Quaternion.FromToRotation(lower.position - upper.position, elbow - upper.position) * upper.rotation;
+            lower.rotation = Quaternion.FromToRotation(end.position - lower.position, target - lower.position) * lower.rotation;
+        }
+
+        void Hold(Transform prop, HumanBodyBones bone, Vector3 offset, Vector3 euler)
+        {
+            if (prop == null || !animator.isHuman) return;
+            var b = animator.GetBoneTransform(bone);
+            if (b == null) return;
+            prop.SetPositionAndRotation(b.position + b.rotation * offset, b.rotation * Quaternion.Euler(euler));
         }
 
         void SamplePose()
@@ -245,7 +326,7 @@ namespace ShiftRush.Comic
             bool hands = leftHand.shape != Shape.FromClip || rightHand.shape != Shape.FromClip
                 || leftHand.curl != 0 || rightHand.curl != 0 || leftHand.spread != 0 || rightHand.spread != 0
                 || leftHand.thumb != 0 || rightHand.thumb != 0;
-            bool body = headTurn != 0 || headNod != 0 || headTilt != 0 || spineLean != 0 || spineTwist != 0;
+            bool body = headTurn != 0 || headNod != 0 || headTilt != 0 || spineLean != 0 || spineTwist != 0 || leftArm.Any || rightArm.Any;
             bool clip = graph.IsValid();
             if (!hands && !body && clip) return;
             LoadMuscles();
@@ -262,6 +343,8 @@ namespace ShiftRush.Comic
             Add("Neck Tilt Left-Right", headTilt * 0.4f); Add("Head Tilt Left-Right", headTilt * 0.8f);
             Add("Spine Front-Back", spineLean * 0.5f); Add("Chest Front-Back", spineLean * 0.5f);
             Add("Spine Twist Left-Right", spineTwist * 0.5f); Add("Chest Twist Left-Right", spineTwist * 0.5f);
+            DoArm("Left", leftArm);
+            DoArm("Right", rightArm);
             DoHand("Left", leftHand);
             DoHand("Right", rightHand);
             poser.SetHumanPose(ref human);
@@ -282,6 +365,15 @@ namespace ShiftRush.Comic
                 case Shape.Grip: return new[] { 0.2f, -0.45f, -0.5f, -0.55f, -0.6f };
             }
             return null;
+        }
+
+        void DoArm(string side, Arm a)
+        {
+            Add(side + " Arm Down-Up", a.raise);
+            Add(side + " Arm Front-Back", a.forward);
+            Add(side + " Arm Twist In-Out", a.twist);
+            Add(side + " Forearm Stretch", a.elbow);
+            Add(side + " Hand Down-Up", a.wrist);
         }
 
         void DoHand(string side, Hand h)

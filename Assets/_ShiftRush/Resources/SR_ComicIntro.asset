@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 360d91b41ea6a498d838adcf6a275aa9, type: 3}
+  m_Name: SR_ComicIntro
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Comic.ComicIntroData
+  pages:
+  - {fileID: 2800000, guid: a7b89fa9242954f419c568e12ac18ec1, type: 3}
+  - {fileID: 2800000, guid: ab1b1d496787344fda5f442a90256223, type: 3}
+  - {fileID: 2800000, guid: b56eec65e12ab4ec3a11004b4a46075b, type: 3}
+  - {fileID: 2800000, guid: 6207af81a4c0946369b0d67917f486df, type: 3}
+  - {fileID: 2800000, guid: e659d4206d26a4f32b92729d6fec67b2, type: 3}
+  - {fileID: 2800000, guid: ece19f395c4f54b3cbb64dcbd100f423, type: 3}
+  - {fileID: 2800000, guid: d4301c118d1554ad6989f5a77fffa850, type: 3}
+  - {fileID: 2800000, guid: 4b84966ec3e994064a72de4d33651f7f, type: 3}
+  - {fileID: 2800000, guid: 3517de99444d14c09927c586f0f4d5a3, type: 3}
+  - {fileID: 2800000, guid: 7cc4aa47847844c7e9891ef72a563649, type: 3}
+  - {fileID: 2800000, guid: 197dae2e6cf7947dd9045f1c6fef9d9f, type: 3}
+  - {fileID: 2800000, guid: 612118229a5cc40e0a89dd6904bb1b64, type: 3}
+  mono: {fileID: 11400000, guid: 2aa6a549793ef4e008081c1f0d117471, type: 2}
