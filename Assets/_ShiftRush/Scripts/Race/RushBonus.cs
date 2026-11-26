@@ -10,14 +10,17 @@ using UnityEngine.UI;
 namespace ShiftRush.Race
 {
     /// <summary>
-    /// Nitro you earn by driving on the edge, between SHIFT ramps:
+    /// Nitro you earn by driving on the edge:
     /// <list type="bullet">
+    /// <item>DRIFT: a drift that ends cleanly pays by the tier it charged, and the tank trickles up while sliding.</item>
     /// <item>SLIPSTREAM: tuck in close behind a rival at speed. The air tows you (a gentle push) and fills the draft
     /// meter; when it fills you're paid nitro and it starts filling again.</item>
     /// <item>CLOSE CALL: overtake a rival with only a sliver of air between you, without touching.</item>
     /// <item>WALL SKIM: run along a wall or rail within a hand's width, without touching.</item>
     /// </list>
     /// Bonuses landed within a few seconds of each other chain (x2, x3), each paying more.
+    /// Every car's tank also refills slowly on its own once it hasn't used nitro for a moment; rivals earn from their
+    /// drifts by the same rules, quietly.
     /// Resources/SR_RushHUD (built by SHIFT RUSH → Build Main Menu) spawns itself in every race scene.
     /// </summary>
     public class RushBonus : MonoBehaviour
@@ -47,6 +50,16 @@ namespace ShiftRush.Race
         [SerializeField] float skimHold = 0.35f;
         [SerializeField] float skimMinKmh = 110f;
         [SerializeField] float skimNitro = 0.05f;
+
+        [Header("Drift and recharge")]
+        [Tooltip("Nitro for a clean drift at tier 1, 2, 3 (share of a tank).")]
+        [SerializeField] float[] driftNitro = { 0.12f, 0.22f, 0.35f };
+        [Tooltip("Nitro per second while sliding, before the drift pays out.")]
+        [SerializeField] float driftTrickle = 0.04f;
+        [Tooltip("Seconds for an empty tank to refill on its own.")]
+        [SerializeField] float rechargeSeconds = 45f;
+        [Tooltip("Seconds after nitro was last used before the tank starts refilling.")]
+        [SerializeField] float rechargeDelay = 2f;
 
         [Header("Chain")]
         [Tooltip("Seconds after a bonus in which the next one chains.")]
@@ -78,6 +91,42 @@ namespace ShiftRush.Race
         int chain;
         Rigidbody contactBody;
         readonly RaycastHit[] hits = new RaycastHit[8];
+        readonly Dictionary<RaceManager.Racer, float> lastNitroUse = new Dictionary<RaceManager.Racer, float>();
+
+        void OnEnable() { DriftMoves.Ended += OnDriftEnded; }
+        void OnDisable() { DriftMoves.Ended -= OnDriftEnded; }
+
+        /// <summary>A clean drift pays nitro by its tier: the player with the pop and chain, rivals quietly.</summary>
+        void OnDriftEnded(DriftMoves drift, int tier, float held)
+        {
+            if (tier <= 0 || race == null || race.CurrentState != RaceManager.State.Racing) return;
+            float pay = driftNitro[Mathf.Min(tier, driftNitro.Length) - 1];
+            foreach (var r in race.Racers)
+            {
+                if (r.vehicle == null || r.vehicle.Transform != drift.transform) continue;
+                if (r.isPlayer) { RaceManager.Racer p; if (Live(out p)) Award(p, "DRIFT TIER " + tier, pay); }
+                else if (r.vehicle is INitroTank t && t.Nitro01 >= 0f) t.AddNitro(pay * 0.8f);
+                return;
+            }
+        }
+
+        /// <summary>Every tank refills slowly when it hasn't been used for a moment; sliding adds a trickle.</summary>
+        void Recharge(float dt)
+        {
+            foreach (var r in race.Racers)
+            {
+                if (r.vehicle == null || r.suspended || r.finished) continue;
+                if (!(r.vehicle is INitroTank tank) || tank.Nitro01 < 0f) continue;
+                var dash = r.vehicle as IVehicleDash;
+                if (dash != null && dash.NitroActive) { lastNitroUse[r] = Time.time; continue; }
+                lastNitroUse.TryGetValue(r, out float used);
+                float refill = Core.Difficulty.Current.rechargeSeconds > 0f ? Core.Difficulty.Current.rechargeSeconds : rechargeSeconds;
+                float gain = Time.time - used > rechargeDelay ? dt / refill : 0f;
+                var drift = r.vehicle.Transform.GetComponent<DriftMoves>();
+                if (drift != null && drift.Drifting) gain += driftTrickle * dt * (r.isPlayer ? Core.Difficulty.Current.bonusNitro : 0.8f);
+                if (gain > 0f && tank.Nitro01 < 1f) tank.AddNitro(gain);
+            }
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Hook()
@@ -122,6 +171,7 @@ namespace ShiftRush.Race
             if (live)
             {
                 WatchContacts(p.vehicle);
+                Recharge(dt);
                 Rivals(p, dt);
                 Walls(p.vehicle, dt);
             }

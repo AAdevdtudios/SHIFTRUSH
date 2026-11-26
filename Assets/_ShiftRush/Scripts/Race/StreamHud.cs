@@ -88,7 +88,8 @@ namespace ShiftRush.Race
         bool banked;
 
         // Dares.
-        enum DareKind { None, DriftTier3, Knock, CleanLandings, TopSpeed }
+        enum DareKind { None, DriftTier3, Knock, CleanLandings, TopSpeed, Rings }
+        FanRings rings;
         DareKind dare;
         float dareEnds, dareNext, dareProgress, dareSince;
         int dareCount, dareGoal, dareReward01;
@@ -240,8 +241,14 @@ namespace ShiftRush.Race
         {
             dares++;
             dareCount = 0;
-            var options = new List<DareKind> { DareKind.DriftTier3, DareKind.Knock, DareKind.CleanLandings, DareKind.TopSpeed };
+            // Rings come up most: the crowd loves them, and they're a dare you can see on the road.
+            var options = new List<DareKind> { DareKind.Rings, DareKind.Rings, DareKind.DriftTier3, DareKind.Knock, DareKind.CleanLandings, DareKind.TopSpeed };
             dare = options[Random.Range(0, options.Count)];
+            if (dare == DareKind.Rings)
+            {
+                rings = race != null && vehicle != null ? FanRings.Spawn(race.Line, vehicle, 5) : null;
+                if (rings == null) dare = DareKind.DriftTier3;
+            }
             float time = 20f;
             string title;
             switch (dare)
@@ -249,6 +256,7 @@ namespace ShiftRush.Race
                 case DareKind.DriftTier3: title = "HIT DRIFT TIER 3"; dareReward01 = 600; break;
                 case DareKind.Knock: title = "KNOCK A RIVAL"; dareReward01 = 500; break;
                 case DareKind.CleanLandings: title = "LAND 2 CLEAN ROLLS"; dareGoal = 2; dareReward01 = 450; break;
+                case DareKind.Rings: title = "THREAD 4 OF 5 RINGS"; dareGoal = 4; dareReward01 = 550; time = 30f; break;
                 default: title = "HOLD " + Mathf.RoundToInt(GameSettings.ToDisplaySpeed(180f)) + "+ " + GameSettings.SpeedUnit + " FOR 3 S"; dareReward01 = 400; time = 25f; break;
             }
             dareEnds = Time.unscaledTime + time;
@@ -261,10 +269,18 @@ namespace ShiftRush.Race
             Chat(DareLines);
         }
 
+        /// <summary>The rings fade out a moment after their dare is over.</summary>
+        void ClearRings()
+        {
+            if (rings != null) Destroy(rings.gameObject, 1.5f);
+            rings = null;
+        }
+
         void DareDone()
         {
             if (dare == DareKind.None) return;
             dare = DareKind.None;
+            ClearRings();
             daresDone++;
             dareHype += dareReward01;
             sessionHype += dareReward01;
@@ -290,8 +306,15 @@ namespace ShiftRush.Race
                     dareProgress = Mathf.Abs(vehicle.SpeedKmh) >= 180f ? dareProgress + dt : 0f;
                     if (dareProgress >= 3f) DareDone();
                 }
+                if (dare == DareKind.Rings && rings != null)
+                {
+                    if (rings.Passed >= dareGoal) DareDone();
+                    else if (rings.Behind || rings.Missed > rings.Count - dareGoal) dareEnds = Mathf.Min(dareEnds, Time.unscaledTime); // can't make it now
+                    if (dareVotes && dare == DareKind.Rings) dareVotes.text = rings.Passed + " / " + rings.Count + " RINGS";
+                }
                 if (dare != DareKind.None && Time.unscaledTime > dareEnds)
                 {
+                    ClearRings();
                     dare = DareKind.None; // missed: nothing lost
                     dareResult = "MISSED"; dareResultUntil = Time.unscaledTime + 1.2f;
                     dareNext = raceTime + Random.Range(35f, 55f);
@@ -316,6 +339,7 @@ namespace ShiftRush.Race
         {
             if (!r.isPlayer || banked) return;
             banked = true;
+            ClearRings();
             int place = race.PositionOf(r);
             int placeHype = Mathf.RoundToInt(PlaceHype * Mathf.Clamp01(1f - (place - 1) / Mathf.Max(1f, race.Racers.Count)));
             sessionHype += placeHype;

@@ -1,6 +1,7 @@
 namespace ShiftRush.Vehicles
 {
-    /// <summary>The car's nitro reserve. In races nitro only comes from SHIFT ramps, so regeneration is switched off.</summary>
+    /// <summary>The car's nitro reserve. In races RCC's own regeneration is off: nitro comes from drifts, bonuses and a slow
+    /// recharge (RushBonus).</summary>
     public interface INitroTank
     {
         /// <summary>0..1, or -1 when the car has no nitro.</summary>

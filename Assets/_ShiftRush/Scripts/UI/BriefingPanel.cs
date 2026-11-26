@@ -8,8 +8,8 @@ namespace ShiftRush.UI
 {
     /// <summary>
     /// "Tonight on Channel 13": the briefing before an episode. Slim's intro, the main goal and the two Feed bonuses,
-    /// the rival to beat, the track and your car. Enter goes live (loads the race), G opens the garage, Esc goes back
-    /// to the case board.
+    /// the rival to beat, the track and your car. Arrows (or the d-pad) move between GO LIVE, CASE BOARD and GARAGE,
+    /// with a focus ring on the one Enter will press; G still opens the garage, Esc goes back to the case board.
     /// </summary>
     public class BriefingPanel : MonoBehaviour
     {
@@ -37,23 +37,26 @@ namespace ShiftRush.UI
         [SerializeField] Button garageButton;
 
         StoryCatalog.Episode episode;
+        KeyNav nav;
 
         void Awake()
         {
             if (goButton) goButton.onClick.AddListener(GoLive);
             if (boardButton) boardButton.onClick.AddListener(() => { if (Accepting && router) { MenuSounds.Back(); router.OpenStory(); } });
             if (garageButton) garageButton.onClick.AddListener(() => { if (Accepting && router) { MenuSounds.Select(); router.OpenGarage(); } });
+            nav = KeyNav.Attach(gameObject, goButton, boardButton, garageButton);
+            nav.Gate = () => Accepting;
         }
 
         bool Accepting { get { return !PreRaceTalk.Running && !StoryLiftOff.Running && (visibleGroup == null || (visibleGroup.alpha > 0.95f && visibleGroup.interactable)); } }
 
-        void OnEnable() { Show(); }
+        void OnEnable() { Show(); if (nav != null) nav.Focus(0); }
 
         void Update()
         {
             if (!Accepting) return;
             var kb = Keyboard.current; var pad = Gamepad.current;
-            if (MenuInput.Submit) GoLive();
+            if (MenuInput.Submit) { if (nav != null) nav.Press(); else GoLive(); }
             else if ((kb != null && kb.gKey.wasPressedThisFrame) || (pad != null && pad.buttonNorth.wasPressedThisFrame)) { MenuSounds.Select(); if (router) router.OpenGarage(); }
         }
 
@@ -95,12 +98,17 @@ namespace ShiftRush.UI
                     rides.Add(c.name + " " + (rc != null ? rc.displayName.ToUpperInvariant() : c.carId.ToUpperInvariant()));
                 }
                 if (rivalName) rivalName.text = e.Matchup + "  //  VS " + (names.Count <= 2 ? string.Join(" & ", names) : names.Count + " RIVALS");
-                if (rivalLine) rivalLine.text = e.rivalLine + "\n" + string.Join("  ·  ", rides);
+                // One or two rivals: name and car. A bigger field: just the names, so it fits the card.
+                if (rivalLine)
+                {
+                    rivalLine.text = e.rivalLine + "\n<color=#9AA0B4>" + string.Join("  ·  ", names.Count <= 2 ? rides : names) + "</color>";
+                    FitInCard(rivalLine);
+                }
             }
             else
             {
                 if (rivalName) rivalName.text = e.rival;
-                if (rivalLine) rivalLine.text = e.rivalLine;
+                if (rivalLine) { rivalLine.text = e.rivalLine; FitInCard(rivalLine); }
             }
             if (trackName) trackName.text = track != null ? track.displayName.ToUpperInvariant() : e.trackId.ToUpperInvariant();
             int gridSize = named ? e.opponents.Length + 1 : 6;
@@ -109,6 +117,13 @@ namespace ShiftRush.UI
             if (carInfo) carInfo.text = car != null ? Vehicles.CarTypes.Name(car.type) : "";
             if (photo) { photo.sprite = track != null ? track.thumbnail : null; photo.color = photo.sprite != null ? Color.white : new Color32(30, 25, 48, 255); }
             if (photoLabel) photoLabel.text = "CAM 01  //  DRONE OVER " + (track != null ? track.displayName.ToUpperInvariant() : "THE TRACK");
+        }
+
+        /// <summary>The rival's line shrinks to stay inside its card instead of running out under the buttons.</summary>
+        static void FitInCard(TMP_Text t)
+        {
+            if (!t.enableAutoSizing) { t.fontSizeMax = t.fontSize; t.fontSizeMin = Mathf.Min(16f, t.fontSize); t.enableAutoSizing = true; }
+            t.overflowMode = TextOverflowModes.Ellipsis;
         }
 
         void GoLive()

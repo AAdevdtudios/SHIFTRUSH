@@ -132,7 +132,7 @@ namespace ShiftRush.UI
             var col = levelColours != null && lv < levelColours.Length ? levelColours[lv] : Color.white;
             if (difficultyValue) { difficultyValue.text = Difficulty.Labels[lv]; difficultyValue.color = col; }
             if (difficultyBlurb)
-                difficultyBlurb.text = GameSettings.Tutorial ? "Your first race runs on CRUISE, with the tutorial." : Difficulty.Of(lv).blurb;
+                difficultyBlurb.text = Difficulty.FirstRace ? "Your first race runs on CRUISE, with the tutorial." : Difficulty.Of(lv).blurb;
             if (difficultyPips != null)
                 for (int i = 0; i < difficultyPips.Length; i++) if (difficultyPips[i]) difficultyPips[i].color = i <= lv ? col : pipOff;
             if (difficultyDown) difficultyDown.interactable = lv > 0;

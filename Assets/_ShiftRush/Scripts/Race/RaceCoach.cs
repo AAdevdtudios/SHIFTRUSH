@@ -84,6 +84,7 @@ namespace ShiftRush.Race
             ShiftDirector.Warped += OnWarped;
             ShiftDirector.Returned += OnReturned;
             ShiftDirector.NitroAwarded += OnNitro;
+            RushBonus.Awarded += OnBonus;
             VehicleReset.Respawned += OnRespawned;
         }
 
@@ -96,6 +97,7 @@ namespace ShiftRush.Race
             ShiftDirector.Warped -= OnWarped;
             ShiftDirector.Returned -= OnReturned;
             ShiftDirector.NitroAwarded -= OnNitro;
+            RushBonus.Awarded -= OnBonus;
             VehicleReset.Respawned -= OnRespawned;
             AssistShift = false;
         }
@@ -164,6 +166,8 @@ namespace ShiftRush.Race
             if (!active || IsDone(Lesson.Nitro)) return;
             nitroReadyAt = Time.unscaledTime + 2.4f; // after the reward panel has had its moment
         }
+
+        void OnBonus(string label, float fill) { OnNitro(fill); }
 
         void OnRespawned(VehicleReset r)
         {
@@ -264,6 +268,8 @@ namespace ShiftRush.Race
             }
             if (shiftState != ShiftDirector.State.Idle) return;
 
+            // The tank also refills on its own: once there's a useful amount, it's time for the nitro lesson.
+            if (!IsDone(Lesson.Nitro) && nitroReadyAt < 0f && dash != null && dash.Nitro01 > 0.3f) nitroReadyAt = Time.unscaledTime;
             if (!IsDone(Lesson.Nitro) && nitroReadyAt > 0f && Time.unscaledTime >= nitroReadyAt && dash != null && dash.Nitro01 > 0.05f)
             {
                 Show(Lesson.Nitro);
@@ -320,6 +326,7 @@ namespace ShiftRush.Race
             progress = AllDone;
             PlayerPrefs.SetInt(ProgressKey, AllDone);
             PlayerPrefs.SetString("Switch_" + GameSettings.TutorialKey, "false");
+            Core.Difficulty.MarkRaced();
             PlayerPrefs.Save();
         }
 
@@ -415,7 +422,7 @@ namespace ShiftRush.Race
                 case Lesson.Nitro:
                     key = nitro;
                     head = "NITRO'S LOADED: HOLD " + nitro;
-                    body = "Nitro only comes from SHIFT ramps, so spend it on the straights.";
+                    body = "Drift to earn it: a longer, wider slide pays more. It also refills slowly on its own.";
                     return;
                 case Lesson.Stuck:
                     key = "R";

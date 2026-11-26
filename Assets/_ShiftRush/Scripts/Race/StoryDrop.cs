@@ -82,8 +82,11 @@ namespace ShiftRush.Race
                 var p = r.vehicle.Transform.position;
                 int i = line.Nearest(p);
                 var d = new Drop { racer = r, slot = line.distances[i], lateral = line.Lateral(p, i) };
-                d.at = d.slot - Approach - (float)rng.NextDouble() * 12f;
-                d.letGoAt = r.isPlayer ? d.slot : d.slot - (float)rng.NextDouble() * 14f;
+                // Every chopper keeps its car's grid spacing all the way in (a random head start bigger than the
+                // gap between grid rows stacked cars on top of each other), and rivals let go a little before their
+                // spot, only once the road below them is clear.
+                d.at = d.slot - Approach - (float)rng.NextDouble() * 1.5f;
+                d.letGoAt = r.isPlayer ? d.slot : d.slot - (float)rng.NextDouble() * 6f;
                 d.chopper = MakeChopper(prefab);
                 d.rotorA = Deep(d.chopper, "FrontPropeller"); d.rotorB = Deep(d.chopper, "RearPropeller");
                 d.cable = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
@@ -221,7 +224,7 @@ namespace ShiftRush.Race
                 d.at += Speed * dt;
                 if (!d.released)
                 {
-                    if (!d.racer.isPlayer && d.at >= d.letGoAt) Release(d);
+                    if (!d.racer.isPlayer && d.at >= d.letGoAt && (ClearBelow(d) || d.at >= d.slot + 4f)) Release(d);
                     else Hang(d, dt);
                 }
                 if (d.released)
@@ -266,6 +269,20 @@ namespace ShiftRush.Race
             var dir = line.Direction(line.IndexAt(Mathf.Repeat(d.at, line.length)));
             if (body != null) { body.isKinematic = false; body.linearVelocity = dir * Speed * 0.9f; body.angularVelocity = Vector3.zero; }
             StartCoroutine(ResetBackOn(d.racer.vehicle));
+        }
+
+        /// <summary>No other car on the road under this one, or about to be: safe to let go.</summary>
+        bool ClearBelow(Drop d)
+        {
+            var me = d.racer.vehicle.Transform.position;
+            foreach (var other in drops)
+            {
+                if (other == d || !other.released) continue;
+                var p = other.racer.vehicle.Transform.position;
+                var flat = new Vector3(p.x - me.x, 0f, p.z - me.z);
+                if (flat.magnitude < 6.5f) return false;
+            }
+            return true;
         }
 
         static bool Landed(Drop d) { return d.released && d.racer.vehicle.AnyWheelGrounded && Time.time - d.releasedTime > 0.3f; }

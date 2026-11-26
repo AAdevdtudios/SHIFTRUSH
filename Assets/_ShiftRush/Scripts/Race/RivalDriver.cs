@@ -65,6 +65,7 @@ namespace ShiftRush.Race
             drift = GetComponent<DriftMoves>();
             if (drift == null) drift = gameObject.AddComponent<DriftMoves>();
             drift.playerControlled = false;
+            if (GetComponent<RivalGrounding>() == null) gameObject.AddComponent<RivalGrounding>();
             GripMoves.Leapt -= OnSomeoneRolled;
             GripMoves.Leapt += OnSomeoneRolled;
         }

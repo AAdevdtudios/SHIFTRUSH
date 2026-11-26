@@ -412,11 +412,84 @@ namespace ShiftRush.Race
             if (raceGroup != null) raceGroup.alpha = Mathf.MoveTowards(raceGroup.alpha, 0.25f, dt * 3f);
             if (finishGroup.alpha < 0.9f || SceneLoader.IsLoading || ShiftRush.UI.PauseMenu.IsPaused) return;
 
+            SetupFinishButtons();
             var kb = Keyboard.current; var pad = Gamepad.current;
-            bool again = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) || (pad != null && pad.buttonSouth.wasPressedThisFrame);
+            // Arrows, WASD or the d-pad move between the two buttons; Enter, Space or A presses the lit one.
+            bool move = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame
+                            || kb.downArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame))
+                        || (pad != null && (pad.dpad.left.wasPressedThisFrame || pad.dpad.right.wasPressedThisFrame || pad.dpad.up.wasPressedThisFrame || pad.dpad.down.wasPressedThisFrame));
+            if (move) { finishChoice = 1 - finishChoice; StyleFinishButtons(); ShiftRush.UI.MenuSounds.Tick(); }
+            bool press = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)) || (pad != null && pad.buttonSouth.wasPressedThisFrame);
             bool menu = (kb != null && kb.mKey.wasPressedThisFrame) || (pad != null && pad.buttonNorth.wasPressedThisFrame);
-            if (again) RaceAgain();
-            else if (menu) SceneLoader.Load(MenuScene, "MAIN MENU", "GRIP PRO", "");
+            if (press) { if (finishChoice == 0) RaceAgain(); else LeaveRace(); }
+            else if (menu) LeaveRace();
+        }
+
+        // ------------------------------------------------------------------ results buttons
+
+        int finishChoice;
+        bool finishButtonsReady;
+        Image againImg, menuImg, againShadow;
+        TMP_Text againText, menuText;
+        Sprite filledSprite, outlineSprite;
+        static readonly Color Pink = new Color32(255, 46, 154, 255), Night = new Color32(11, 10, 18, 255), Paper = new Color32(244, 241, 250, 255);
+
+        /// <summary>Story: RESTART or RETURN TO STORY (the case board). Quick race: RACE AGAIN or MAIN MENU.</summary>
+        void SetupFinishButtons()
+        {
+            if (finishButtonsReady || finishGroup == null) return;
+            finishButtonsReady = true;
+            foreach (var img in finishGroup.GetComponentsInChildren<Image>(true))
+            {
+                if (img.name == "Again") againImg = img;
+                else if (img.name == "Menu") menuImg = img;
+                else if (img.name == "Again Shadow") againShadow = img;
+            }
+            if (againImg == null || menuImg == null) return;
+            againText = againImg.GetComponentInChildren<TMP_Text>(true);
+            menuText = menuImg.GetComponentInChildren<TMP_Text>(true);
+            filledSprite = againImg.sprite; outlineSprite = menuImg.sprite;
+            bool story = !string.IsNullOrEmpty(StoryProgress.Active);
+            if (againText != null) againText.text = story ? "RESTART" : "RACE AGAIN";
+            if (menuText != null) menuText.text = story ? "RETURN TO STORY" : "MAIN MENU";
+            // Same size, side by side, so either can be the lit one.
+            var a = againImg.rectTransform; var m = menuImg.rectTransform;
+            float w = Mathf.Max(a.sizeDelta.x, 330f);
+            m.sizeDelta = new Vector2(w, a.sizeDelta.y);
+            m.anchoredPosition = new Vector2(a.anchoredPosition.x + w + 22f, a.anchoredPosition.y);
+            if (againText != null) { againText.fontSize = 34f; againText.enableAutoSizing = true; againText.fontSizeMax = 38f; againText.fontSizeMin = 20f; }
+            if (menuText != null) { menuText.fontSize = 34f; menuText.enableAutoSizing = true; menuText.fontSizeMax = 38f; menuText.fontSizeMin = 20f; if (againText != null) menuText.font = againText.font; }
+            finishChoice = 0;
+            StyleFinishButtons();
+        }
+
+        /// <summary>The lit button: pink, filled, with the cyan shadow behind it. The other: an outline.</summary>
+        void StyleFinishButtons()
+        {
+            if (againImg == null || menuImg == null) return;
+            var lit = finishChoice == 0 ? againImg : menuImg;
+            var dim = finishChoice == 0 ? menuImg : againImg;
+            lit.sprite = filledSprite; lit.color = Pink;
+            dim.sprite = outlineSprite; dim.color = Paper;
+            var litText = finishChoice == 0 ? againText : menuText;
+            var dimText = finishChoice == 0 ? menuText : againText;
+            if (litText != null) litText.color = Night;
+            if (dimText != null) dimText.color = Paper;
+            if (againShadow != null)
+            {
+                var sr = againShadow.rectTransform; var lr = lit.rectTransform;
+                sr.sizeDelta = lr.sizeDelta;
+                sr.anchoredPosition = lr.anchoredPosition + new Vector2(7f, -7f);
+                againShadow.transform.SetSiblingIndex(lit.transform.GetSiblingIndex());
+            }
+            lit.rectTransform.localScale = Vector3.one * 1.04f;
+            dim.rectTransform.localScale = Vector3.one;
+        }
+
+        static void LeaveRace()
+        {
+            bool story = !string.IsNullOrEmpty(StoryProgress.Active);
+            SceneLoader.Load(MenuScene, story ? "CASE BOARD" : "MAIN MENU", "GRIP PRO", "");
         }
 
         static void RaceAgain()
