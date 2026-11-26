@@ -19,6 +19,10 @@ namespace ShiftRush.Core
         public const string AutoAccelerateKey = "SR_AutoAccelerate";
         public const string TutorialKey = "SR_Tutorial";
         public const string ToonLookKey = "SR_ToonLook";
+        public const string DrivingLineKey = "SR_DrivingLine";
+
+        /// <summary>The chevron driving line painted on the road ahead (cyan go, amber ease, magenta brake).</summary>
+        public static bool DrivingLine { get { return GetSwitch(DrivingLineKey, true); } }
 
         /// <summary>Coach hints in the first races (see Race.RaceCoach). On until the player has done it all.</summary>
         public static bool Tutorial { get { return GetSwitch(TutorialKey, true); } }

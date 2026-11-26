@@ -417811,8 +417811,12 @@ MonoBehaviour:
   lineColor: {r: 1, g: 1, b: 1, a: 0.55}
   boostLineColor: {r: 1, g: 0.25, b: 0.85, a: 0.75}
   maxChromatic: 0.55
-  maxLensDistortion: -0.22
+  maxLensDistortion: 0.42
+  lensAxes: {x: 1, y: 0.35}
+  lensSteerLean: 0.09
   vignetteAtSpeed: 0.32
+  blurAtSpeed: 0.35
+  blurBoost: 0.25
 --- !u!1 &1473024598
 GameObject:
   m_ObjectHideFlags: 0

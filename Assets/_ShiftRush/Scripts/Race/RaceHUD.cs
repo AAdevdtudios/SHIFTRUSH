@@ -480,7 +480,10 @@ namespace ShiftRush.Race
                 var sr = againShadow.rectTransform; var lr = lit.rectTransform;
                 sr.sizeDelta = lr.sizeDelta;
                 sr.anchoredPosition = lr.anchoredPosition + new Vector2(7f, -7f);
-                againShadow.transform.SetSiblingIndex(lit.transform.GetSiblingIndex());
+                // Directly behind the lit button. Moving a sibling up the list shifts the ones after it down, so
+                // the target index depends on which side of the button the shadow starts on.
+                int li = lit.transform.GetSiblingIndex(), si = againShadow.transform.GetSiblingIndex();
+                againShadow.transform.SetSiblingIndex(si > li ? li : li - 1);
             }
             lit.rectTransform.localScale = Vector3.one * 1.04f;
             dim.rectTransform.localScale = Vector3.one;

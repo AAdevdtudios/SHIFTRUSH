@@ -11,7 +11,9 @@ namespace ShiftRush.UI
     /// The talk before a story race: when you press Go Live, the episode's lines play one at a time as an incoming
     /// call over the briefing (who's on the line, their car, then the back and forth), typed out. Enter, Space,
     /// click or A for the next line, Esc or B to skip. Then the lift-off and the race. Episodes with no lines go
-    /// straight on.
+    /// straight on. Above the call, a face-off: your driver on the left, whoever's talking on the right, each a live
+    /// portrait (<see cref="PortraitStudio"/>) in a tilted comic panel. The speaker's panel is lit and full size, the
+    /// other dims back; each line sets the speaker's mood ("!" angry, "?" shocked, rivals smug by default).
     /// </summary>
     public class PreRaceTalk : MonoBehaviour
     {
@@ -39,7 +41,214 @@ namespace ShiftRush.UI
         Image ring, nameBar;
         CanvasGroup group;
 
-        void OnDestroy() { Running = false; }
+        void OnDestroy()
+        {
+            Running = false;
+            foreach (var st in studios.Values) if (st != null) Destroy(st.gameObject);
+        }
+
+        // ------------------------------------------------------------------ face-off portraits
+
+        class Panel
+        {
+            public RectTransform root;
+            public RawImage face;
+            public Image back, dots, shadow, tagBar;
+            public TMP_Text tag;
+            public CanvasGroup group;
+            public RectTransform marks;
+            public float home, tilt, lit;
+            public string who;
+        }
+
+        readonly System.Collections.Generic.Dictionary<string, PortraitStudio> studios = new System.Collections.Generic.Dictionary<string, PortraitStudio>();
+        Panel left, right;
+        string speaking;
+        static Sprite dotSprite;
+
+        PortraitStudio Studio(string who)
+        {
+            string key = who.ToLowerInvariant();
+            if (!studios.TryGetValue(key, out var st) || st == null) { st = PortraitStudio.Film(key == "you" ? "YOU" : key, FaceColour(who)); studios[key] = st; }
+            return st;
+        }
+
+        static Color FaceColour(string who)
+        {
+            string k = who.ToLowerInvariant();
+            if (k == "you") return Cyan;
+            if (k == "slim") return Magenta;
+            var c = RivalCast.Instance != null ? RivalCast.Instance.Find(k) : null;
+            return c != null ? c.color : new Color32(255, 184, 46, 255);
+        }
+
+        static PortraitStudio.Mood MoodOf(string who, string text)
+        {
+            if (text.Contains("?")) return PortraitStudio.Mood.Shocked;
+            if (text.Contains("!")) return PortraitStudio.Mood.Angry;
+            string k = who.ToLowerInvariant();
+            return k == "you" || k == "slim" ? PortraitStudio.Mood.Neutral : PortraitStudio.Mood.Smug;
+        }
+
+        /// <summary>Who's talking now: their panel lights, their mood is set, the other dims.</summary>
+        void Speak(string who, string text)
+        {
+            speaking = who;
+            bool me = who == "YOU";
+            var p = me ? left : right;
+            if (!me && right.who != who) Show(right, who);
+            Studio(who).SetMood(MoodOf(who, text));
+            Marks(p, MoodOf(who, text));
+        }
+
+        void Show(Panel p, string who)
+        {
+            p.who = who;
+            var st = Studio(who);
+            p.face.texture = st.Texture;
+            var c = FaceColour(who);
+            p.back.color = Color.Lerp(c, Ink, 0.35f);
+            p.dots.color = new Color(c.r, c.g, c.b, 0.55f);
+            // The drop shadow in the opposite broadcast colour, so a cyan character still pops.
+            Color.RGBToHSV(c, out float hue, out _, out _);
+            p.shadow.color = hue > 0.4f && hue < 0.6f ? Magenta : Cyan;
+            p.tag.text = Display(who);
+            p.tagBar.color = c;
+            // Only the two portraits on screen keep rendering.
+            foreach (var kv in studios)
+                if (kv.Value != null) kv.Value.Live = (left != null && left.who != null && kv.Key == left.who.ToLowerInvariant())
+                                                    || (right != null && right.who != null && kv.Key == right.who.ToLowerInvariant());
+        }
+
+        Panel MakePanel(bool isLeft)
+        {
+            var p = new Panel();
+            p.root = Rect(isLeft ? "You Panel" : "Caller Panel", transform);
+            p.root.anchorMin = p.root.anchorMax = new Vector2(0.5f, 0.38f);
+            p.root.sizeDelta = new Vector2(400, 400);
+            p.home = isLeft ? -330f : 330f;
+            p.tilt = isLeft ? -4f : 4f;
+            p.root.anchoredPosition = new Vector2(p.home + (isLeft ? -900f : 900f), 400f);
+            p.root.localEulerAngles = new Vector3(0, 0, p.tilt);
+            p.group = p.root.gameObject.AddComponent<CanvasGroup>();
+
+            var sh = Rect("Shadow", p.root); Fill(sh); sh.offsetMin = new Vector2(14, -14); sh.offsetMax = new Vector2(14, -14);
+            p.shadow = sh.gameObject.AddComponent<Image>();
+            var ink = Rect("Ink", p.root); Fill(ink); ink.gameObject.AddComponent<Image>().color = Ink;
+            var inner = Rect("Inner", p.root); Fill(inner); inner.offsetMin = new Vector2(8, 8); inner.offsetMax = new Vector2(-8, -8);
+            inner.gameObject.AddComponent<RectMask2D>();
+            p.back = inner.gameObject.AddComponent<Image>();
+            var dots = Rect("Halftone", inner); Fill(dots);
+            p.dots = dots.gameObject.AddComponent<Image>(); p.dots.sprite = Dots(); p.dots.type = Image.Type.Tiled; p.dots.raycastTarget = false;
+            p.dots.pixelsPerUnitMultiplier = 1.6f;
+            // Speed lines behind the head, shown when shocked.
+            p.marks = Rect("Marks", inner); Fill(p.marks);
+            var face = Rect("Face", inner); Fill(face); face.offsetMin = new Vector2(-30, -30); face.offsetMax = new Vector2(30, 30);
+            p.face = face.gameObject.AddComponent<RawImage>(); p.face.raycastTarget = false;
+
+            // Name slashed across the bottom corner.
+            var bar = Rect("Name", p.root);
+            bar.anchorMin = bar.anchorMax = new Vector2(isLeft ? 0f : 1f, 0f); bar.pivot = new Vector2(isLeft ? 0f : 1f, 0f);
+            bar.anchoredPosition = new Vector2(isLeft ? -18f : 18f, -22f); bar.sizeDelta = new Vector2(250, 54);
+            bar.localEulerAngles = new Vector3(0, 0, isLeft ? 5f : -5f);
+            var barInk = Rect("Ink", bar); Fill(barInk); barInk.offsetMin = new Vector2(-5, -5); barInk.offsetMax = new Vector2(5, 5); barInk.gameObject.AddComponent<Image>().color = Ink;
+            var barFill = Rect("Fill", bar); Fill(barFill);
+            p.tagBar = barFill.gameObject.AddComponent<Image>();
+            p.tag = Label(bar, null, 34, Ink, TextAlignmentOptions.Center); Fill(p.tag.rectTransform);
+            p.tag.fontStyle = FontStyles.Bold | FontStyles.Italic;
+            return p;
+        }
+
+        /// <summary>Comic marks for the mood: shocked gets speed lines, angry gets vein marks, smug a sparkle.</summary>
+        void Marks(Panel p, PortraitStudio.Mood mood)
+        {
+            for (int i = p.marks.childCount - 1; i >= 0; i--) Destroy(p.marks.GetChild(i).gameObject);
+            switch (mood)
+            {
+                case PortraitStudio.Mood.Shocked:
+                    for (int i = 0; i < 16; i++)
+                    {
+                        var l = Rect("Line", p.marks); l.anchorMin = l.anchorMax = new Vector2(0.5f, 0.55f);
+                        l.pivot = new Vector2(0.5f, 0f); l.sizeDelta = new Vector2(i % 2 == 0 ? 5 : 3, 320);
+                        l.localEulerAngles = new Vector3(0, 0, i * 22.5f + 6f);
+                        l.anchoredPosition = Vector2.zero;
+                        var im = l.gameObject.AddComponent<Image>(); im.color = new Color(1, 1, 1, 0.55f); im.raycastTarget = false;
+                    }
+                    break;
+                case PortraitStudio.Mood.Angry:
+                    Vein(p.marks, new Vector2(0.78f, 0.8f), 0f); Vein(p.marks, new Vector2(0.86f, 0.68f), 40f);
+                    break;
+                case PortraitStudio.Mood.Smug:
+                    Sparkle(p.marks, new Vector2(0.22f, 0.78f), 1f); Sparkle(p.marks, new Vector2(0.3f, 0.9f), 0.55f);
+                    break;
+            }
+        }
+
+        static void Vein(RectTransform parent, Vector2 at, float spin)
+        {
+            // Four short red strokes around a gap: the comic "angry" cross.
+            for (int i = 0; i < 4; i++)
+            {
+                var r = Rect("Vein", parent); r.anchorMin = r.anchorMax = at; r.sizeDelta = new Vector2(30, 8);
+                float a = spin + i * 90f;
+                r.localEulerAngles = new Vector3(0, 0, a + 20f);
+                r.anchoredPosition = (Vector2)(Quaternion.Euler(0, 0, a) * new Vector2(17, 0));
+                var im = r.gameObject.AddComponent<Image>(); im.color = new Color32(255, 40, 60, 255); im.raycastTarget = false;
+            }
+        }
+
+        static void Sparkle(RectTransform parent, Vector2 at, float size)
+        {
+            // A four-point glint: a tall thin stroke, a shorter cross stroke, and a small diamond in the middle.
+            Stroke(parent, at, new Vector2(5, 56) * size, 0f);
+            Stroke(parent, at, new Vector2(5, 30) * size, 90f);
+            Stroke(parent, at, new Vector2(12, 12) * size, 45f);
+        }
+
+        static void Stroke(RectTransform parent, Vector2 at, Vector2 size, float angle)
+        {
+            var r = Rect("Sparkle", parent); r.anchorMin = r.anchorMax = at; r.sizeDelta = size;
+            r.localEulerAngles = new Vector3(0, 0, angle);
+            var im = r.gameObject.AddComponent<Image>(); im.color = Color.white; im.raycastTarget = false;
+        }
+
+        /// <summary>One halftone dot, tiled across a panel's background.</summary>
+        static Sprite Dots()
+        {
+            if (dotSprite != null) return dotSprite;
+            const int n = 24;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear };
+            var px = new Color32[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(n / 2f, n / 2f));
+                    byte a = (byte)(Mathf.Clamp01(5.5f - d) * 255f);
+                    px[y * n + x] = new Color32(255, 255, 255, a);
+                }
+            tex.SetPixels32(px); tex.Apply();
+            dotSprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f);
+            return dotSprite;
+        }
+
+        void Update()
+        {
+            if (left == null || right == null) return;
+            float k = 1f - Mathf.Exp(-Time.unscaledDeltaTime * 9f);
+            foreach (var p in new[] { left, right })
+            {
+                bool on = speaking == null || (p == left ? speaking == "YOU" : speaking != "YOU");
+                p.lit = Mathf.Lerp(p.lit, on ? 1f : 0f, k);
+                var pos = p.root.anchoredPosition;
+                p.root.anchoredPosition = new Vector2(Mathf.Lerp(pos.x, p.home, k), Mathf.Lerp(pos.y, 400f + p.lit * 14f, k));
+                p.root.localScale = Vector3.one * Mathf.Lerp(0.84f, 1f, p.lit);
+                float g = Mathf.Lerp(0.38f, 1f, p.lit);
+                p.face.color = new Color(g, g, g, 1f);
+                p.group.alpha = Mathf.Lerp(0.8f, 1f, p.lit);
+                p.root.localEulerAngles = new Vector3(0, 0, p.tilt * Mathf.Lerp(0.6f, 1f, p.lit));
+                if (p.marks != null) p.marks.gameObject.SetActive(p.lit > 0.5f);
+            }
+        }
 
         void Start() { Build(); StartCoroutine(Play()); }
 
@@ -65,6 +274,7 @@ namespace ShiftRush.UI
             foreach (var l in episode.talk)
             {
                 bool me = l.speaker == "YOU";
+                Speak(l.speaker, l.text);
                 who.text = Display(l.speaker);
                 nameBar.color = me ? Cyan : ColourOf(l.speaker);
                 who.color = Ink;
@@ -186,6 +396,13 @@ namespace ShiftRush.UI
             var nr = hint.rectTransform; nr.anchorMin = nr.anchorMax = new Vector2(0.5f, 0.38f); nr.sizeDelta = new Vector2(1180, 34);
             nr.anchoredPosition = new Vector2(0, -180);
             hint.text = "ENTER / A  NEXT      ESC / B  SKIP";
+
+            left = MakePanel(true);
+            right = MakePanel(false);
+            Show(left, "YOU");
+            string caller = null;
+            foreach (var l in episode.talk) if (l.speaker != "YOU") { caller = l.speaker; break; }
+            Show(right, caller ?? "SLIM");
         }
 
         static RectTransform Rect(string name, Transform parent)

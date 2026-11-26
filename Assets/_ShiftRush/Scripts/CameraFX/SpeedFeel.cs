@@ -8,7 +8,9 @@ namespace ShiftRush.CameraFX
 {
     /// <summary>
     /// The sense of speed. As the car goes faster the chase camera drops back and low, the field of view widens,
-    /// streaks fly past the screen edges and the image picks up a light lens fringe. Hard acceleration and nitro
+    /// streaks fly past the screen edges, the lens bows the world outward left and right (leaning into the steering, so
+    /// a turn warps the world towards it), the image fringes, and motion blur streaks the scenery while the car stays
+    /// sharp (per-object blur). Hard acceleration and nitro
     /// make the car surge away from the camera before it catches up; nitro shakes the camera (with a jolt as it lights)
     /// and rumbles a controller.
     /// Camera-package agnostic: a bridge (e.g. RCCPSpeedCamera) calls <see cref="Tick"/> every LateUpdate
@@ -67,8 +69,18 @@ namespace ShiftRush.CameraFX
 
         [Header("Lens")]
         [SerializeField] float maxChromatic = 0.55f;
-        [SerializeField] float maxLensDistortion = -0.22f;
+        [Tooltip("Barrel bend at full speed with nitro (positive bows the world outward).")]
+        [SerializeField] float maxLensDistortion = 0.42f;
+        [Tooltip("How much of the bend is sideways (x) against up and down (y): mostly sideways reads as speed.")]
+        [SerializeField] Vector2 lensAxes = new Vector2(1f, 0.35f);
+        [Tooltip("How far the bend's centre leans into the steering (share of the screen).")]
+        [SerializeField] float lensSteerLean = 0.09f;
         [SerializeField] float vignetteAtSpeed = 0.32f;
+
+        [Header("Motion blur")]
+        [Tooltip("Blur at full speed; nitro adds the boost amount.")]
+        [SerializeField] float blurAtSpeed = 0.35f;
+        [SerializeField] float blurBoost = 0.25f;
 
         float intensity, boost, surge, pull, lastSpeed, kick, swing, swingSide;
         DriftMoves drift;
@@ -85,6 +97,8 @@ namespace ShiftRush.CameraFX
         ChromaticAberration chromatic;
         LensDistortion lens;
         Vignette vignette;
+        MotionBlur blur;
+        float lean;
 
         /// <summary>0..1 speed amount, smoothed.</summary>
         public float Intensity { get { return intensity; } }
@@ -151,7 +165,16 @@ namespace ShiftRush.CameraFX
             float lensAmount = calm ? 0f : Mathf.Clamp01(intensity * 0.7f + boost * 0.6f) * strength;
             chromatic.intensity.value = lensAmount * maxChromatic;
             lens.intensity.value = lensAmount * maxLensDistortion;
+            lens.xMultiplier.value = lensAxes.x; lens.yMultiplier.value = lensAxes.y;
+            lens.scale.value = 1f + lensAmount * maxLensDistortion * 0.25f; // crop in a touch so the bowed edges stay filled
+            // The bend's centre leans into the turn: steer left and the world warps towards the left.
+            float steer = vehicle != null && chaseView ? vehicle.SteerInput : 0f;
+            lean = Mathf.Lerp(lean, -steer * lensSteerLean * lensAmount, dt * 3f);
+            lens.center.value = new Vector2(0.5f + lean, 0.5f);
             vignette.intensity.value = lensAmount * vignetteAtSpeed;
+            // Motion blur: the scenery streaks, the car itself (moving with the camera) stays sharp.
+            float blurAmount = calm ? 0f : Mathf.Clamp01(Mathf.InverseLerp(0.35f, 1f, intensity) * blurAtSpeed + boost * blurBoost) * Mathf.Min(strength, 1.2f);
+            if (blur != null) { blur.active = blurAmount > 0.01f; blur.intensity.value = blurAmount; }
         }
 
         /// <summary>Controller motors (low = heavy, high = buzz). Only touches the pad while it has something to say.</summary>
@@ -255,6 +278,12 @@ namespace ShiftRush.CameraFX
             chromatic = profile.Add<ChromaticAberration>(true);
             lens = profile.Add<LensDistortion>(true);
             vignette = profile.Add<Vignette>(true);
+            blur = profile.Add<MotionBlur>(true);
+            blur.mode.value = MotionBlurMode.CameraAndObjects;
+            blur.quality.value = MotionBlurQuality.Medium;
+            blur.clamp.value = 0.06f;
+            blur.intensity.value = 0f;
+            blur.active = false;
             chromatic.intensity.value = 0f;
             lens.intensity.value = 0f;
             vignette.intensity.value = 0f;

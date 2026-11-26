@@ -34,6 +34,10 @@ namespace ShiftRush.UI
 
         [SerializeField] float crossfade = 0.6f;
 
+        /// <summary>Portrait mode (set before the body is switched on): the calm bone idle only, no mocap clips, no
+        /// glances or fidgets, so the face stays on the camera. Used by PortraitStudio.</summary>
+        [HideInInspector] public bool portrait;
+
         PlayableGraph graph;
         AnimationMixerPlayable mixer;
         AnimationClip[] clips;
@@ -43,7 +47,8 @@ namespace ShiftRush.UI
         void Awake()
         {
             var anim = GetComponentInChildren<Animator>(true);
-            if (anim != null && StartClips(anim)) return;
+            if (portrait) { lookDegrees = 0f; fidgetEvery = new Vector2(1e6f, 1e6f); }
+            if (!portrait && anim != null && StartClips(anim)) return;
             if (anim != null) anim.enabled = false; // no clips: the animator would only hold the bind pose
             hips = Find("Hips"); spine = Find("Spine"); chest = Find("Spine2") ?? Find("Spine1");
             neck = Find("Neck"); head = Find("Head");

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da7102db786c42848e331c2965cce95, type: 3}
+  m_Name: SR_Spectacle
+  m_EditorClassIdentifier: Assembly-CSharp::ShiftRush.Core.SpectacleKit
+  newsChopper: {fileID: 4351436237561678316, guid: d5338955ab2cac24ea272296575296f4, type: 3}
+  policeChopper: {fileID: 5156730247836263679, guid: 8b4917e49f8fb2341a0b76c412f8bbd2, type: 3}
+  leadJet: {fileID: 5839496286933663643, guid: 48addbbabec17e64fb3a72f28173e2fe, type: 3}
+  wingJet: {fileID: 1798213887226583951, guid: 8acaa953564b2384fa7c80d47025dcab, type: 3}
+  balloon: {fileID: 4359919210329903620, guid: 61c0362f91640bf46bd5d5460e12961b, type: 3}
+  smoke: {fileID: 2100000, guid: 8d16bc462993247b69dcf6296031b197, type: 2}
+  bannerFont: {fileID: 11400000, guid: 56909cb300baa4221bf7970aca31ad15, type: 2}
+  additive: {fileID: 2100000, guid: 4625e9a83710846748c34e85f616c463, type: 2}
+  checkpointArch: {fileID: 1680074988764882, guid: 6acfe35714b0f674ba01180c8620a5db, type: 3}
+  checkpointSign: {fileID: 1609661323418190, guid: d20a7175c68b58c4982d681ddd595ecc, type: 3}
+  checkpointFlag: {fileID: 1326152078775118, guid: c6853fb5a3943704e90112d17f42923f, type: 3}
+  startSign: {fileID: 1111796073400088, guid: 173fa84afc3978147bfe352ea0d02fc4, type: 3}
+  finishSign: {fileID: 1997549933977344, guid: 727fd57c75e348d48a78fa63f179d599, type: 3}
+  chevronBoard: {fileID: 1785419730068912, guid: d2b08b050ab987f449e2c4ef245b3a36, type: 3}
+  tyreStack: {fileID: 1227585913498518, guid: a68d14618096f734795111f01ce91e61, type: 3}
+  crashBarrel: {fileID: 1956064923496110, guid: 4b6eec744335d1542b66d0601aa8ff81, type: 3}
+  confettiFx: {fileID: 1544843790154516, guid: 3a9926addcd9ce44cad6e6fe7b978792, type: 3}
+  arrowsFx: {fileID: 1804763018037358, guid: 99c2c3f3afbb8dc4b9057b31e0099798, type: 3}
+  mech: {fileID: 3139966320091609202, guid: 0b4685531970f29479b4929a3496e4e1, type: 3}
+  mechIdle: {fileID: 8993902097722301239, guid: 44e81a1b4556e7f45a76ee9991628aa4, type: 3}
+  mechTaunt: {fileID: 8993902097722301239, guid: 7fab3523194952f41a08404834241f9b, type: 3}
+  mechScenes:
+  - Track_DowntownNeon
